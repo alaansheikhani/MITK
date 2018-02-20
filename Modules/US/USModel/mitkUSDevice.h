@@ -321,6 +321,7 @@ namespace mitk {
 
 
   protected:
+    itkSetMacro(Image, mitk::Image::Pointer);
 
     // Threading-Related
     itk::ConditionVariable::Pointer m_FreezeBarrier;

@@ -362,8 +362,8 @@ void QmitkUltrasoundCalibration::OnStartCalibrationProcess()
 
   QApplication::setOverrideCursor(Qt::WaitCursor);
   // make sure that the combined modality is in connected state before using it
-  if (m_CombinedModality->GetDeviceState() < mitk::USDevice::State_Connected) { m_CombinedModality->Connect(); }
-  if (m_CombinedModality->GetDeviceState() < mitk::USDevice::State_Activated) { m_CombinedModality->Activate(); }
+  if (m_CombinedModality->GetUltrasoundDevice()->GetDeviceState() < mitk::USDevice::State_Connected) { m_CombinedModality->GetUltrasoundDevice()->Connect(); }
+  if (m_CombinedModality->GetUltrasoundDevice()->GetDeviceState() < mitk::USDevice::State_Activated) { m_CombinedModality->GetUltrasoundDevice()->Activate(); }
   QApplication::restoreOverrideCursor();
 
   this->SwitchFreeze();
@@ -960,7 +960,7 @@ void QmitkUltrasoundCalibration::SwitchFreeze()
     m_Timer->setInterval(interval);
     m_Timer->start();
 
-    m_CombinedModality->SetIsFreezed(false);
+    m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(false);
   }
   else if (this->m_Tracker->GetOutput(0)->IsDataValid())
   {
@@ -970,7 +970,7 @@ void QmitkUltrasoundCalibration::SwitchFreeze()
     m_FreezePoint = this->m_Tracker->GetOutput(0)->GetPosition();
     m_Controls.m_CalibBtnAddPoint->setEnabled(true); // activate only, if valid point is set
 
-    m_CombinedModality->SetIsFreezed(true);
+    m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(true);
   }
 }
 
@@ -1061,7 +1061,7 @@ void QmitkUltrasoundCalibration::ApplyTransformToPointSet(mitk::PointSet::Pointe
 
 void QmitkUltrasoundCalibration::OnFreezeClicked()
 {
-  if (m_CombinedModality->GetIsFreezed())
+  if (m_CombinedModality->GetUltrasoundDevice()->GetIsFreezed())
   {
     if (!m_Timer->isActive()) // Activate Imaging
     {
@@ -1079,14 +1079,12 @@ void QmitkUltrasoundCalibration::OnFreezeClicked()
     m_Controls.m_SpacingPointsList->clear();
     m_SpacingPointsCount = 0;
     m_Controls.m_SpacingAddPoint->setEnabled(false);
-    m_CombinedModality->SetIsFreezed(false);
+    m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(false);
 
   }
   else
   {
-    //deactivate Imaging
-    m_Timer->stop();
-    m_CombinedModality->SetIsFreezed(true);
+    m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(true);
     m_Controls.m_SpacingAddPoint->setEnabled(true);
   }
   //SwitchFreeze();
@@ -1141,7 +1139,7 @@ void QmitkUltrasoundCalibration::OnCalculateSpacing()
   m_SpacingPoints->Clear();
   m_Controls.m_SpacingPointsList->clear();
   m_SpacingPointsCount = 0;
-  m_CombinedModality->SetIsFreezed(false);
+  m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(false);
 }
 
 void QmitkUltrasoundCalibration::OnUSDepthChanged(const std::string& key, const std::string&)
