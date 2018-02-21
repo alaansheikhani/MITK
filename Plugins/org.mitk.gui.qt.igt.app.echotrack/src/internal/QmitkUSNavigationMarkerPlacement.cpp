@@ -94,7 +94,6 @@ QmitkUSNavigationMarkerPlacement::QmitkUSNavigationMarkerPlacement()
   m_WarnOverlay(mitk::TextAnnotation2D::New()),
   m_NavigationDataSource(nullptr),
   m_CurrentStorage(nullptr),
-  m_ListenerDeviceChanged(this, &QmitkUSNavigationMarkerPlacement::OnCombinedModalityPropertyChanged),
   ui(new Ui::QmitkUSNavigationMarkerPlacement )
 {
   connect(m_UpdateTimer, SIGNAL(timeout()), this, SLOT(OnTimeout()));
@@ -241,12 +240,10 @@ void QmitkUSNavigationMarkerPlacement::OnInitializeNavigation()
 
 void QmitkUSNavigationMarkerPlacement::InitImageStream()
 {
-  //m_ImageStreamNode = this->GetDataStorage()->GetNamedNode(QmitkUSAbstractNavigationStep::DATANAME_IMAGESTREAM);
   if (m_ImageStreamNode.IsNull())
   {
-    // Create Node for US Stream
     m_ImageStreamNode = mitk::DataNode::New();
-    m_ImageStreamNode->SetName("US Navigation Viewing Stream");//QmitkUSAbstractNavigationStep::DATANAME_IMAGESTREAM);
+    m_ImageStreamNode->SetName("US Navigation Viewing Stream");
     this->GetDataStorage()->Add(m_ImageStreamNode);
   }
 }
@@ -579,22 +576,8 @@ void QmitkUSNavigationMarkerPlacement::OnFinishExperiment()
 void QmitkUSNavigationMarkerPlacement::OnCombinedModalityChanged(
   itk::SmartPointer<mitk::AbstractUltrasoundTrackerDevice> combinedModality)
 {
-  MITK_INFO << "On combined modality changed";
-  // remove old listener for ultrasound device changes
-  if (m_CombinedModality.IsNotNull() && m_CombinedModality->GetUltrasoundDevice().IsNotNull())
-  {
-    MITK_INFO << "New combined modality";
-    m_CombinedModality->GetUltrasoundDevice()->RemovePropertyChangedListener(m_ListenerDeviceChanged);
-  }
-
   m_CombinedModality = combinedModality;
   m_ReinitAlreadyDone = false;
-
-  // add a listener for ultrasound device changes
-  if (m_CombinedModality.IsNotNull() && m_CombinedModality->GetUltrasoundDevice().IsNotNull())
-  {
-    m_CombinedModality->GetUltrasoundDevice()->AddPropertyChangedListener(m_ListenerDeviceChanged);
-  }
 
   // update navigation data recorder for using the new combined modality
   mitk::NavigationDataSource::Pointer navigationDataSource = combinedModality->GetNavigationDataSource();
