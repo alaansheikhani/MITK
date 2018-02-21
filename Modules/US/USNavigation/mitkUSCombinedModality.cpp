@@ -39,25 +39,7 @@ mitk::USCombinedModality::USCombinedModality( USDevice::Pointer usDevice,
 
 mitk::USCombinedModality::~USCombinedModality()
 {
-  if (m_ServiceRegistration != nullptr)
-  {
-    m_ServiceRegistration.Unregister();
-  }
-  m_ServiceRegistration = 0;
-}
 
-void mitk::USCombinedModality::UnregisterOnService()
-{
-  if (m_UltrasoundDevice->GetDeviceState() == USDevice::State_Activated)
-  {
-    m_UltrasoundDevice->Deactivate();
-  }
-  if (m_UltrasoundDevice->GetDeviceState() == USDevice::State_Connected)
-  {
-    m_UltrasoundDevice->Disconnect();
-  }
-
-  mitk::USDevice::UnregisterOnService();
 }
 
 void mitk::USCombinedModality::RegisterAsMicroservice()
@@ -71,10 +53,12 @@ void mitk::USCombinedModality::RegisterAsMicroservice()
     mitk::UIDGenerator("org.mitk.services.USCombinedModality", 16);
   m_ServiceProperties[US_PROPKEY_ID] = uidGen.GetUID();
   m_ServiceProperties[US_PROPKEY_DEVICENAME] = m_UltrasoundDevice->GetName();
-  m_ServiceProperties[US_PROPKEY_CLASS] = mitk::USCombinedModality::DeviceClassIdentifier;
+  m_ServiceProperties[US_PROPKEY_CLASS] = mitk::AbstractUltrasoundTrackerDevice::DeviceClassIdentifier;
 
   m_ServiceRegistration = context->RegisterService(this, m_ServiceProperties);
 }
+
+
 
 mitk::USAbstractControlInterface::Pointer mitk::USCombinedModality::GetControlInterfaceCustom()
 {
@@ -126,7 +110,7 @@ void mitk::USCombinedModality::GenerateData()
   if (m_UltrasoundDevice->GetIsFreezed()) { return; } //if the image is freezed: do nothing
 
   //get next image from ultrasound image source
-  mitk::Image::Pointer image = m_UltrasoundDevice->GetUSImageSource()->GetNextImage()[0];
+  mitk::Image::Pointer image = m_UltrasoundDevice->GetUSImageSource()->GetNextImage();
 
   if (image.IsNull() || !image->IsInitialized()) //check the image
   {
