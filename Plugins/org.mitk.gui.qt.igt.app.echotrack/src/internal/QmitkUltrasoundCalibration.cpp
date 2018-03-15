@@ -66,7 +66,7 @@ m_USDeviceChanged(this, &QmitkUltrasoundCalibration::OnUSDepthChanged)
   if (pluginContext)
   {
     // to be notified about service event of an USDevice
-    pluginContext->connectServiceListener(this, "OnDeviceServiceEvent",
+    pluginContext->connectServiceListener(this, "OnDeciveServiceEvent",
       QString::fromStdString("(" + us::ServiceConstants::OBJECTCLASS() + "=" + us_service_interface_iid<mitk::USDevice>() + ")"));
   }
 }
@@ -146,8 +146,6 @@ void QmitkUltrasoundCalibration::CreateQtPartControl(QWidget *parent)
   // Tracking Status Widgets
   m_Controls.m_CalibTrackingStatus->ShowStatusLabels();
   m_Controls.m_EvalTrackingStatus->ShowStatusLabels();
-
-  m_OverrideSpacing = false;
 
   // General & Device Selection
   connect(m_Timer, SIGNAL(timeout()), this, SLOT(Update()));
@@ -633,7 +631,7 @@ void QmitkUltrasoundCalibration::OnStopCalibrationProcess()
   m_Controls.m_ToolBox->setCurrentIndex(0);
 }
 
-void QmitkUltrasoundCalibration::OnDeviceServiceEvent(const ctkServiceEvent event)
+void QmitkUltrasoundCalibration::OnDeciveServiceEvent(const ctkServiceEvent event)
 {
   if (m_CombinedModality.IsNull() || event.getType() != ctkServiceEvent::MODIFIED) { return; }
 
@@ -920,24 +918,17 @@ void QmitkUltrasoundCalibration::Update()
   m_Controls.m_EvalTrackingStatus->Refresh();
 
   // Update US Image
-  // Important: Set spacing at first --> then call modified() and update()
-  // Otherwise, there might occure problems concerning the rendering of the Ultrasound view.
   if (m_Image.IsNotNull() && m_Image->IsInitialized())
   {
-    if (m_OverrideSpacing)
-    {
-      m_Image->GetGeometry()->SetSpacing(m_Spacing);
-    }
-    if (m_Image.IsNotNull() && m_Image->IsInitialized())
-    {
-      m_Node->SetData(m_Image);
-    }
+    m_Node->SetData(m_Image);
+  }
+  else
+  {
+    mitk::Image::Pointer m_Image = m_CombinedModality->GetUltrasoundDevice()->GetOutput();
+    m_Node->SetData(m_Image); //Workaround because image is not initalized, maybe problem of the Ultrasound view?
   }
   m_CombinedModality->Modified();
   m_CombinedModality->Update();
-  mitk::Image::Pointer m_Image = m_CombinedModality->GetOutput();
-
-  m_Node->SetData(m_Image); //Workaround because image is not initalized, maybe problem of the Ultrasound view?
 
   // Update Needle Projection
   m_NeedleProjectionFilter->Update();
@@ -959,7 +950,7 @@ void QmitkUltrasoundCalibration::SwitchFreeze()
     }
 
     m_CombinedModality->Update();
-    m_Image = m_CombinedModality->GetOutput(); 
+    m_Image = m_CombinedModality->GetUltrasoundDevice()->GetOutput();
     if (m_Image.IsNotNull() && m_Image->IsInitialized())
     {
       m_Node->SetData(m_Image);
@@ -1081,25 +1072,13 @@ void QmitkUltrasoundCalibration::ApplyTransformToPointSet(mitk::PointSet::Pointe
 void QmitkUltrasoundCalibration::OnFreezeClicked()
 {
   if (m_CombinedModality->GetUltrasoundDevice()->GetIsFreezed())
-  {
-    if (!m_Timer->isActive()) // Activate Imaging
-    {
-      // if (m_Node) m_Node->ReleaseData();
-      if (m_CombinedModality.IsNull()) {
-        m_Timer->stop();
-        return;
-      }
-      m_Timer->start();
-    }  
-    
-    //device was already frozen so we need to delete all Spacing points because they need to be collected all at once
+  { //device was already frozen so we need to delete all Spacing points because they need to be collected all at once
     // no need to check if all four points are already collected, because if thats the case you can no longer click the Freeze Button
     m_SpacingPoints->Clear();
     m_Controls.m_SpacingPointsList->clear();
     m_SpacingPointsCount = 0;
     m_Controls.m_SpacingAddPoint->setEnabled(false);
     m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(false);
-
   }
   else
   {
@@ -1145,14 +1124,7 @@ void QmitkUltrasoundCalibration::OnCalculateSpacing()
   double xSpacing = 30 / xDistance;
   double ySpacing = 20 / yDistance;
 
-  m_Spacing[0] = xSpacing;
-  m_Spacing[1] = ySpacing;
-  m_Spacing[2] = 1;
-
-  MITK_INFO << m_Spacing;
-
-  //Make sure the new spacing is applied to the USVideoDeviceImages
-  m_OverrideSpacing = true;
+  m_CombinedModality->GetUltrasoundDevice()->SetSpacing(xSpacing, ySpacing);
 
   //Now that the spacing is set clear all stuff and return to Calibration
   m_SpacingPoints->Clear();
@@ -1166,7 +1138,9 @@ void QmitkUltrasoundCalibration::OnUSDepthChanged(const std::string& key, const 
   //whenever depth of USImage is changed the spacing should no longer be overwritten
   if (key == mitk::USDevice::GetPropertyKeys().US_PROPKEY_BMODE_DEPTH)
   {
-
-    m_OverrideSpacing = false;
+    if( m_CombinedModality.IsNotNull() )
+    {
+      m_CombinedModality->GetUltrasoundDevice()->SetOverrideSpacing(false);
+    }
   }
 }
