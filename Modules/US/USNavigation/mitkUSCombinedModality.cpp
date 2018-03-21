@@ -30,6 +30,7 @@ mitk::USCombinedModality::USCombinedModality( USDevice::Pointer usDevice,
 
 mitk::USCombinedModality::~USCombinedModality()
 {
+}
 
 }
 
