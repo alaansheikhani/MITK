@@ -143,10 +143,10 @@ namespace mitk {
      */
     mitkNewMessage2Macro(PropertyChanged, const std::string&, const std::string&)
 
-    /**
-     * \return keys for the microservice properties of ultrasound devices
-     */
-    static mitk::USDevice::PropertyKeys GetPropertyKeys();
+      /**
+       * \return keys for the microservice properties of ultrasound devices
+       */
+       static mitk::USDevice::PropertyKeys GetPropertyKeys();
 
     /**
     * \brief Default getter for the custom control interface.
@@ -313,18 +313,14 @@ namespace mitk {
     void SetComment(std::string comment);
 
     itkGetMacro(DeviceState, DeviceStates)
-    itkGetMacro(ServiceProperties, us::ServiceProperties)
+      itkGetMacro(ServiceProperties, us::ServiceProperties)
 
-    void GrabImage();
-
-    virtual void SetSpacing(double xSpacing, double ySpacing);
-
+      void GrabImage();
 
     void SetSpacing(double xSpacing, double ySpacing);
     void SetOverrideSpacing( bool overriding );
 
   protected:
-    itkSetMacro(Image, mitk::Image::Pointer);
 
     // Threading-Related
     itk::ConditionVariable::Pointer m_FreezeBarrier;
@@ -346,9 +342,7 @@ namespace mitk {
     static ITK_THREAD_RETURN_TYPE ConnectThread(void* pInfoStruct);
 
     std::vector<mitk::Image::Pointer> m_ImageVector;
-
-    // Variables to determine if spacing was calibrated and needs to be applied to the incoming images
-    mitk::Vector3D m_Spacing;
+    //mitk::Image::Pointer m_OutputImage;
 
     // Variables to determine if spacing was calibrated and needs to be applied to the incoming images
     mitk::Vector3D m_Spacing;
@@ -456,28 +450,17 @@ namespace mitk {
     */
     USDevice(mitk::USImageMetadata::Pointer metadata);
 
-    ~USDevice() override;
+    virtual ~USDevice();
 
     /**
     * \brief Grabs the next frame from the Video input.
     * This method is called internally, whenever Update() is invoked by an Output.
     */
-    void GenerateData() override;
+    virtual void GenerateData() override;
 
     std::string GetServicePropertyLabel();
 
     unsigned int m_NumberOfOutputs;
-
-    /**
-    * \brief Properties of the device's Microservice.
-    */
-    us::ServiceProperties m_ServiceProperties;
-
-        /**
-    *  \brief The device's ServiceRegistration object that allows to modify it's Microservice registraton details.
-    */
-    us::ServiceRegistration<Self> m_ServiceRegistration;
-
 
   private:
 
@@ -486,6 +469,17 @@ namespace mitk {
     std::string m_Comment;
 
     bool m_SpawnAcquireThread;
+
+    /**
+    *  \brief The device's ServiceRegistration object that allows to modify it's Microservice registraton details.
+    */
+    us::ServiceRegistration<Self> m_ServiceRegistration;
+
+    /**
+    * \brief Properties of the device's Microservice.
+    */
+    us::ServiceProperties m_ServiceProperties;
+
 
     bool m_UnregisteringStarted;
   };
