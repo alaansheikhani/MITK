@@ -99,4 +99,5 @@ set(MITK_PLUGINS
   org.mitk.gui.qt.matchpoint.manipulator:OFF
   org.mitk.gui.qt.preprocessing.resampling:OFF
   org.mitk.gui.qt.cest:OFF
+  org.mitk.gui.qt.ablationplanning:OFF
 )
