@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "ui_QmitkUSNewVideoDeviceWidgetControls.h"
 #include "mitkUSVideoDevice.h"
 #include "mitkUSIGTLDevice.h"
-#include "mitkUSDeviceReaderXML.h"
 
 //QT headers
 #include <QWidget>
@@ -43,8 +42,8 @@ public:
 
   static const std::string VIEW_ID;
 
-  QmitkUSNewVideoDeviceWidget(QWidget* p = nullptr, Qt::WindowFlags f1 = nullptr);
-  ~QmitkUSNewVideoDeviceWidget() override;
+  QmitkUSNewVideoDeviceWidget(QWidget* p = 0, Qt::WindowFlags f1 = 0);
+  virtual ~QmitkUSNewVideoDeviceWidget();
 
   /* @brief This method is part of the widget an needs not to be called seperately. */
   virtual void CreateQtPartControl(QWidget *parent);
@@ -96,7 +95,7 @@ signals:
 
   void OnProbeChanged(const QString & probename);
 
-  void OnDepthChanged(int depth, mitk::USProbe::Pointer probe);
+  void OnDepthChanged(int depth, mitk::USProbe* probe);
 
   void OnDepthChanged(const QString &depth);
 
@@ -135,9 +134,7 @@ protected:
 
   void AddProbesToDevice(mitk::USVideoDevice::Pointer device);
 
-  mitk::USProbe::Pointer CheckIfProbeExistsAlready(const std::string &probe);
-
-  void CollectUltrasoundVideoDeviceConfigInformation(mitk::USDeviceReaderXML::USVideoDeviceConfigData &config);
+  mitk::USProbe::Pointer CheckIfProbeExistsAlready(std::string &probe);
 
   /**
   * \brief Enables or disables the GUI elements of the spacing and cropping options.
