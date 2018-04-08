@@ -25,10 +25,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateAnd.h>
 #include <mitkNodePredicateOr.h>
 
+#include <mitkImage.h>
+
 #include "ui_QmitkAblationPlanningViewControls.h"
-
-
-
 
 /**
   \brief QmitkAblationPlanningView
@@ -62,6 +61,10 @@ public:
   virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part,
     const QList<mitk::DataNode::Pointer>& nodes) override;
 
+
+  void UnsetSegmentationImageGeometry();
+  void SetSegmentationImageGeometryInformation(mitk::Image* image);
+
   static const std::string VIEW_ID;
 
 protected:
@@ -77,11 +80,35 @@ protected:
 
   bool CheckForSameGeometry(const mitk::DataNode*, const mitk::DataNode*) const;
 
+  double CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2);
+
+  void CalculateAblationVolume(itk::Index<3> &center);
+
+  bool CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume);
+
+  void ProcessDirectNeighbourAblationZones(itk::Index<3> &center);
+
+  void CalculateUpperLowerXYZ(unsigned int &upperX, unsigned int &lowerX,
+                              unsigned int &upperY, unsigned int &lowerY,
+                              unsigned int &upperZ, unsigned int &lowerZ,
+                              unsigned int &pixelDirectionX,
+                              unsigned int &pixelDirectionY,
+                              unsigned int &pixelDirectionZ,
+                              itk::Index<3> &center );
+
+  std::vector<itk::Index<3>> CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3> &center);
+
+  bool IsAblationZoneAlreadyProcessed(itk::Index<3> &center);
+
+  void ResetSegmentationImage();
+
 protected slots:
   void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node);
   void OnVisiblePropertyChanged();
   void OnBinaryPropertyChanged();
-  void OnAblationStatingPointPushButtonClicked();
+  void OnAblationStartingPointPushButtonClicked();
+  void OnCalculateAblationZonesPushButtonClicked();
+  void OnAblationRadiusChanged(double radius);
 
 
 private:
@@ -101,6 +128,27 @@ private:
   mitk::Point3D m_AblationStartingPositionInWorldCoordinates;
   itk::Index<3> m_AblationStartingPositionIndexCoordinates;
   bool m_AblationStartingPositionValid;
+  double m_AblationRadius;
+  mitk::Image::Pointer m_SegmentationImage;
+
+  /*!
+  * \brief Vector storing the index coordinates of all circle centers of the ablation zones.
+  */
+  std::vector<itk::Index<3>> m_AblationZoneCenters;
+
+  /*!
+  * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
+  * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
+  * for remaining non-ablated tumor issue.
+  */
+  std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
+
+
+  /*!
+  \brief The 3D dimension of the segmentation image given in index size.
+  */
+  mitk::Vector3D m_ImageDimension;
+  mitk::Vector3D m_ImageSpacing;
 };
 
 #endif // QMITKABLATIONPLANNINGVIEW_H

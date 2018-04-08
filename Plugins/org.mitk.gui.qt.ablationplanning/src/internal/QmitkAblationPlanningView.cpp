@@ -32,12 +32,15 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateProperty.h>
 #include <mitkLabelSetImage.h>
 #include "mitkProperties.h"
+#include <mitkImagePixelReadAccessor.h>
+#include <mitkImagePixelWriteAccessor.h>
 
-
-
+#include <cmath>
 
 const std::string QmitkAblationPlanningView::VIEW_ID = "org.mitk.views.ablationplanning";
-
+const static short ABLATION_VALUE = 2;
+const static short TUMOR_NOT_YET_ABLATED = 1;
+const static short NO_TUMOR_ISSUE = 0;
 
 //=====================Konstruktor/Destruktor===================================
 QmitkAblationPlanningView::QmitkAblationPlanningView()
@@ -46,8 +49,11 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   m_DataSelectionChanged(false),
   m_AblationStartingPositionInWorldCoordinates(),
   m_AblationStartingPositionIndexCoordinates(),
-  m_AblationStartingPositionValid(false)
+  m_AblationStartingPositionValid(false),
+  m_AblationRadius(0.5)
 {
+  this->UnsetSegmentationImageGeometry();
+
   mitk::TNodePredicateDataType<mitk::Image>::Pointer isImage = mitk::TNodePredicateDataType<mitk::Image>::New();
   //mitk::NodePredicateDataType::Pointer isDwi = mitk::NodePredicateDataType::New("DiffusionImage");
   //mitk::NodePredicateDataType::Pointer isDti = mitk::NodePredicateDataType::New("TensorImage");
@@ -187,6 +193,28 @@ void QmitkAblationPlanningView::OnSelectionChanged(berry::IWorkbenchPart::Pointe
 
 }
 
+void QmitkAblationPlanningView::UnsetSegmentationImageGeometry()
+{
+  m_ImageDimension[0] = 0;
+  m_ImageDimension[1] = 0;
+  m_ImageDimension[2] = 0;
+
+  m_ImageSpacing[0] = 1;
+  m_ImageSpacing[1] = 1;
+  m_ImageSpacing[2] = 1;
+}
+
+void QmitkAblationPlanningView::SetSegmentationImageGeometryInformation(mitk::Image* image)
+{
+  m_ImageDimension[0] = image->GetDimension(0);
+  m_ImageDimension[1] = image->GetDimension(1);
+  m_ImageDimension[2] = image->GetDimension(2);
+
+  m_ImageSpacing[0] = image->GetGeometry()->GetSpacing()[0];
+  m_ImageSpacing[1] = image->GetGeometry()->GetSpacing()[1];
+  m_ImageSpacing[2] = image->GetGeometry()->GetSpacing()[2];
+}
+
 //==============================================================================
 
 void QmitkAblationPlanningView::SetFocus()
@@ -269,49 +297,345 @@ bool QmitkAblationPlanningView::CheckForSameGeometry(const mitk::DataNode *node1
   }
 }
 
+double QmitkAblationPlanningView::CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2)
+{
+
+  double x = (point1[0] - point2[0]) * m_ImageSpacing[0];
+  double y = (point1[1] - point2[1]) * m_ImageSpacing[1];
+  double z = (point1[2] - point2[2]) * m_ImageSpacing[2];
+
+  return sqrt(x*x + y*y + z*z);
+}
+
+void QmitkAblationPlanningView::CalculateAblationVolume(itk::Index<3>& center)
+{
+  MITK_INFO << "Calculate ablation volume for index: " << center;
+  if( m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull() )
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for( actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1 )
+    {
+      for(actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for( actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if( m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
+          {
+            unsigned short pixelValue =
+              imagePixelWriter.GetPixelByIndex(actualIndex)
+                + ABLATION_VALUE;
+
+            imagePixelWriter.SetPixelByIndex(actualIndex, pixelValue);
+          }
+        }
+      }
+    }
+    m_AblationZoneCenters.push_back(center);
+  }
+}
+
+bool QmitkAblationPlanningView::CheckVolumeForNonAblatedTissue(itk::Index<3>& centerOfVolume)
+{
+  if (m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if (m_AblationRadius >= this->CalculateScalarDistance(centerOfVolume, actualIndex))
+          {
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED )
+            {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+void QmitkAblationPlanningView::ProcessDirectNeighbourAblationZones(itk::Index<3>& center)
+{
+  MITK_INFO << "Process direct neighbour ablation zones for index: " << center;
+  std::vector<itk::Index<3>> indices =
+    this->CalculateIndicesOfDirectNeighbourAblationZones(center);
+
+  for( std::vector<itk::Index<3>>::iterator it = indices.begin();
+       it != indices.end(); ++it )
+  {
+    if( CheckVolumeForNonAblatedTissue(*it) )
+    {
+      this->CalculateAblationVolume(*it);
+    }
+  }
+
+  //Now, all 12 direct neighbour ablation zones are processed. So add the
+  // index of the given center to the processed ablation centers:
+  m_AblationZoneCentersProcessed.push_back(center);
+}
+
+void QmitkAblationPlanningView::CalculateUpperLowerXYZ( unsigned int &upperX,
+                                                        unsigned int &lowerX,
+                                                        unsigned int &upperY,
+                                                        unsigned int &lowerY,
+                                                        unsigned int &upperZ,
+                                                        unsigned int &lowerZ,
+                                                        unsigned int &pixelDirectionX,
+                                                        unsigned int &pixelDirectionY,
+                                                        unsigned int &pixelDirectionZ,
+                                                        itk::Index<3> &center )
+{
+  //Calculate upperX --> means vector in direction [1,0,0]:
+  if (center[0] + pixelDirectionX >= m_ImageDimension[0])
+  {
+    upperX = m_ImageDimension[0] - 1;
+  }
+  else
+  {
+    upperX = center[0] + pixelDirectionX;
+  }
+  //Calculate lowerX --> means vector in direction [-1,0,0]:
+  if (center[0] - pixelDirectionX < 0)
+  {
+    lowerX = 0;
+  }
+  else
+  {
+    lowerX = center[0] - pixelDirectionX;
+  }
+
+  //Calculate upperY --> means vector in direction [0,1,0]:
+  if (center[1] + pixelDirectionY >= m_ImageDimension[1])
+  {
+    upperY = m_ImageDimension[1] - 1;
+  }
+  else
+  {
+    upperY = center[1] + pixelDirectionY;
+  }
+  //Calculate lowerY --> means vector in direction [0,-1,0]:
+  if (center[1] - pixelDirectionY < 0)
+  {
+    lowerY = 0;
+  }
+  else
+  {
+    lowerY = center[1] - pixelDirectionY;
+  }
+
+  //Calculate upperZ --> means vector in direction [0,0,1]:
+  if (center[2] + pixelDirectionZ >= m_ImageDimension[2])
+  {
+    upperZ = m_ImageDimension[2] - 1;
+  }
+  else
+  {
+    upperZ = center[2] + pixelDirectionZ;
+  }
+
+  //Calculate lowerZ --> means vector in direction [0,0,-1]:
+  if (center[2] - pixelDirectionZ < 0)
+  {
+    lowerZ = 0;
+  }
+  else
+  {
+    lowerZ = center[2] - pixelDirectionZ;
+  }
+}
+
+std::vector<itk::Index<3>>
+  QmitkAblationPlanningView::
+  CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3>& center)
+{
+  MITK_INFO << "Calculate indices of direct neighbour ablation zones...";
+  std::vector<itk::Index<3>> directNeighbourAblationZones;
+  unsigned int pixelDirectionX = ceil(m_AblationRadius / m_ImageSpacing[0]);
+  unsigned int pixelDirectionY = ceil(m_AblationRadius / m_ImageSpacing[1]);
+  unsigned int pixelDirectionZ = ceil(m_AblationRadius / m_ImageSpacing[2]);
+
+  unsigned int upperX;
+  unsigned int lowerX;
+  unsigned int upperY;
+  unsigned int lowerY;
+  unsigned int upperZ;
+  unsigned int lowerZ;
+
+  itk::Index<3> newIndex;
+
+  this->CalculateUpperLowerXYZ( upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+                                pixelDirectionX, pixelDirectionY, pixelDirectionZ, center);
+
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [1, 1, 0]:
+  newIndex[0] = upperX;
+  newIndex[1] = upperY;
+  newIndex[2] = center[2];
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [1, 1, 0] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [-1, 1, 0]:
+  newIndex[0] = lowerX;
+  newIndex[1] = upperY;
+  newIndex[2] = center[2];
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [-1, 1, 0] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [1, -1, 0]:
+  newIndex[0] = upperX;
+  newIndex[1] = lowerY;
+  newIndex[2] = center[2];
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [1, -1, 0] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [-1, -1, 0]:
+  newIndex[0] = lowerX;
+  newIndex[1] = lowerY;
+  newIndex[2] = center[2];
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [-1, -1, 0] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [1, 0, 1]:
+  newIndex[0] = upperX;
+  newIndex[1] = center[1];
+  newIndex[2] = upperZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [1, 0, 1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [1, 0, -1]:
+  newIndex[0] = upperX;
+  newIndex[1] = center[1];
+  newIndex[2] = lowerZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [1, 0, -1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [-1, 0, 1]:
+  newIndex[0] = lowerX;
+  newIndex[1] = center[1];
+  newIndex[2] = upperZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [-1, 0, 1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [-1, 0, -1]:
+  newIndex[0] = lowerX;
+  newIndex[1] = center[1];
+  newIndex[2] = lowerZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [-1, 0, -1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [0, 1, 1]:
+  newIndex[0] = center[0];
+  newIndex[1] = upperY;
+  newIndex[2] = upperZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [0, 1, 1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [0, 1, -1]:
+  newIndex[0] = center[0];
+  newIndex[1] = upperY;
+  newIndex[2] = lowerZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [0, 1, -1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [0, -1, 1]:
+  newIndex[0] = center[0];
+  newIndex[1] = lowerY;
+  newIndex[2] = upperZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [0, -1, 1] --> " << newIndex;
+  //--------------------------------------------------------------------------------------
+  //Calculate position in vector direction [0, -1, -1]:
+  newIndex[0] = center[0];
+  newIndex[1] = lowerY;
+  newIndex[2] = lowerZ;
+
+  directNeighbourAblationZones.push_back(newIndex);
+  MITK_INFO << "Index for [0, -1, -1] --> " << newIndex;
+
+  return directNeighbourAblationZones;
+}
+
+bool QmitkAblationPlanningView::IsAblationZoneAlreadyProcessed(itk::Index<3>& center)
+{
+  for( std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
+       it != m_AblationZoneCentersProcessed.end(); ++it )
+  {
+    if (center == (*it))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void QmitkAblationPlanningView::ResetSegmentationImage()
+{
+  if( m_SegmentationImage.IsNotNull() )
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+            unsigned short pixelValue = imagePixelWriter.GetPixelByIndex(actualIndex);
+            pixelValue &= 1;
+            imagePixelWriter.SetPixelByIndex(actualIndex, pixelValue);
+        }
+      }
+    }
+  }
+}
+
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node)
 {
+  MITK_INFO << "OnSegmentationComboBoxSelectionChanged()";
   if (node == nullptr)
   {
     //this->UpdateWarningLabel(tr("Select or create a segmentation"));
     //this->SetToolSelectionBoxesEnabled(false);
+    this->UnsetSegmentationImageGeometry();
     return;
   }
 
-  mitk::DataNode* refNode = m_Controls.segmentationComboBox->GetSelectedNode();
+  mitk::DataNode* selectedSegmentation = m_Controls.segmentationComboBox->GetSelectedNode();
+  if (selectedSegmentation == nullptr)
+  {
+    return;
+  }
+
+  mitk::Image::Pointer segmentationImage = dynamic_cast<mitk::Image*>(selectedSegmentation->GetData());
+  if (segmentationImage.IsNull())
+  {
+    MITK_WARN << "Failed to cast selected segmentation node to mitk::Image*";
+    return;
+  }
+
+  this->SetSegmentationImageGeometryInformation(segmentationImage.GetPointer());
 
   //RenderingManagerReinitialized();
   //if (m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
   //  return;
-
-  mitk::DataStorage::SetOfObjects::ConstPointer possibleParents = this->GetDataStorage()->GetSources(node, m_IsAPatientImagePredicate);
-
-  if (possibleParents->Size() == 1)
-  {
-    mitk::DataNode* parentNode = possibleParents->ElementAt(0);
-
-    if (parentNode != refNode)
-    {
-      //this->UpdateWarningLabel(tr("The selected segmentation does not match with the selected patient image!"));
-      //this->SetToolSelectionBoxesEnabled(false);
-      //this->SetToolManagerSelection(nullptr, node);
-    }
-    else
-    {
-      //this->UpdateWarningLabel("");
-      //this->SetToolManagerSelection(refNode, node);
-    }
-  }
-  else if (refNode && this->CheckForSameGeometry(node, refNode))
-  {
-    //this->UpdateWarningLabel("");
-    //this->SetToolManagerSelection(refNode, node);
-  }
-  else if (!refNode || !this->CheckForSameGeometry(node, refNode))
-  {
-    //this->UpdateWarningLabel(tr("Please select or load the according patient image!"));
-  }
-
 
   /*mitk::IRenderWindowPart* renderWindowPart = this->GetRenderWindowPart();
   if (!renderWindowPart || !node->IsVisible(renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer()))
@@ -361,7 +685,7 @@ void QmitkAblationPlanningView::OnBinaryPropertyChanged()
   }
 }
 
-void QmitkAblationPlanningView::OnAblationStatingPointPushButtonClicked()
+void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
 {
 
   mitk::DataNode* selectedSegmentation = m_Controls.segmentationComboBox->GetSelectedNode();
@@ -371,9 +695,8 @@ void QmitkAblationPlanningView::OnAblationStatingPointPushButtonClicked()
     return;
   }
 
-
-  mitk::Image::Pointer segmentationImage = dynamic_cast<mitk::Image*>(selectedSegmentation->GetData());
-  if (segmentationImage.IsNull())
+  m_SegmentationImage = dynamic_cast<mitk::Image*>(selectedSegmentation->GetData());
+  if (m_SegmentationImage.IsNull())
   {
     MITK_WARN << "Failed to cast selected segmentation node to mitk::Image*";
     m_AblationStartingPositionValid = false;
@@ -384,12 +707,19 @@ void QmitkAblationPlanningView::OnAblationStatingPointPushButtonClicked()
   m_AblationStartingPositionInWorldCoordinates = this->GetRenderWindowPart()->GetSelectedPosition();
 
   //Calculate the index coordinates of the starting position:
-  segmentationImage->GetGeometry()->WorldToIndex( m_AblationStartingPositionInWorldCoordinates,
-                                                  m_AblationStartingPositionIndexCoordinates);
+  m_SegmentationImage->GetGeometry()->WorldToIndex( m_AblationStartingPositionInWorldCoordinates,
+                                                    m_AblationStartingPositionIndexCoordinates);
 
-  double pixelType = segmentationImage->GetPixelValueByIndex(m_AblationStartingPositionIndexCoordinates);
+  //___mitk::PixelType type = segmentationImage->GetPixelType();
+  //___MITK_INFO << "PixelTypeAsString: " << type.GetTypeAsString();
+
+  mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+  unsigned short pixelType = imagePixelWriter.GetPixelByIndex(m_AblationStartingPositionIndexCoordinates);
+  //imagePixelWriter.SetPixelByIndex(m_AblationStartingPositionIndexCoordinates, 5);
+
+
   MITK_INFO << "PixelType: " << pixelType;
-  if (pixelType < 1.0)
+  if (pixelType < 1)
   {
     m_AblationStartingPositionValid = false;
     m_Controls.ablationStartingPointLabel->setText("Position is not in the segmentation. Please choose a new starting position.");
@@ -404,9 +734,58 @@ void QmitkAblationPlanningView::OnAblationStatingPointPushButtonClicked()
   m_Controls.ablationStartingPointLabel->setText(text);
   MITK_INFO << "Set Ablation Startingposition to: " << m_AblationStartingPositionInWorldCoordinates;
   MITK_INFO << "Startingposition in Index: " << m_AblationStartingPositionIndexCoordinates;
-  MITK_INFO << "Spacing: " << segmentationImage->GetGeometry()->GetSpacing();
+  MITK_INFO << "Spacing: " << m_SegmentationImage->GetGeometry()->GetSpacing();
   //Get number of voxels in the three dimensions:
-  MITK_INFO << "Dimension: " << segmentationImage->GetDimension(0) << " " << segmentationImage->GetDimension(1) << " " << segmentationImage->GetDimension(2);
+  MITK_INFO << "Dimension: " << m_ImageDimension[0] << " " << m_ImageDimension[1] << " " << m_ImageDimension[2];
+
+  //segmentationImage->GetPixelValueByIndex()
+
+}
+
+void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
+{
+  if( !m_AblationStartingPositionValid )
+  {
+    QMessageBox msgBox;
+    msgBox.setText("Before calculating the ablation zones please choose a starting point for the ablation first.");
+    msgBox.exec();
+    return;
+  }
+  if (m_SegmentationImage.IsNull())
+  {
+    QMessageBox msgBox;
+    msgBox.setText("Cannot calculate ablation zones. SegmentationImage is NULL.");
+    msgBox.exec();
+    return;
+  }
+
+  m_AblationZoneCenters.clear();
+  m_AblationZoneCentersProcessed.clear();
+  this->ResetSegmentationImage();
+
+  this->CalculateAblationVolume(m_AblationStartingPositionIndexCoordinates);
+  this->ProcessDirectNeighbourAblationZones(m_AblationStartingPositionIndexCoordinates);
+  while( m_AblationZoneCenters.size() != m_AblationZoneCentersProcessed.size() )
+  {
+    for( int index = 0; index < m_AblationZoneCenters.size(); ++index )
+    {
+      if (!this->IsAblationZoneAlreadyProcessed(m_AblationZoneCenters.at(index)))
+      {
+        this->ProcessDirectNeighbourAblationZones(m_AblationZoneCenters.at(index));
+        break;
+      }
+    }
+
+  }
+  MITK_INFO << "Finished calculating ablation zones!";
+  MITK_INFO << "Total number of ablation zones: " << m_AblationZoneCentersProcessed.size();
+  mitk::RenderingManager::GetInstance()->Modified();
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
+
+void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)
+{
+  m_AblationRadius = radius;
 }
 
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
@@ -425,8 +804,11 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
   connect(m_Controls.segmentationComboBox, SIGNAL(OnSelectionChanged(const mitk::DataNode*)),
     this, SLOT(OnSegmentationComboBoxSelectionChanged(const mitk::DataNode*)));
   connect(m_Controls.ablationStartingPointPushButton, SIGNAL(clicked()),
-    this, SLOT(OnAblationStatingPointPushButtonClicked()));
-
+    this, SLOT(OnAblationStartingPointPushButtonClicked()));
+  connect(m_Controls.calculateAblationZonesPushButton, SIGNAL(clicked()),
+    this, SLOT(OnCalculateAblationZonesPushButtonClicked()));
+  connect(m_Controls.ablationRadiusSpinBox, SIGNAL(valueChanged(double)),
+    this, SLOT(OnAblationRadiusChanged(double)));
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())

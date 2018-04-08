@@ -61,6 +61,47 @@
     </widget>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="ablationRadiusLabel">
+       <property name="text">
+        <string>Ablation Radius (mm):</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="ablationRadiusSpinBox">
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="minimum">
+        <double>0.500000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>60.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="calculateAblationZonesPushButton">
+     <property name="text">
+      <string>Calculate Ablation Zones</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../../../../src/Modules/USUI/resources/USUI.qrc">
+       <normaloff>:/USUI/accept.png</normaloff>:/USUI/accept.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="spacer1">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -86,6 +127,8 @@
    <header location="global">QmitkDataStorageComboBox.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../../../../src/Modules/USUI/resources/USUI.qrc"/>
+ </resources>
  <connections/>
 </ui>
