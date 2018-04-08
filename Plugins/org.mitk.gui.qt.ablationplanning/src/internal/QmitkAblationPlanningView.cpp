@@ -361,6 +361,29 @@ bool QmitkAblationPlanningView::CheckVolumeForNonAblatedTissue(itk::Index<3>& ce
   return false;
 }
 
+bool QmitkAblationPlanningView::CheckImageForNonAblatedTissue()
+{
+  if (m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if (imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED)
+          {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
 void QmitkAblationPlanningView::ProcessDirectNeighbourAblationZones(itk::Index<3>& center)
 {
   MITK_INFO << "Process direct neighbour ablation zones for index: " << center;
@@ -457,9 +480,9 @@ std::vector<itk::Index<3>>
 {
   MITK_INFO << "Calculate indices of direct neighbour ablation zones...";
   std::vector<itk::Index<3>> directNeighbourAblationZones;
-  unsigned int pixelDirectionX = ceil(m_AblationRadius / m_ImageSpacing[0]);
-  unsigned int pixelDirectionY = ceil(m_AblationRadius / m_ImageSpacing[1]);
-  unsigned int pixelDirectionZ = ceil(m_AblationRadius / m_ImageSpacing[2]);
+  unsigned int pixelDirectionX = floor(m_AblationRadius / m_ImageSpacing[0]);
+  unsigned int pixelDirectionY = floor(m_AblationRadius / m_ImageSpacing[1]);
+  unsigned int pixelDirectionZ = floor(m_AblationRadius / m_ImageSpacing[2]);
 
   unsigned int upperX;
   unsigned int lowerX;
@@ -781,6 +804,11 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   MITK_INFO << "Total number of ablation zones: " << m_AblationZoneCentersProcessed.size();
   mitk::RenderingManager::GetInstance()->Modified();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+
+  if (this->CheckImageForNonAblatedTissue())
+  {
+    MITK_WARN << "There is still non ablated tumor tissue.";
+  }
 }
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)

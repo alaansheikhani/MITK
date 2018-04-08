@@ -86,6 +86,8 @@ protected:
 
   bool CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume);
 
+  bool CheckImageForNonAblatedTissue();
+
   void ProcessDirectNeighbourAblationZones(itk::Index<3> &center);
 
   void CalculateUpperLowerXYZ(unsigned int &upperX, unsigned int &lowerX,
