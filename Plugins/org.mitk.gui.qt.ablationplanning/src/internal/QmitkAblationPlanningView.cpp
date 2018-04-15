@@ -35,6 +35,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkImagePixelWriteAccessor.h>
 
+#include <vtkSphereSource.h>
+#include <vtkAppendPolyData.h>
+#include <mitkSurface.h>
+
 #include <cmath>
 
 const std::string QmitkAblationPlanningView::VIEW_ID = "org.mitk.views.ablationplanning";
@@ -609,6 +613,112 @@ bool QmitkAblationPlanningView::IsAblationZoneAlreadyProcessed(itk::Index<3>& ce
   return false;
 }
 
+void QmitkAblationPlanningView::DetectNotNeededAblationVolume()
+{
+  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    if (!this->CheckIfAblationVolumeIsNeeded(m_AblationZoneCentersProcessed.at(index)))
+    {
+
+    }
+  }
+}
+
+bool QmitkAblationPlanningView::CheckIfAblationVolumeIsNeeded(itk::Index<3>& center)
+{
+  if( m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull() )
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if (m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
+          {
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) - ABLATION_VALUE == TUMOR_NOT_YET_ABLATED )
+            {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+void QmitkAblationPlanningView::RemoveAblationVolume(itk::Index<3>& center)
+{
+  if (m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if (m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
+          {
+            unsigned short pixelValue = imagePixelWriter.GetPixelByIndex(actualIndex);
+            pixelValue -= ABLATION_VALUE;
+            imagePixelWriter.SetPixelByIndex(actualIndex, pixelValue);
+          }
+        }
+      }
+    }
+  }
+}
+
+void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
+{
+  for( int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    mitk::DataNode::Pointer m_DataNode = mitk::DataNode::New();
+
+    mitk::Surface::Pointer mySphere = mitk::Surface::New();
+
+    vtkSmartPointer<vtkSphereSource> vtkSphere = vtkSmartPointer<vtkSphereSource>::New();
+    vtkSmartPointer<vtkAppendPolyData> appendPolyData = vtkSmartPointer<vtkAppendPolyData>::New();
+    vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
+    mitk::Point3D centerInWorldCoordinates;
+
+    m_SegmentationImage->GetGeometry()->IndexToWorld(
+                                          m_AblationZoneCentersProcessed.at(index),
+                                          centerInWorldCoordinates );
+
+    //Center
+    vtkSphere->SetRadius(m_AblationRadius);
+    vtkSphere->SetCenter(centerInWorldCoordinates[0], centerInWorldCoordinates[1], centerInWorldCoordinates[2]);
+    vtkSphere->Update();
+
+    appendPolyData->AddInputData(vtkSphere->GetOutput());
+
+    mySphere->SetVtkPolyData(vtkSphere->GetOutput());
+
+    m_DataNode->SetData(mySphere);
+    QString name;
+    if (index == 0)
+    {
+      name = QString("Start-Ablationsvolumen");
+    }
+    else
+    {
+      name = QString("Kugel_%1").arg(index);
+    }
+
+    m_DataNode->SetName(name.toStdString());
+    this->GetDataStorage()->Add(m_DataNode);
+  }
+
+  this->GetDataStorage()->Modified();
+  this->RequestRenderWindowUpdate();
+}
+
 void QmitkAblationPlanningView::ResetSegmentationImage()
 {
   if( m_SegmentationImage.IsNotNull() )
@@ -790,6 +900,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->ProcessDirectNeighbourAblationZones(m_AblationStartingPositionIndexCoordinates);
   while( m_AblationZoneCenters.size() != m_AblationZoneCentersProcessed.size() )
   {
+    MITK_INFO << "Size1: " << m_AblationZoneCenters.size() << " Size2: " << m_AblationZoneCentersProcessed.size();
     for( int index = 0; index < m_AblationZoneCenters.size(); ++index )
     {
       if (!this->IsAblationZoneAlreadyProcessed(m_AblationZoneCenters.at(index)))
@@ -809,6 +920,9 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   {
     MITK_WARN << "There is still non ablated tumor tissue.";
   }
+
+  this->CreateSpheresOfAblationVolumes();
+
 }
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)

@@ -102,6 +102,14 @@ protected:
 
   bool IsAblationZoneAlreadyProcessed(itk::Index<3> &center);
 
+  void DetectNotNeededAblationVolume();
+
+  bool CheckIfAblationVolumeIsNeeded(itk::Index<3> &center);
+
+  void RemoveAblationVolume(itk::Index<3> &center);
+
+  void CreateSpheresOfAblationVolumes();
+
   void ResetSegmentationImage();
 
 protected slots:
