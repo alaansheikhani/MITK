@@ -615,12 +615,22 @@ bool QmitkAblationPlanningView::IsAblationZoneAlreadyProcessed(itk::Index<3>& ce
 
 void QmitkAblationPlanningView::DetectNotNeededAblationVolume()
 {
+  std::vector<int> indicesRemoved;
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     if (!this->CheckIfAblationVolumeIsNeeded(m_AblationZoneCentersProcessed.at(index)))
     {
-
+      this->RemoveAblationVolume(m_AblationZoneCentersProcessed.at(index));
+      indicesRemoved.push_back(index);
     }
+  }
+  for( int index = indicesRemoved.size() - 1; index >= 0; --index )
+  {
+    std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
+    m_AblationZoneCentersProcessed.erase(it + indicesRemoved.at(index));
+    std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
+    m_AblationZoneCenters.erase(it2 + indicesRemoved.at(index));
+    MITK_INFO << "Removed Ablation zone at index position: " << indicesRemoved.at(index);
   }
 }
 
@@ -913,6 +923,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
   MITK_INFO << "Finished calculating ablation zones!";
   MITK_INFO << "Total number of ablation zones: " << m_AblationZoneCentersProcessed.size();
+
+  this->DetectNotNeededAblationVolume();
 
   m_Controls.numberAblationVoluminaLabel->setText(QString::number(m_AblationZoneCentersProcessed.size()));
   mitk::RenderingManager::GetInstance()->Modified();
