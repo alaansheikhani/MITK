@@ -913,6 +913,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
   MITK_INFO << "Finished calculating ablation zones!";
   MITK_INFO << "Total number of ablation zones: " << m_AblationZoneCentersProcessed.size();
+
+  m_Controls.numberAblationVoluminaLabel->setText(QString::number(m_AblationZoneCentersProcessed.size()));
   mitk::RenderingManager::GetInstance()->Modified();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 
