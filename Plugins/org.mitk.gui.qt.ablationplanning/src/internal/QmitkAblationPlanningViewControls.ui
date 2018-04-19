@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>222</width>
+    <width>342</width>
     <height>331</height>
    </rect>
   </property>
@@ -115,6 +115,74 @@
      </item>
      <item row="0" column="1">
       <widget class="QLabel" name="numberAblationVoluminaLabel">
+       <property name="styleSheet">
+        <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="numberTumorVolumeLabel">
+       <property name="styleSheet">
+        <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="tumorVolumeLabel">
+       <property name="text">
+        <string>Tumor Volume (in mm³):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="tumorAndMarginVolumeLabel">
+       <property name="text">
+        <string>Tumor Volume + Safety Margin (in mm³):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="numberTumorAndMarginVolumeLabel">
+       <property name="styleSheet">
+        <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="ablationVolumeLabel">
+       <property name="text">
+        <string>Total Ablation Volume (in mm³):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLabel" name="numberAblationVolumeLabel">
+       <property name="styleSheet">
+        <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="volumeAblatedTwoAndMoreLabel">
+       <property name="text">
+        <string>Volume ablated 2-/3-/4-times (in mm³):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLabel" name="numberVolumeAblatedTwoAndMoreLabel">
        <property name="styleSheet">
         <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
        </property>
