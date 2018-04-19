@@ -116,84 +116,40 @@ void QmitkAblationPlanningView::OnSelectionChanged(mitk::DataNode * node)
 void QmitkAblationPlanningView::OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes)
 {
   MITK_INFO << "OnSelectionChanged()";
-  if (nodes.size() != 0)
+
+  if (nodes.size() == 1)
   {
-    std::string markerName = "Position";
-    unsigned int numberOfNodes = nodes.size();
-    std::string nodeName = nodes.at(0)->GetName();
-    if ((numberOfNodes == 1) && (nodeName.find(markerName) == 0))
+    mitk::DataNode::Pointer selectedNode = nodes.at(0);
+    if (selectedNode.IsNull())
     {
-      //OnContourMarkerSelected(nodes.at(0));
       return;
     }
-  }
 
-    if (nodes.size() == 1)
+    mitk::Image::Pointer selectedImage = dynamic_cast<mitk::Image*>(selectedNode->GetData());
+    if (selectedImage.IsNull())
     {
-      mitk::DataNode::Pointer selectedNode = nodes.at(0);
-      if (selectedNode.IsNull())
-      {
-        return;
-      }
-
-      mitk::Image::Pointer selectedImage = dynamic_cast<mitk::Image*>(selectedNode->GetData());
-      if (selectedImage.IsNull())
-      {
-        return;
-      }
-
-      if (m_IsASegmentationImagePredicate->CheckNode(selectedNode))
-      {
-        // set all nodes to invisible
-        mitk::DataStorage::SetOfObjects::ConstPointer allImages = GetDataStorage()->GetSubset(m_IsOfTypeImagePredicate);
-        for (mitk::DataStorage::SetOfObjects::const_iterator iter = allImages->begin(); iter != allImages->end(); ++iter)
-        {
-          (*iter)->SetVisibility(false);
-        }
-
-        // if a segmentation is selected find a possible patient image
-        mitk::DataStorage::SetOfObjects::ConstPointer sources = GetDataStorage()->GetSources(selectedNode, m_IsAPatientImagePredicate);
-        mitk::DataNode::Pointer refNode;
-        if (sources->Size() != 0)
-        {
-          // found one or more sources - use the first one
-          refNode = sources->ElementAt(0);
-          refNode->SetVisibility(true);
-          selectedNode->SetVisibility(true);
-        }
-        /*else
-        {
-          // did not find a source / patient image, check all images and compare geometry
-          mitk::DataStorage::SetOfObjects::ConstPointer possiblePatientImages = GetDataStorage()->GetSubset(m_IsAPatientImagePredicate);
-          for (mitk::DataStorage::SetOfObjects::ConstIterator iter = possiblePatientImages->Begin(); iter != possiblePatientImages->End(); ++iter)
-          {
-            refNode = iter->Value();
-
-            if (CheckForSameGeometry(selectedNode, iter->Value()))
-            {
-              refNode->SetVisibility(true);
-              selectedNode->SetVisibility(true);
-              SetToolManagerSelection(refNode, selectedNode);
-
-              // doing this we can assure that the segmentation is always visible if the segmentation and the patient image are at the
-              // same level in the data manager
-              int layer(10);
-              refNode->GetIntProperty("layer", layer);
-              layer++;
-              selectedNode->SetProperty("layer", mitk::IntProperty::New(layer));
-              return;
-            }
-          }
-          // did not find a source / patient image with the same geometry
-          SetToolManagerSelection(nullptr, selectedNode);
-        }*/
-        mitk::RenderingManager::GetInstance()->InitializeViews(selectedNode->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true);
-      }
-      else
-      {
-        MITK_WARN << "SelectedNode is no segmentation node";
-      }
+      return;
     }
+
+    if (m_IsASegmentationImagePredicate->CheckNode(selectedNode))
+    {
+      // if a segmentation is selected find a possible patient image
+      mitk::DataStorage::SetOfObjects::ConstPointer sources = GetDataStorage()->GetSources(selectedNode, m_IsAPatientImagePredicate);
+      mitk::DataNode::Pointer refNode;
+      if (sources->Size() != 0)
+      {
+        // found one or more sources - use the first one
+        refNode = sources->ElementAt(0);
+        refNode->SetVisibility(true);
+        selectedNode->SetVisibility(true);
+      }
+      mitk::RenderingManager::GetInstance()->InitializeViews(selectedNode->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true);
+    }
+    else
+    {
+      MITK_WARN << "SelectedNode is no segmentation node";
+    }
+  }
 
 }
 
@@ -755,8 +711,6 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
   MITK_INFO << "OnSegmentationComboBoxSelectionChanged()";
   if (node == nullptr)
   {
-    //this->UpdateWarningLabel(tr("Select or create a segmentation"));
-    //this->SetToolSelectionBoxesEnabled(false);
     this->UnsetSegmentationImageGeometry();
     return;
   }
@@ -791,25 +745,7 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
 void QmitkAblationPlanningView::OnVisiblePropertyChanged()
 {
   MITK_INFO << "OnVisiblePropertyChanged()";
-  mitk::DataNode* selectedNode = m_Controls.segmentationComboBox->GetSelectedNode();
-  if (!selectedNode)
-  {
-    return;
-  }
 
-  //mitk::IRenderWindowPart* renderWindowPart = this->GetRenderWindowPart();
-  //bool selectedNodeIsVisible = renderWindowPart && selectedNode->IsVisible(renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer());
-
-  /*if (!selectedNodeIsVisible)
-  {
-    this->SetToolSelectionBoxesEnabled(false);
-    this->UpdateWarningLabel(tr("The selected segmentation is currently not visible!"));
-  }
-  else
-  {
-    this->SetToolSelectionBoxesEnabled(true);
-    this->UpdateWarningLabel("");
-  }*/
 }
 
 void QmitkAblationPlanningView::OnBinaryPropertyChanged()
