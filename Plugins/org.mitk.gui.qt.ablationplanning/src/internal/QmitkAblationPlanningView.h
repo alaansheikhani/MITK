@@ -110,12 +110,21 @@ protected:
 
   void CreateSpheresOfAblationVolumes();
 
+  void DeleteAllSpheres();
+
   void ResetSegmentationImage();
+
+  void ResetSafetyMargin();
+
+  bool CheckAllVonNeumannNeighbourPixelsAreTumorTissue(itk::Index<3> &pixel);
+
+  void CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3> &pixel);
 
 protected slots:
   void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node);
   void OnVisiblePropertyChanged();
   void OnBinaryPropertyChanged();
+  void OnCalculateSafetyMargin();
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
   void OnAblationRadiusChanged(double radius);

@@ -41,12 +41,40 @@
     </widget>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="safetyMarginLabel">
+       <property name="text">
+        <string>Safety Margin (mm)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="safetyMarginSpinBox">
+       <property name="maximum">
+        <number>20</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="calculateSafetyMarginPushButton">
+     <property name="text">
+      <string>Calculate Safety Margin</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="ablationStartingPointPushButton">
      <property name="toolTip">
       <string>Do image processing</string>
      </property>
      <property name="text">
-      <string>Set Ablation Starting Point</string>
+      <string>Choose Ablation Starting Point</string>
      </property>
     </widget>
    </item>

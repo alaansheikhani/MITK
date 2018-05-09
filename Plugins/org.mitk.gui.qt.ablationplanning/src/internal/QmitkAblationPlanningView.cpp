@@ -45,6 +45,7 @@ const std::string QmitkAblationPlanningView::VIEW_ID = "org.mitk.views.ablationp
 const static short ABLATION_VALUE = 2;
 const static short TUMOR_NOT_YET_ABLATED = 1;
 const static short NO_TUMOR_ISSUE = 0;
+const static short SAFETY_MARGIN = 256;
 
 //=====================Konstruktor/Destruktor===================================
 QmitkAblationPlanningView::QmitkAblationPlanningView()
@@ -674,7 +675,7 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     }
     else
     {
-      name = QString("Kugel_%1").arg(index);
+      name = QString("Kugel_%1").arg(index + 1);
     }
 
     m_DataNode->SetName(name.toStdString());
@@ -684,6 +685,31 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
   this->GetDataStorage()->Modified();
   this->RequestRenderWindowUpdate();
 }
+
+void QmitkAblationPlanningView::DeleteAllSpheres()
+{
+  for( int index = m_AblationZoneCentersProcessed.size(); index > 0; --index )
+  {
+    QString name;
+    if( index > 1 )
+    {
+      name = QString("Kugel_%1").arg(index);
+    }
+    else
+    {
+      name = QString("Start-Ablationsvolumen");
+    }
+
+    mitk::DataNode::Pointer dataNode = this->GetDataStorage()->GetNamedNode(name.toStdString());
+    if( dataNode.IsNotNull() )
+    {
+      this->GetDataStorage()->Remove(dataNode);
+    }
+  }
+  this->GetDataStorage()->Modified();
+  this->RequestRenderWindowUpdate();
+}
+
 
 void QmitkAblationPlanningView::ResetSegmentationImage()
 {
@@ -698,8 +724,150 @@ void QmitkAblationPlanningView::ResetSegmentationImage()
         for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
         {
             unsigned short pixelValue = imagePixelWriter.GetPixelByIndex(actualIndex);
-            pixelValue &= 1;
+            pixelValue &= (SAFETY_MARGIN + TUMOR_NOT_YET_ABLATED);
             imagePixelWriter.SetPixelByIndex(actualIndex, pixelValue);
+        }
+      }
+    }
+  }
+}
+
+void QmitkAblationPlanningView::ResetSafetyMargin()
+{
+  if (m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          unsigned short pixelValue = imagePixelWriter.GetPixelByIndex(actualIndex);
+          pixelValue &= (SAFETY_MARGIN - 1);
+          imagePixelWriter.SetPixelByIndex(actualIndex, pixelValue);
+        }
+      }
+    }
+  }
+}
+
+bool QmitkAblationPlanningView::CheckAllVonNeumannNeighbourPixelsAreTumorTissue(itk::Index<3> &pixel)
+{
+  if (m_SegmentationImage.IsNotNull())
+  {
+    //MITK_INFO << "CheckAllVonNeumannNeighbourPixels... " << pixel[0] << " " << pixel[1] << " " << pixel[2];
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    if (imagePixelWriter.GetPixelByIndex(pixel) != TUMOR_NOT_YET_ABLATED)
+    {
+      //If true --> actual pixel is no tumor tissue, so skip this pixel:
+      return true;
+    }
+
+    unsigned int xLower = pixel[0];
+    if( xLower != 0 )
+      --xLower;
+
+    unsigned int xUpper = pixel[0];
+    if( xUpper != m_ImageDimension[0] - 1 )
+      ++xUpper;
+
+    unsigned int yLower = pixel[1];
+    if (yLower != 0)
+      --yLower;
+
+    unsigned int yUpper = pixel[1];
+    if (yUpper != m_ImageDimension[1] - 1)
+      ++yUpper;
+
+    unsigned int zLower = pixel[2];
+    if (zLower != 0)
+      --zLower;
+
+    unsigned int zUpper = pixel[2];
+    if (zUpper != m_ImageDimension[2] - 1)
+      ++zUpper;
+
+    itk::Index<3> pixelXLower = pixel;
+    pixelXLower[0] = xLower;
+    itk::Index<3> pixelXUpper = pixel;
+    pixelXUpper[0] = xUpper;
+
+    itk::Index<3> pixelYLower = pixel;
+    pixelYLower[1] = yLower;
+    itk::Index<3> pixelYUpper = pixel;
+    pixelYUpper[1] = yUpper;
+
+    itk::Index<3> pixelZLower = pixel;
+    pixelZLower[2] = zLower;
+    itk::Index<3> pixelZUpper = pixel;
+    pixelZUpper[2] = zUpper;
+
+    if( imagePixelWriter.GetPixelByIndex(pixelXLower) != TUMOR_NOT_YET_ABLATED )
+    {
+      return false;
+    }
+    if (imagePixelWriter.GetPixelByIndex(pixelYLower) != TUMOR_NOT_YET_ABLATED)
+    {
+      return false;
+    }
+    if (imagePixelWriter.GetPixelByIndex(pixelZLower) != TUMOR_NOT_YET_ABLATED)
+    {
+      return false;
+    }
+    if (imagePixelWriter.GetPixelByIndex(pixelXUpper) != TUMOR_NOT_YET_ABLATED)
+    {
+      return false;
+    }
+    if (imagePixelWriter.GetPixelByIndex(pixelYUpper) != TUMOR_NOT_YET_ABLATED)
+    {
+      return false;
+    }
+    if (imagePixelWriter.GetPixelByIndex(pixelZUpper) != TUMOR_NOT_YET_ABLATED)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+void QmitkAblationPlanningView::CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3>& pixel)
+{
+  if( m_SegmentationImage.IsNotNull() )
+  {
+    //MITK_INFO << "CreateSafetyMarginInfluenceAreaOfPixel: " << pixel[0]  << " " << pixel[1] << " " << pixel[2];
+    double margin = m_Controls.safetyMarginSpinBox->value();
+    unsigned int pixelDirectionX = floor(margin / m_ImageSpacing[0]);
+    unsigned int pixelDirectionY = floor(margin / m_ImageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(margin / m_ImageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    this->CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+       pixelDirectionX, pixelDirectionY, pixelDirectionZ, pixel);
+
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
+        {
+          if( margin >= this->CalculateScalarDistance(pixel, actualIndex) )
+          {
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) != TUMOR_NOT_YET_ABLATED &&
+                imagePixelWriter.GetPixelByIndex(actualIndex) != SAFETY_MARGIN )
+            {
+              imagePixelWriter.SetPixelByIndex(actualIndex, SAFETY_MARGIN );
+            }
+          }
         }
       }
     }
@@ -712,12 +880,15 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
   if (node == nullptr)
   {
     this->UnsetSegmentationImageGeometry();
+    m_SegmentationImage = nullptr;
     return;
   }
 
   mitk::DataNode* selectedSegmentation = m_Controls.segmentationComboBox->GetSelectedNode();
   if (selectedSegmentation == nullptr)
   {
+    this->UnsetSegmentationImageGeometry();
+    m_SegmentationImage = nullptr;
     return;
   }
 
@@ -725,21 +896,14 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
   if (segmentationImage.IsNull())
   {
     MITK_WARN << "Failed to cast selected segmentation node to mitk::Image*";
+    this->UnsetSegmentationImageGeometry();
+    m_SegmentationImage = nullptr;
     return;
   }
 
+  m_SegmentationImage = segmentationImage;
   this->SetSegmentationImageGeometryInformation(segmentationImage.GetPointer());
 
-  //RenderingManagerReinitialized();
-  //if (m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
-  //  return;
-
-  /*mitk::IRenderWindowPart* renderWindowPart = this->GetRenderWindowPart();
-  if (!renderWindowPart || !node->IsVisible(renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer()))
-  {
-    this->UpdateWarningLabel(tr("The selected segmentation is currently not visible!"));
-    this->SetToolSelectionBoxesEnabled(false);
-  }*/
 }
 
 void QmitkAblationPlanningView::OnVisiblePropertyChanged()
@@ -761,6 +925,40 @@ void QmitkAblationPlanningView::OnBinaryPropertyChanged()
       m_Controls.segmentationComboBox->RemoveNode(node);
       return;
     }
+  }
+}
+
+void QmitkAblationPlanningView::OnCalculateSafetyMargin()
+{
+  if(m_SegmentationImage.IsNotNull() && m_Controls.safetyMarginSpinBox->value() > 0.0 )
+  {
+    MITK_INFO << "Calculating safety margin is in progress...";
+    //Reset the old calculated safety margin if the user calculated a safety margin before:
+    this->ResetSafetyMargin();
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          // Check, if von-Neumann neighbour elements are tumor tissue or not:
+          if( !this->CheckAllVonNeumannNeighbourPixelsAreTumorTissue(actualIndex) )
+          {
+            this->CreateSafetyMarginInfluenceAreaOfPixel(actualIndex);
+          }
+        }
+      }
+    }
+    MITK_INFO << "Finished calculating safety margin.";
+    mitk::RenderingManager::GetInstance()->Modified();
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
+  else if(m_Controls.safetyMarginSpinBox->value() > 0.0)
+  {
+    QMessageBox msgBox;
+    msgBox.setText("Cannot calculate safety margin: No segmentation image was chosen.");
+    msgBox.exec();
   }
 }
 
@@ -841,6 +1039,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_AblationZoneCenters.clear();
   m_AblationZoneCentersProcessed.clear();
   this->ResetSegmentationImage();
+  this->DeleteAllSpheres();
 
   this->CalculateAblationVolume(m_AblationStartingPositionIndexCoordinates);
   this->ProcessDirectNeighbourAblationZones(m_AblationStartingPositionIndexCoordinates);
@@ -901,6 +1100,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnCalculateAblationZonesPushButtonClicked()));
   connect(m_Controls.ablationRadiusSpinBox, SIGNAL(valueChanged(double)),
     this, SLOT(OnAblationRadiusChanged(double)));
+  connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()),
+    this, SLOT(OnCalculateSafetyMargin()));
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())
