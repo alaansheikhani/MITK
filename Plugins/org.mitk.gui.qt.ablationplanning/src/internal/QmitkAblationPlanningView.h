@@ -80,7 +80,7 @@ protected:
 
   bool CheckForSameGeometry(const mitk::DataNode*, const mitk::DataNode*) const;
 
-  void CopyTemporaryAblationZoneDitribution();
+  void CopyTemporaryAblationZoneDistribution();
 
   void FillVectorContainingIndicesOfTumorTissueSafetyMargin();
 
@@ -117,6 +117,10 @@ protected:
   bool CheckIfAblationVolumeIsNeeded(itk::Index<3> &center);
 
   void RemoveAblationVolume(itk::Index<3> &center);
+
+  void RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center, std::vector<itk::Index<3>> &tumorSafetyMarginPixels);
+
+  itk::Index<3> SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels);
 
   void CreateSpheresOfAblationVolumes();
 
