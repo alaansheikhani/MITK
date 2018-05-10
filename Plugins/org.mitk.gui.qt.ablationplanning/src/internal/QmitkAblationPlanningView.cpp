@@ -228,8 +228,6 @@ void QmitkAblationPlanningView::NodeAdded(const mitk::DataNode * node)
   itk::SimpleMemberCommand<QmitkAblationPlanningView>::Pointer command2 = itk::SimpleMemberCommand<QmitkAblationPlanningView>::New();
   command2->SetCallbackFunction(this, &QmitkAblationPlanningView::OnBinaryPropertyChanged);
   m_BinaryPropertyObserverTags.insert(std::pair<mitk::DataNode*, unsigned long>(const_cast<mitk::DataNode*>(node), node->GetProperty("binary")->AddObserver(itk::ModifiedEvent(), command2)));
-
-  //ApplyDisplayOptions(const_cast<mitk::DataNode*>(node));
 }
 
 bool QmitkAblationPlanningView::CheckForSameGeometry(const mitk::DataNode *node1, const mitk::DataNode *node2) const
@@ -310,7 +308,8 @@ bool QmitkAblationPlanningView::CheckVolumeForNonAblatedTissue(itk::Index<3>& ce
         {
           if (m_AblationRadius >= this->CalculateScalarDistance(centerOfVolume, actualIndex))
           {
-            if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED )
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED ||
+                imagePixelWriter.GetPixelByIndex(actualIndex) == SAFETY_MARGIN )
             {
               return true;
             }
@@ -334,7 +333,8 @@ bool QmitkAblationPlanningView::CheckImageForNonAblatedTissue()
       {
         for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
         {
-          if (imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED)
+          if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED ||
+              imagePixelWriter.GetPixelByIndex(actualIndex) == SAFETY_MARGIN)
           {
             return true;
           }
@@ -605,7 +605,8 @@ bool QmitkAblationPlanningView::CheckIfAblationVolumeIsNeeded(itk::Index<3>& cen
         {
           if (m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
           {
-            if( imagePixelWriter.GetPixelByIndex(actualIndex) - ABLATION_VALUE == TUMOR_NOT_YET_ABLATED )
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) - ABLATION_VALUE == TUMOR_NOT_YET_ABLATED
+                || imagePixelWriter.GetPixelByIndex(actualIndex) - ABLATION_VALUE == SAFETY_MARGIN )
             {
               return true;
             }
@@ -987,13 +988,8 @@ void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
   m_SegmentationImage->GetGeometry()->WorldToIndex( m_AblationStartingPositionInWorldCoordinates,
                                                     m_AblationStartingPositionIndexCoordinates);
 
-  //___mitk::PixelType type = segmentationImage->GetPixelType();
-  //___MITK_INFO << "PixelTypeAsString: " << type.GetTypeAsString();
-
   mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
   unsigned short pixelType = imagePixelWriter.GetPixelByIndex(m_AblationStartingPositionIndexCoordinates);
-  //imagePixelWriter.SetPixelByIndex(m_AblationStartingPositionIndexCoordinates, 5);
-
 
   MITK_INFO << "PixelType: " << pixelType;
   if (pixelType < 1)
@@ -1014,8 +1010,6 @@ void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
   MITK_INFO << "Spacing: " << m_SegmentationImage->GetGeometry()->GetSpacing();
   //Get number of voxels in the three dimensions:
   MITK_INFO << "Dimension: " << m_ImageDimension[0] << " " << m_ImageDimension[1] << " " << m_ImageDimension[2];
-
-  //segmentationImage->GetPixelValueByIndex()
 
 }
 
