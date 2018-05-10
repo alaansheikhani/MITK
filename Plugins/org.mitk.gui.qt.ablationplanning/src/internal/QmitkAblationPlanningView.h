@@ -80,11 +80,19 @@ protected:
 
   bool CheckForSameGeometry(const mitk::DataNode*, const mitk::DataNode*) const;
 
+  void FillVectorContainingIndicesOfTumorTissueSafetyMargin();
+
+  void FindAblationStartingPosition();
+
   double CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2);
 
   void CalculateAblationVolume(itk::Index<3> &center);
 
   bool CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume);
+
+  bool CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(double &radius, itk::Index<3> &centerOfVolume);
+
+  double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point);
 
   bool CheckImageForNonAblatedTissue();
 
@@ -146,7 +154,7 @@ private:
 
   mitk::Point3D m_AblationStartingPositionInWorldCoordinates;
   itk::Index<3> m_AblationStartingPositionIndexCoordinates;
-  bool m_AblationStartingPositionValid;
+  bool m_ManualAblationStartingPositionSet;
   double m_AblationRadius;
   mitk::Image::Pointer m_SegmentationImage;
 
@@ -161,6 +169,12 @@ private:
   * for remaining non-ablated tumor issue.
   */
   std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
+
+  /*!
+  * \brief Vector storing the index coordinates of all pixels, which are tumor tissue or
+  * safety margin.
+  */
+  std::vector<itk::Index<3>> m_TumorTissueSafetyMarginIndices;
 
 
   /*!

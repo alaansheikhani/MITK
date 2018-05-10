@@ -54,7 +54,7 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   m_DataSelectionChanged(false),
   m_AblationStartingPositionInWorldCoordinates(),
   m_AblationStartingPositionIndexCoordinates(),
-  m_AblationStartingPositionValid(false),
+  m_ManualAblationStartingPositionSet(false),
   m_AblationRadius(0.5)
 {
   this->UnsetSegmentationImageGeometry();
@@ -256,6 +256,93 @@ bool QmitkAblationPlanningView::CheckForSameGeometry(const mitk::DataNode *node1
   }
 }
 
+void QmitkAblationPlanningView::FillVectorContainingIndicesOfTumorTissueSafetyMargin()
+{
+  if( m_SegmentationImage.IsNotNull() )
+  {
+    MITK_INFO << "Detecting the tumor tissue and safety margin is in progress...";
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED ||
+              imagePixelWriter.GetPixelByIndex(actualIndex) == SAFETY_MARGIN )
+          {
+            m_TumorTissueSafetyMarginIndices.push_back(actualIndex);
+          }
+        }
+      }
+    }
+  }
+}
+
+void QmitkAblationPlanningView::FindAblationStartingPosition()
+{
+  if( m_SegmentationImage.IsNotNull() )
+  {
+    MITK_INFO << "Finding a random ablation starting position...";
+    int randomIndex1 = rand() % m_TumorTissueSafetyMarginIndices.size();
+    int randomIndex2 = rand() % m_TumorTissueSafetyMarginIndices.size();
+    int randomIndex3 = rand() % m_TumorTissueSafetyMarginIndices.size();
+    int randomIndex4 = rand() % m_TumorTissueSafetyMarginIndices.size();
+    int randomIndex5 = rand() % m_TumorTissueSafetyMarginIndices.size();
+    MITK_INFO << "Gezogene Zufallszahl 1: " << randomIndex1;
+    MITK_INFO << "Gezogene Zufallszahl 2: " << randomIndex2;
+    MITK_INFO << "Gezogene Zufallszahl 3: " << randomIndex3;
+    MITK_INFO << "Gezogene Zufallszahl 4: " << randomIndex4;
+    MITK_INFO << "Gezogene Zufallszahl 5: " << randomIndex5;
+
+    itk::Index<3> startingPosition1 = m_TumorTissueSafetyMarginIndices.at(randomIndex1);
+    itk::Index<3> startingPosition2 = m_TumorTissueSafetyMarginIndices.at(randomIndex2);
+    itk::Index<3> startingPosition3 = m_TumorTissueSafetyMarginIndices.at(randomIndex3);
+    itk::Index<3> startingPosition4 = m_TumorTissueSafetyMarginIndices.at(randomIndex4);
+    itk::Index<3> startingPosition5 = m_TumorTissueSafetyMarginIndices.at(randomIndex5);
+
+    std::vector<itk::Index<3>> startingPositions;
+    startingPositions.push_back(startingPosition1);
+    startingPositions.push_back(startingPosition2);
+    startingPositions.push_back(startingPosition3);
+    startingPositions.push_back(startingPosition4);
+    startingPositions.push_back(startingPosition5);
+
+    double radius1 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition1);
+    double radius2 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition2);
+    double radius3 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition3);
+    double radius4 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition4);
+    double radius5 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition5);
+    std::vector<double> radiusVector;
+    std::vector<double>::iterator result;
+    radiusVector.push_back(radius1);
+    radiusVector.push_back(radius2);
+    radiusVector.push_back(radius3);
+    radiusVector.push_back(radius4);
+    radiusVector.push_back(radius5);
+    result = std::max_element(radiusVector.begin(), radiusVector.end());
+    int index = std::distance(radiusVector.begin(), result);
+
+    m_AblationStartingPositionIndexCoordinates = startingPositions.at(index);
+
+    //Calculate the index coordinates of the starting position:
+    m_SegmentationImage->GetGeometry()->IndexToWorld(m_AblationStartingPositionIndexCoordinates,
+                                                     m_AblationStartingPositionInWorldCoordinates);
+
+    double x = m_AblationStartingPositionInWorldCoordinates[0];
+    double y = m_AblationStartingPositionInWorldCoordinates[1];
+    double z = m_AblationStartingPositionInWorldCoordinates[2];
+    QString text = QString("Set Ablation Startingposition to: %1 | %2 | %3").arg(x).arg(y).arg(z);
+    m_Controls.ablationStartingPointLabel->setText(text);
+    MITK_INFO << "Set Ablation Startingposition to: " << m_AblationStartingPositionInWorldCoordinates;
+    MITK_INFO << "Startingposition in Index: " << m_AblationStartingPositionIndexCoordinates;
+    MITK_INFO << "Spacing: " << m_SegmentationImage->GetGeometry()->GetSpacing();
+    //Get number of voxels in the three dimensions:
+    MITK_INFO << "Dimension: " << m_ImageDimension[0] << " " << m_ImageDimension[1] << " " << m_ImageDimension[2];
+  }
+}
+
 double QmitkAblationPlanningView::CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2)
 {
 
@@ -269,7 +356,7 @@ double QmitkAblationPlanningView::CalculateScalarDistance(itk::Index<3> &point1,
 void QmitkAblationPlanningView::CalculateAblationVolume(itk::Index<3>& center)
 {
   MITK_INFO << "Calculate ablation volume for index: " << center;
-  if( m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull() )
+  if( m_SegmentationImage.IsNotNull() )
   {
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
@@ -294,17 +381,31 @@ void QmitkAblationPlanningView::CalculateAblationVolume(itk::Index<3>& center)
   }
 }
 
-bool QmitkAblationPlanningView::CheckVolumeForNonAblatedTissue(itk::Index<3>& centerOfVolume)
+bool QmitkAblationPlanningView::CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume)
 {
-  if (m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull())
+  if(m_SegmentationImage.IsNotNull())
   {
+    unsigned int pixelDirectionX = floor(m_AblationRadius / m_ImageSpacing[0]);
+    unsigned int pixelDirectionY = floor(m_AblationRadius / m_ImageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(m_AblationRadius / m_ImageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    this->CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+      pixelDirectionX, pixelDirectionY, pixelDirectionZ, centerOfVolume);
+
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
-    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
     {
-      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      for (actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
       {
-        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        for (actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
         {
           if (m_AblationRadius >= this->CalculateScalarDistance(centerOfVolume, actualIndex))
           {
@@ -321,9 +422,65 @@ bool QmitkAblationPlanningView::CheckVolumeForNonAblatedTissue(itk::Index<3>& ce
   return false;
 }
 
+bool QmitkAblationPlanningView::CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(
+                                double &radius, itk::Index<3>& centerOfVolume)
+{
+  if (m_SegmentationImage.IsNotNull())
+  {
+    unsigned int pixelDirectionX = floor(radius / m_ImageSpacing[0]);
+    unsigned int pixelDirectionY = floor(radius / m_ImageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(radius / m_ImageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    this->CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+      pixelDirectionX, pixelDirectionY, pixelDirectionZ, centerOfVolume);
+
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
+        {
+          if( radius >= this->CalculateScalarDistance(centerOfVolume, actualIndex) )
+          {
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) != TUMOR_NOT_YET_ABLATED &&
+                imagePixelWriter.GetPixelByIndex(actualIndex) != SAFETY_MARGIN)
+            {
+              return false;
+            }
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
+
+double QmitkAblationPlanningView::
+       CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3>& point)
+{
+  double radius = 1.0;
+  while( this->CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(
+                                                                      radius, point))
+  {
+    radius += 1;
+  }
+
+  MITK_INFO << "Calculated max radius for given point: " << radius;
+  return radius;
+}
+
 bool QmitkAblationPlanningView::CheckImageForNonAblatedTissue()
 {
-  if (m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull())
+  if(m_SegmentationImage.IsNotNull())
   {
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
@@ -593,7 +750,7 @@ void QmitkAblationPlanningView::DetectNotNeededAblationVolume()
 
 bool QmitkAblationPlanningView::CheckIfAblationVolumeIsNeeded(itk::Index<3>& center)
 {
-  if( m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull() )
+  if( m_SegmentationImage.IsNotNull() )
   {
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
@@ -620,7 +777,7 @@ bool QmitkAblationPlanningView::CheckIfAblationVolumeIsNeeded(itk::Index<3>& cen
 
 void QmitkAblationPlanningView::RemoveAblationVolume(itk::Index<3>& center)
 {
-  if (m_AblationStartingPositionValid && m_SegmentationImage.IsNotNull())
+  if(m_SegmentationImage.IsNotNull())
   {
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
@@ -837,7 +994,6 @@ void QmitkAblationPlanningView::CreateSafetyMarginInfluenceAreaOfPixel(itk::Inde
 {
   if( m_SegmentationImage.IsNotNull() )
   {
-    //MITK_INFO << "CreateSafetyMarginInfluenceAreaOfPixel: " << pixel[0]  << " " << pixel[1] << " " << pixel[2];
     double margin = m_Controls.safetyMarginSpinBox->value();
     unsigned int pixelDirectionX = floor(margin / m_ImageSpacing[0]);
     unsigned int pixelDirectionY = floor(margin / m_ImageSpacing[1]);
@@ -965,19 +1121,21 @@ void QmitkAblationPlanningView::OnCalculateSafetyMargin()
 
 void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
 {
-
+/*
   mitk::DataNode* selectedSegmentation = m_Controls.segmentationComboBox->GetSelectedNode();
   if( selectedSegmentation == nullptr )
   {
-    m_AblationStartingPositionValid = false;
+    m_ManualAblationStartingPositionSet = false;
     return;
   }
 
   m_SegmentationImage = dynamic_cast<mitk::Image*>(selectedSegmentation->GetData());
+  */
+
   if (m_SegmentationImage.IsNull())
   {
-    MITK_WARN << "Failed to cast selected segmentation node to mitk::Image*";
-    m_AblationStartingPositionValid = false;
+    MITK_WARN << "No segmentation image was chosen. Cannot set ablation starting point.";
+    m_ManualAblationStartingPositionSet = false;
     return;
   }
 
@@ -994,12 +1152,12 @@ void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
   MITK_INFO << "PixelType: " << pixelType;
   if (pixelType < 1)
   {
-    m_AblationStartingPositionValid = false;
+    m_ManualAblationStartingPositionSet = false;
     m_Controls.ablationStartingPointLabel->setText("Position is not in the segmentation. Please choose a new starting position.");
     return;
   }
 
-  m_AblationStartingPositionValid = true;
+  m_ManualAblationStartingPositionSet = true;
   double x = m_AblationStartingPositionInWorldCoordinates[0];
   double y = m_AblationStartingPositionInWorldCoordinates[1];
   double z = m_AblationStartingPositionInWorldCoordinates[2];
@@ -1015,13 +1173,6 @@ void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
 
 void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 {
-  if( !m_AblationStartingPositionValid )
-  {
-    QMessageBox msgBox;
-    msgBox.setText("Before calculating the ablation zones please choose a starting point for the ablation first.");
-    msgBox.exec();
-    return;
-  }
   if (m_SegmentationImage.IsNull())
   {
     QMessageBox msgBox;
@@ -1030,10 +1181,19 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     return;
   }
 
+  //Reset earlier calculations:
+  this->DeleteAllSpheres();
+  this->ResetSegmentationImage();
+  m_TumorTissueSafetyMarginIndices.clear();
   m_AblationZoneCenters.clear();
   m_AblationZoneCentersProcessed.clear();
-  this->ResetSegmentationImage();
-  this->DeleteAllSpheres();
+
+  this->FillVectorContainingIndicesOfTumorTissueSafetyMargin();
+
+  if (!m_ManualAblationStartingPositionSet)
+  {
+    this->FindAblationStartingPosition();
+  }
 
   this->CalculateAblationVolume(m_AblationStartingPositionIndexCoordinates);
   this->ProcessDirectNeighbourAblationZones(m_AblationStartingPositionIndexCoordinates);
