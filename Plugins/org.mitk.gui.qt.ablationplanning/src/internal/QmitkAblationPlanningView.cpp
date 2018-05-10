@@ -514,7 +514,7 @@ double QmitkAblationPlanningView::
   {
     radius += 1;
   }
-
+  ++radius;
   MITK_INFO << "Calculated max radius for given point: " << radius;
   return radius;
 }
@@ -1265,24 +1265,31 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   for( int iteration = 1; iteration <= 100; ++iteration )
   {
     MITK_INFO << "Iteration: " << iteration;
-    if (!m_ManualAblationStartingPositionSet)
+    if (!m_ManualAblationStartingPositionSet || iteration > 1 )
     {
       this->FindAblationStartingPosition();
     }
 
-    this->CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates);
-    this->ProcessDirectNeighbourAblationZones(m_TempAblationStartingPositionIndexCoordinates);
-    while( m_TempAblationZoneCenters.size() != m_TempAblationZoneCentersProcessed.size() )
+    if( m_Controls.gridModelRadioButton->isChecked() )
     {
-      MITK_INFO << "Size1: " << m_TempAblationZoneCenters.size() << " Size2: " << m_TempAblationZoneCentersProcessed.size();
-      for( int index = 0; index < m_TempAblationZoneCenters.size(); ++index )
+      this->CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates);
+      this->ProcessDirectNeighbourAblationZones(m_TempAblationStartingPositionIndexCoordinates);
+      while( m_TempAblationZoneCenters.size() != m_TempAblationZoneCentersProcessed.size() )
       {
-        if (!this->IsAblationZoneAlreadyProcessed(m_TempAblationZoneCenters.at(index)))
+        MITK_INFO << "Size1: " << m_TempAblationZoneCenters.size() << " Size2: " << m_TempAblationZoneCentersProcessed.size();
+        for( int index = 0; index < m_TempAblationZoneCenters.size(); ++index )
         {
-          this->ProcessDirectNeighbourAblationZones(m_TempAblationZoneCenters.at(index));
-          break;
+          if (!this->IsAblationZoneAlreadyProcessed(m_TempAblationZoneCenters.at(index)))
+          {
+            this->ProcessDirectNeighbourAblationZones(m_TempAblationZoneCenters.at(index));
+            break;
+          }
         }
       }
+    }
+    else if( m_Controls.randomDistributionRadioButton->isChecked() )
+    {
+      //Todo: insert the random distribution model...
     }
 
     this->DetectNotNeededAblationVolume();
