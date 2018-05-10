@@ -144,7 +144,7 @@ void QmitkAblationPlanningView::OnSelectionChanged(berry::IWorkbenchPart::Pointe
         refNode->SetVisibility(true);
         selectedNode->SetVisibility(true);
       }
-      mitk::RenderingManager::GetInstance()->InitializeViews(selectedNode->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true);
+      //mitk::RenderingManager::GetInstance()->InitializeViews(selectedNode->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true);
     }
     else
     {
@@ -256,6 +256,33 @@ bool QmitkAblationPlanningView::CheckForSameGeometry(const mitk::DataNode *node1
   }
 }
 
+void QmitkAblationPlanningView::CopyTemporaryAblationZoneDitribution()
+{
+  if( m_AblationZoneCentersProcessed.size() == 0 ||
+      m_AblationZoneCentersProcessed.size() > m_TempAblationZoneCentersProcessed.size())
+  {
+    MITK_INFO << "Reduced the number of ablation zones from: "
+              << m_AblationZoneCentersProcessed.size()
+              << " to: "
+              << m_TempAblationZoneCentersProcessed.size()
+              << "========================================";
+
+    m_AblationZoneCenters.clear();
+    m_AblationZoneCentersProcessed.clear();
+    m_AblationZoneCenters = m_TempAblationZoneCenters;
+    m_AblationZoneCentersProcessed = m_TempAblationZoneCentersProcessed;
+    m_TempAblationZoneCenters.clear();
+    m_TempAblationZoneCentersProcessed.clear();
+    m_AblationStartingPositionIndexCoordinates = m_TempAblationStartingPositionIndexCoordinates;
+    m_AblationStartingPositionInWorldCoordinates = m_TempAblationStartingPositionInWorldCoordinates;
+  }
+  else
+  {
+    m_TempAblationZoneCenters.clear();
+    m_TempAblationZoneCentersProcessed.clear();
+  }
+}
+
 void QmitkAblationPlanningView::FillVectorContainingIndicesOfTumorTissueSafetyMargin()
 {
   if( m_SegmentationImage.IsNotNull() )
@@ -324,19 +351,19 @@ void QmitkAblationPlanningView::FindAblationStartingPosition()
     result = std::max_element(radiusVector.begin(), radiusVector.end());
     int index = std::distance(radiusVector.begin(), result);
 
-    m_AblationStartingPositionIndexCoordinates = startingPositions.at(index);
+    m_TempAblationStartingPositionIndexCoordinates = startingPositions.at(index);
 
     //Calculate the index coordinates of the starting position:
-    m_SegmentationImage->GetGeometry()->IndexToWorld(m_AblationStartingPositionIndexCoordinates,
-                                                     m_AblationStartingPositionInWorldCoordinates);
+    m_SegmentationImage->GetGeometry()->IndexToWorld(m_TempAblationStartingPositionIndexCoordinates,
+                                                     m_TempAblationStartingPositionInWorldCoordinates);
 
-    double x = m_AblationStartingPositionInWorldCoordinates[0];
-    double y = m_AblationStartingPositionInWorldCoordinates[1];
-    double z = m_AblationStartingPositionInWorldCoordinates[2];
+    double x = m_TempAblationStartingPositionInWorldCoordinates[0];
+    double y = m_TempAblationStartingPositionInWorldCoordinates[1];
+    double z = m_TempAblationStartingPositionInWorldCoordinates[2];
     QString text = QString("Set Ablation Startingposition to: %1 | %2 | %3").arg(x).arg(y).arg(z);
     m_Controls.ablationStartingPointLabel->setText(text);
-    MITK_INFO << "Set Ablation Startingposition to: " << m_AblationStartingPositionInWorldCoordinates;
-    MITK_INFO << "Startingposition in Index: " << m_AblationStartingPositionIndexCoordinates;
+    MITK_INFO << "Set Ablation Startingposition to: " << m_TempAblationStartingPositionInWorldCoordinates;
+    MITK_INFO << "Startingposition in Index: " << m_TempAblationStartingPositionIndexCoordinates;
     MITK_INFO << "Spacing: " << m_SegmentationImage->GetGeometry()->GetSpacing();
     //Get number of voxels in the three dimensions:
     MITK_INFO << "Dimension: " << m_ImageDimension[0] << " " << m_ImageDimension[1] << " " << m_ImageDimension[2];
@@ -358,13 +385,27 @@ void QmitkAblationPlanningView::CalculateAblationVolume(itk::Index<3>& center)
   MITK_INFO << "Calculate ablation volume for index: " << center;
   if( m_SegmentationImage.IsNotNull() )
   {
+    unsigned int pixelDirectionX = floor(m_AblationRadius / m_ImageSpacing[0]);
+    unsigned int pixelDirectionY = floor(m_AblationRadius / m_ImageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(m_AblationRadius / m_ImageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    this->CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+      pixelDirectionX, pixelDirectionY, pixelDirectionZ, center);
+
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
-    for( actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1 )
+    for( actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1 )
     {
-      for(actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      for(actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
       {
-        for( actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        for( actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
         {
           if( m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
           {
@@ -377,7 +418,7 @@ void QmitkAblationPlanningView::CalculateAblationVolume(itk::Index<3>& center)
         }
       }
     }
-    m_AblationZoneCenters.push_back(center);
+    m_TempAblationZoneCenters.push_back(center);
   }
 }
 
@@ -519,7 +560,7 @@ void QmitkAblationPlanningView::ProcessDirectNeighbourAblationZones(itk::Index<3
 
   //Now, all 12 direct neighbour ablation zones are processed. So add the
   // index of the given center to the processed ablation centers:
-  m_AblationZoneCentersProcessed.push_back(center);
+  m_TempAblationZoneCentersProcessed.push_back(center);
 }
 
 void QmitkAblationPlanningView::CalculateUpperLowerXYZ( unsigned int &upperX,
@@ -621,7 +662,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = center[2];
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [1, 1, 0] --> " << newIndex;
+  //MITK_INFO << "Index for [1, 1, 0] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [-1, 1, 0]:
   newIndex[0] = lowerX;
@@ -629,7 +670,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = center[2];
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [-1, 1, 0] --> " << newIndex;
+  //MITK_INFO << "Index for [-1, 1, 0] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [1, -1, 0]:
   newIndex[0] = upperX;
@@ -637,7 +678,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = center[2];
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [1, -1, 0] --> " << newIndex;
+  //MITK_INFO << "Index for [1, -1, 0] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [-1, -1, 0]:
   newIndex[0] = lowerX;
@@ -645,7 +686,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = center[2];
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [-1, -1, 0] --> " << newIndex;
+  //MITK_INFO << "Index for [-1, -1, 0] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [1, 0, 1]:
   newIndex[0] = upperX;
@@ -653,7 +694,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = upperZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [1, 0, 1] --> " << newIndex;
+  //MITK_INFO << "Index for [1, 0, 1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [1, 0, -1]:
   newIndex[0] = upperX;
@@ -661,7 +702,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = lowerZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [1, 0, -1] --> " << newIndex;
+  //MITK_INFO << "Index for [1, 0, -1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [-1, 0, 1]:
   newIndex[0] = lowerX;
@@ -669,7 +710,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = upperZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [-1, 0, 1] --> " << newIndex;
+  //MITK_INFO << "Index for [-1, 0, 1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [-1, 0, -1]:
   newIndex[0] = lowerX;
@@ -677,7 +718,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = lowerZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [-1, 0, -1] --> " << newIndex;
+  //MITK_INFO << "Index for [-1, 0, -1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [0, 1, 1]:
   newIndex[0] = center[0];
@@ -685,7 +726,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = upperZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [0, 1, 1] --> " << newIndex;
+  //MITK_INFO << "Index for [0, 1, 1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [0, 1, -1]:
   newIndex[0] = center[0];
@@ -693,7 +734,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = lowerZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [0, 1, -1] --> " << newIndex;
+  //MITK_INFO << "Index for [0, 1, -1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [0, -1, 1]:
   newIndex[0] = center[0];
@@ -701,7 +742,7 @@ std::vector<itk::Index<3>>
   newIndex[2] = upperZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [0, -1, 1] --> " << newIndex;
+  //MITK_INFO << "Index for [0, -1, 1] --> " << newIndex;
   //--------------------------------------------------------------------------------------
   //Calculate position in vector direction [0, -1, -1]:
   newIndex[0] = center[0];
@@ -709,15 +750,15 @@ std::vector<itk::Index<3>>
   newIndex[2] = lowerZ;
 
   directNeighbourAblationZones.push_back(newIndex);
-  MITK_INFO << "Index for [0, -1, -1] --> " << newIndex;
+  //MITK_INFO << "Index for [0, -1, -1] --> " << newIndex;
 
   return directNeighbourAblationZones;
 }
 
 bool QmitkAblationPlanningView::IsAblationZoneAlreadyProcessed(itk::Index<3>& center)
 {
-  for( std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
-       it != m_AblationZoneCentersProcessed.end(); ++it )
+  for( std::vector<itk::Index<3>>::iterator it = m_TempAblationZoneCentersProcessed.begin();
+       it != m_TempAblationZoneCentersProcessed.end(); ++it )
   {
     if (center == (*it))
     {
@@ -730,20 +771,20 @@ bool QmitkAblationPlanningView::IsAblationZoneAlreadyProcessed(itk::Index<3>& ce
 void QmitkAblationPlanningView::DetectNotNeededAblationVolume()
 {
   std::vector<int> indicesRemoved;
-  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  for (int index = 0; index < m_TempAblationZoneCentersProcessed.size(); ++index)
   {
-    if (!this->CheckIfAblationVolumeIsNeeded(m_AblationZoneCentersProcessed.at(index)))
+    if (!this->CheckIfAblationVolumeIsNeeded(m_TempAblationZoneCentersProcessed.at(index)))
     {
-      this->RemoveAblationVolume(m_AblationZoneCentersProcessed.at(index));
+      this->RemoveAblationVolume(m_TempAblationZoneCentersProcessed.at(index));
       indicesRemoved.push_back(index);
     }
   }
   for( int index = indicesRemoved.size() - 1; index >= 0; --index )
   {
-    std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
-    m_AblationZoneCentersProcessed.erase(it + indicesRemoved.at(index));
-    std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
-    m_AblationZoneCenters.erase(it2 + indicesRemoved.at(index));
+    std::vector<itk::Index<3>>::iterator it = m_TempAblationZoneCentersProcessed.begin();
+    m_TempAblationZoneCentersProcessed.erase(it + indicesRemoved.at(index));
+    std::vector<itk::Index<3>>::iterator it2 = m_TempAblationZoneCenters.begin();
+    m_TempAblationZoneCenters.erase(it2 + indicesRemoved.at(index));
     MITK_INFO << "Removed Ablation zone at index position: " << indicesRemoved.at(index);
   }
 }
@@ -752,13 +793,27 @@ bool QmitkAblationPlanningView::CheckIfAblationVolumeIsNeeded(itk::Index<3>& cen
 {
   if( m_SegmentationImage.IsNotNull() )
   {
+    unsigned int pixelDirectionX = floor(m_AblationRadius / m_ImageSpacing[0]);
+    unsigned int pixelDirectionY = floor(m_AblationRadius / m_ImageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(m_AblationRadius / m_ImageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    this->CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+      pixelDirectionX, pixelDirectionY, pixelDirectionZ, center);
+
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
-    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
     {
-      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      for (actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
       {
-        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        for (actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
         {
           if (m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
           {
@@ -779,13 +834,27 @@ void QmitkAblationPlanningView::RemoveAblationVolume(itk::Index<3>& center)
 {
   if(m_SegmentationImage.IsNotNull())
   {
+    unsigned int pixelDirectionX = floor(m_AblationRadius / m_ImageSpacing[0]);
+    unsigned int pixelDirectionY = floor(m_AblationRadius / m_ImageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(m_AblationRadius / m_ImageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    this->CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+      pixelDirectionX, pixelDirectionY, pixelDirectionZ, center);
+
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
     itk::Index<3> actualIndex;
-    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
     {
-      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      for (actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
       {
-        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        for (actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
         {
           if (m_AblationRadius >= this->CalculateScalarDistance(center, actualIndex))
           {
@@ -1186,34 +1255,47 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->ResetSegmentationImage();
   m_TumorTissueSafetyMarginIndices.clear();
   m_AblationZoneCenters.clear();
+  m_TempAblationZoneCenters.clear();
   m_AblationZoneCentersProcessed.clear();
+  m_TempAblationZoneCentersProcessed.clear();
 
   this->FillVectorContainingIndicesOfTumorTissueSafetyMargin();
 
-  if (!m_ManualAblationStartingPositionSet)
+  //Start of for-loop:
+  for( int iteration = 1; iteration <= 100; ++iteration )
   {
-    this->FindAblationStartingPosition();
-  }
-
-  this->CalculateAblationVolume(m_AblationStartingPositionIndexCoordinates);
-  this->ProcessDirectNeighbourAblationZones(m_AblationStartingPositionIndexCoordinates);
-  while( m_AblationZoneCenters.size() != m_AblationZoneCentersProcessed.size() )
-  {
-    MITK_INFO << "Size1: " << m_AblationZoneCenters.size() << " Size2: " << m_AblationZoneCentersProcessed.size();
-    for( int index = 0; index < m_AblationZoneCenters.size(); ++index )
+    MITK_INFO << "Iteration: " << iteration;
+    if (!m_ManualAblationStartingPositionSet)
     {
-      if (!this->IsAblationZoneAlreadyProcessed(m_AblationZoneCenters.at(index)))
+      this->FindAblationStartingPosition();
+    }
+
+    this->CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates);
+    this->ProcessDirectNeighbourAblationZones(m_TempAblationStartingPositionIndexCoordinates);
+    while( m_TempAblationZoneCenters.size() != m_TempAblationZoneCentersProcessed.size() )
+    {
+      MITK_INFO << "Size1: " << m_TempAblationZoneCenters.size() << " Size2: " << m_TempAblationZoneCentersProcessed.size();
+      for( int index = 0; index < m_TempAblationZoneCenters.size(); ++index )
       {
-        this->ProcessDirectNeighbourAblationZones(m_AblationZoneCenters.at(index));
-        break;
+        if (!this->IsAblationZoneAlreadyProcessed(m_TempAblationZoneCenters.at(index)))
+        {
+          this->ProcessDirectNeighbourAblationZones(m_TempAblationZoneCenters.at(index));
+          break;
+        }
       }
     }
 
+    this->DetectNotNeededAblationVolume();
+    MITK_INFO << "Total number of ablation zones: " << m_TempAblationZoneCentersProcessed.size();
+    this->CopyTemporaryAblationZoneDitribution();
+    this->ResetSegmentationImage();
+  } //End of for loop
+
+  for( int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    this->CalculateAblationVolume(m_AblationZoneCentersProcessed.at(index));
   }
   MITK_INFO << "Finished calculating ablation zones!";
-  MITK_INFO << "Total number of ablation zones: " << m_AblationZoneCentersProcessed.size();
-
-  this->DetectNotNeededAblationVolume();
 
   m_Controls.numberAblationVoluminaLabel->setText(QString::number(m_AblationZoneCentersProcessed.size()));
   mitk::RenderingManager::GetInstance()->Modified();
@@ -1225,7 +1307,6 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
 
   this->CreateSpheresOfAblationVolumes();
-
 }
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)

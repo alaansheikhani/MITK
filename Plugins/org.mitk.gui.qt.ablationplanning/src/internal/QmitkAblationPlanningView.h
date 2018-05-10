@@ -80,6 +80,8 @@ protected:
 
   bool CheckForSameGeometry(const mitk::DataNode*, const mitk::DataNode*) const;
 
+  void CopyTemporaryAblationZoneDitribution();
+
   void FillVectorContainingIndicesOfTumorTissueSafetyMargin();
 
   void FindAblationStartingPosition();
@@ -154,21 +156,38 @@ private:
 
   mitk::Point3D m_AblationStartingPositionInWorldCoordinates;
   itk::Index<3> m_AblationStartingPositionIndexCoordinates;
+  mitk::Point3D m_TempAblationStartingPositionInWorldCoordinates;
+  itk::Index<3> m_TempAblationStartingPositionIndexCoordinates;
+
   bool m_ManualAblationStartingPositionSet;
   double m_AblationRadius;
   mitk::Image::Pointer m_SegmentationImage;
 
   /*!
-  * \brief Vector storing the index coordinates of all circle centers of the ablation zones.
+  * \brief Final vector storing the index coordinates of all circle centers of the ablation zones
+    after the calculation of the best ablation zone distribution.
   */
   std::vector<itk::Index<3>> m_AblationZoneCenters;
 
   /*!
+  * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
+  * when calculating the best ablation zone distribution.
+  */
+  std::vector<itk::Index<3>> m_TempAblationZoneCenters;
+
+  /*!
   * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
+  * which are finally processed after the calculation of the best ablation zone distribution.
+  * This means: All 12 direct neighbour ablation zones are checked for remaining non-ablated tumor issue.
+  */
+  std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
+
+  /*!
+  * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones,
   * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
   * for remaining non-ablated tumor issue.
   */
-  std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
+  std::vector<itk::Index<3>> m_TempAblationZoneCentersProcessed;
 
   /*!
   * \brief Vector storing the index coordinates of all pixels, which are tumor tissue or
