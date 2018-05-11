@@ -134,6 +134,14 @@ protected:
 
   void CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3> &pixel);
 
+  int CalculateTumorVolume();
+
+  int CalculateSafetyMarginVolume();
+
+  int CalculateTotalAblationVolume();
+
+  int CalculateAblationVolumeAblatedMoreThanOneTime();
+
 protected slots:
   void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node);
   void OnVisiblePropertyChanged();

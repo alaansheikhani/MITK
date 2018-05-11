@@ -46,6 +46,7 @@ const static short ABLATION_VALUE = 2;
 const static short TUMOR_NOT_YET_ABLATED = 1;
 const static short NO_TUMOR_ISSUE = 0;
 const static short SAFETY_MARGIN = 256;
+const static unsigned short BIT_OPERATION_ELIMINATE_TUMOR_SAFETY_MARGIN = 65278; // = 11111110 11111110
 
 //=====================Konstruktor/Destruktor===================================
 QmitkAblationPlanningView::QmitkAblationPlanningView()
@@ -1198,6 +1199,103 @@ void QmitkAblationPlanningView::CreateSafetyMarginInfluenceAreaOfPixel(itk::Inde
   }
 }
 
+int QmitkAblationPlanningView::CalculateTumorVolume()
+{
+  int volume = 0;
+  if(m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    unsigned short pixelValue;
+    for( int index = 0; index < m_TumorTissueSafetyMarginIndices.size(); ++index )
+    {
+      pixelValue = imagePixelWriter.GetPixelByIndex(
+                   m_TumorTissueSafetyMarginIndices.at(index));
+      volume += (pixelValue & TUMOR_NOT_YET_ABLATED);
+    }
+  }
+  double volumeFactor = m_ImageSpacing[0] * m_ImageSpacing[1] * m_ImageSpacing[2];
+  volume = (int) (volume * volumeFactor);
+  return volume;
+}
+
+int QmitkAblationPlanningView::CalculateSafetyMarginVolume()
+{
+  int volume = 0;
+  if (m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    unsigned short pixelValue;
+    for (int index = 0; index < m_TumorTissueSafetyMarginIndices.size(); ++index)
+    {
+      pixelValue = imagePixelWriter.GetPixelByIndex(
+        m_TumorTissueSafetyMarginIndices.at(index));
+      volume += ((pixelValue & SAFETY_MARGIN) / SAFETY_MARGIN);
+    }
+  }
+  double volumeFactor = m_ImageSpacing[0] * m_ImageSpacing[1] * m_ImageSpacing[2];
+  volume = (int)(volume * volumeFactor);
+  return volume;
+}
+
+int QmitkAblationPlanningView::CalculateTotalAblationVolume()
+{
+  int volume = 0;
+  if (m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          unsigned short pixelValue = imagePixelWriter.GetPixelByIndex(actualIndex);
+          pixelValue &= BIT_OPERATION_ELIMINATE_TUMOR_SAFETY_MARGIN;
+          if (pixelValue != 0)
+          {
+            ++volume;
+          }
+        }
+      }
+    }
+  }
+  double volumeFactor = m_ImageSpacing[0] * m_ImageSpacing[1] * m_ImageSpacing[2];
+  volume = (int)(volume * volumeFactor);
+  return volume;
+}
+
+int QmitkAblationPlanningView::CalculateAblationVolumeAblatedMoreThanOneTime()
+{
+  int volume = 0;
+  if (m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          unsigned short pixelValue = imagePixelWriter.GetPixelByIndex(actualIndex);
+          pixelValue &= BIT_OPERATION_ELIMINATE_TUMOR_SAFETY_MARGIN;
+          if (pixelValue != 0)
+          {
+            if ((pixelValue - ABLATION_VALUE) > 0)
+            {
+              ++volume;
+            }
+          }
+        }
+      }
+    }
+  }
+  double volumeFactor = m_ImageSpacing[0] * m_ImageSpacing[1] * m_ImageSpacing[2];
+  volume = (int)(volume * volumeFactor);
+  return volume;
+}
+
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node)
 {
   MITK_INFO << "OnSegmentationComboBoxSelectionChanged()";
@@ -1427,6 +1525,31 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
 
   this->CreateSpheresOfAblationVolumes();
+
+  int tumorVolume = CalculateTumorVolume();
+  int safetyMarginVolume = CalculateSafetyMarginVolume();
+  int tumorAndSafetyMarginVolume = tumorVolume + safetyMarginVolume;
+  int totalAblationVolume = CalculateTotalAblationVolume();
+  int ablationVolumeAblatedMoreThanOneTime = CalculateAblationVolumeAblatedMoreThanOneTime();
+
+  double factorOverlappingAblationZones =
+    ((double)ablationVolumeAblatedMoreThanOneTime / totalAblationVolume) * 100;
+
+  double factorAblatedVolumeOutsideSafetyMargin =
+    ((totalAblationVolume - tumorAndSafetyMarginVolume) / (double)totalAblationVolume) * 100;
+
+  m_Controls.numberTumorVolumeLabel
+    ->setText(QString("%1").arg(tumorVolume));
+  m_Controls.numberTumorAndMarginVolumeLabel
+    ->setText(QString("%1").arg(tumorAndSafetyMarginVolume));
+  m_Controls.numberAblationVolumeLabel
+    ->setText(QString("%1").arg(totalAblationVolume));
+  m_Controls.numberVolumeAblatedTwoAndMoreLabel
+    ->setText(QString("%1").arg(ablationVolumeAblatedMoreThanOneTime));
+  m_Controls.numberOverlappingAblationZonesLabel
+    ->setText(QString("%1").arg(factorOverlappingAblationZones));
+  m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel
+    ->setText(QString("%1").arg(factorAblatedVolumeOutsideSafetyMargin));
 }
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)

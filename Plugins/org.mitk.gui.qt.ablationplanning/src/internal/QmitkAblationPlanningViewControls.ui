@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>342</width>
-    <height>331</height>
+    <width>440</width>
+    <height>386</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -173,6 +173,9 @@
        <property name="text">
         <string>0</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="1" column="1">
@@ -182,6 +185,9 @@
        </property>
        <property name="text">
         <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -207,6 +213,9 @@
        <property name="text">
         <string>0</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="3" column="0">
@@ -224,6 +233,9 @@
        <property name="text">
         <string>0</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="4" column="0">
@@ -240,6 +252,49 @@
        </property>
        <property name="text">
         <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="overlappingAblationZonesLabel">
+       <property name="text">
+        <string>Factor Overlapping Of Ablation Zones (in %):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLabel" name="numberOverlappingAblationZonesLabel">
+       <property name="styleSheet">
+        <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="factorAblatedVolumeOutsideSafetyMarginLabel">
+       <property name="text">
+        <string>Factor Ablated Volume Outside Safety Margin (in %)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLabel" name="numberFactorAblatedVolumeOutsideSafetyMarginLabel">
+       <property name="styleSheet">
+        <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
