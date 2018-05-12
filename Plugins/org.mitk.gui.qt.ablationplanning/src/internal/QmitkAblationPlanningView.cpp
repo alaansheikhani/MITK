@@ -313,46 +313,63 @@ void QmitkAblationPlanningView::FindAblationStartingPosition()
   if( m_SegmentationImage.IsNotNull() )
   {
     MITK_INFO << "Finding a random ablation starting position...";
-    int randomIndex1 = rand() % m_TumorTissueSafetyMarginIndices.size();
-    int randomIndex2 = rand() % m_TumorTissueSafetyMarginIndices.size();
-    int randomIndex3 = rand() % m_TumorTissueSafetyMarginIndices.size();
-    int randomIndex4 = rand() % m_TumorTissueSafetyMarginIndices.size();
-    int randomIndex5 = rand() % m_TumorTissueSafetyMarginIndices.size();
-    MITK_INFO << "Gezogene Zufallszahl 1: " << randomIndex1;
-    MITK_INFO << "Gezogene Zufallszahl 2: " << randomIndex2;
-    MITK_INFO << "Gezogene Zufallszahl 3: " << randomIndex3;
-    MITK_INFO << "Gezogene Zufallszahl 4: " << randomIndex4;
-    MITK_INFO << "Gezogene Zufallszahl 5: " << randomIndex5;
 
-    itk::Index<3> startingPosition1 = m_TumorTissueSafetyMarginIndices.at(randomIndex1);
-    itk::Index<3> startingPosition2 = m_TumorTissueSafetyMarginIndices.at(randomIndex2);
-    itk::Index<3> startingPosition3 = m_TumorTissueSafetyMarginIndices.at(randomIndex3);
-    itk::Index<3> startingPosition4 = m_TumorTissueSafetyMarginIndices.at(randomIndex4);
-    itk::Index<3> startingPosition5 = m_TumorTissueSafetyMarginIndices.at(randomIndex5);
+    bool positionFound = false;
+    int iteration = 1;
 
-    std::vector<itk::Index<3>> startingPositions;
-    startingPositions.push_back(startingPosition1);
-    startingPositions.push_back(startingPosition2);
-    startingPositions.push_back(startingPosition3);
-    startingPositions.push_back(startingPosition4);
-    startingPositions.push_back(startingPosition5);
+    while(!positionFound && iteration < 20)
+    {
+      int randomIndex1 = rand() % m_TumorTissueSafetyMarginIndices.size();
+      int randomIndex2 = rand() % m_TumorTissueSafetyMarginIndices.size();
+      int randomIndex3 = rand() % m_TumorTissueSafetyMarginIndices.size();
+      int randomIndex4 = rand() % m_TumorTissueSafetyMarginIndices.size();
+      int randomIndex5 = rand() % m_TumorTissueSafetyMarginIndices.size();
 
-    double radius1 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition1);
-    double radius2 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition2);
-    double radius3 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition3);
-    double radius4 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition4);
-    double radius5 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition5);
-    std::vector<double> radiusVector;
-    std::vector<double>::iterator result;
-    radiusVector.push_back(radius1);
-    radiusVector.push_back(radius2);
-    radiusVector.push_back(radius3);
-    radiusVector.push_back(radius4);
-    radiusVector.push_back(radius5);
-    result = std::max_element(radiusVector.begin(), radiusVector.end());
-    int index = std::distance(radiusVector.begin(), result);
+      itk::Index<3> startingPosition1 = m_TumorTissueSafetyMarginIndices.at(randomIndex1);
+      itk::Index<3> startingPosition2 = m_TumorTissueSafetyMarginIndices.at(randomIndex2);
+      itk::Index<3> startingPosition3 = m_TumorTissueSafetyMarginIndices.at(randomIndex3);
+      itk::Index<3> startingPosition4 = m_TumorTissueSafetyMarginIndices.at(randomIndex4);
+      itk::Index<3> startingPosition5 = m_TumorTissueSafetyMarginIndices.at(randomIndex5);
 
-    m_TempAblationStartingPositionIndexCoordinates = startingPositions.at(index);
+      std::vector<itk::Index<3>> startingPositions;
+      startingPositions.push_back(startingPosition1);
+      startingPositions.push_back(startingPosition2);
+      startingPositions.push_back(startingPosition3);
+      startingPositions.push_back(startingPosition4);
+      startingPositions.push_back(startingPosition5);
+
+      double radius1 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition1);
+      double radius2 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition2);
+      double radius3 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition3);
+      double radius4 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition4);
+      double radius5 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition5);
+      std::vector<double> radiusVector;
+      std::vector<double>::iterator result;
+      radiusVector.push_back(radius1);
+      radiusVector.push_back(radius2);
+      radiusVector.push_back(radius3);
+      radiusVector.push_back(radius4);
+      radiusVector.push_back(radius5);
+      result = std::max_element(radiusVector.begin(), radiusVector.end());
+      int index = std::distance(radiusVector.begin(), result);
+
+      if (radiusVector.at(index) >= m_AblationRadius - 1)
+      {
+        positionFound = true;
+      }
+      else if( iteration > 10 &&
+               radiusVector.at(index) < m_AblationRadius - 1 &&
+               radiusVector.at(index) > m_AblationRadius / 2)
+      {
+        positionFound = true;
+      }
+      else
+      {
+        ++iteration;
+      }
+      MITK_INFO << "Iteration: " << iteration;
+      m_TempAblationStartingPositionIndexCoordinates = startingPositions.at(index);
+    }
 
     //Calculate the index coordinates of the starting position:
     m_SegmentationImage->GetGeometry()->IndexToWorld(m_TempAblationStartingPositionIndexCoordinates,
@@ -516,7 +533,7 @@ double QmitkAblationPlanningView::
     radius += 1;
   }
   ++radius;
-  MITK_INFO << "Calculated max radius for given point: " << radius;
+  //MITK_INFO << "Calculated max radius for given point: " << radius;
   return radius;
 }
 
@@ -548,7 +565,7 @@ void QmitkAblationPlanningView::ProcessDirectNeighbourAblationZones(itk::Index<3
 {
   MITK_INFO << "Process direct neighbour ablation zones for index: " << center;
   std::vector<itk::Index<3>> indices =
-    this->CalculateIndicesOfDirectNeighbourAblationZones(center);
+    this->CalculateIndicesOfDirectNeighbourAblationZones(center, m_AblationRadius);
 
   for( std::vector<itk::Index<3>>::iterator it = indices.begin();
        it != indices.end(); ++it )
@@ -636,13 +653,13 @@ void QmitkAblationPlanningView::CalculateUpperLowerXYZ( unsigned int &upperX,
 
 std::vector<itk::Index<3>>
   QmitkAblationPlanningView::
-  CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3>& center)
+  CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3>& center, double &radius)
 {
   MITK_INFO << "Calculate indices of direct neighbour ablation zones...";
   std::vector<itk::Index<3>> directNeighbourAblationZones;
-  unsigned int pixelDirectionX = floor(m_AblationRadius / m_ImageSpacing[0]);
-  unsigned int pixelDirectionY = floor(m_AblationRadius / m_ImageSpacing[1]);
-  unsigned int pixelDirectionZ = floor(m_AblationRadius / m_ImageSpacing[2]);
+  unsigned int pixelDirectionX = floor(radius / m_ImageSpacing[0]);
+  unsigned int pixelDirectionY = floor(radius / m_ImageSpacing[1]);
+  unsigned int pixelDirectionZ = floor(radius / m_ImageSpacing[2]);
 
   unsigned int upperX;
   unsigned int lowerX;
@@ -923,46 +940,85 @@ itk::Index<3> QmitkAblationPlanningView::SearchNextAblationCenter(std::vector<it
   if (m_SegmentationImage.IsNotNull())
   {
     MITK_INFO << "Searching the next ablation center...";
-    int randomIndex1 = rand() % tumorSafetyMarginPixels.size();
-    int randomIndex2 = rand() % tumorSafetyMarginPixels.size();
-    int randomIndex3 = rand() % tumorSafetyMarginPixels.size();
-    int randomIndex4 = rand() % tumorSafetyMarginPixels.size();
-    int randomIndex5 = rand() % tumorSafetyMarginPixels.size();
-    MITK_INFO << "Gezogene Zufallszahl 1: " << randomIndex1;
-    MITK_INFO << "Gezogene Zufallszahl 2: " << randomIndex2;
-    MITK_INFO << "Gezogene Zufallszahl 3: " << randomIndex3;
-    MITK_INFO << "Gezogene Zufallszahl 4: " << randomIndex4;
-    MITK_INFO << "Gezogene Zufallszahl 5: " << randomIndex5;
 
-    itk::Index<3> position1 = tumorSafetyMarginPixels.at(randomIndex1);
-    itk::Index<3> position2 = tumorSafetyMarginPixels.at(randomIndex2);
-    itk::Index<3> position3 = tumorSafetyMarginPixels.at(randomIndex3);
-    itk::Index<3> position4 = tumorSafetyMarginPixels.at(randomIndex4);
-    itk::Index<3> position5 = tumorSafetyMarginPixels.at(randomIndex5);
+    int iteration = 1;
 
-    std::vector<itk::Index<3>> positions;
-    positions.push_back(position1);
-    positions.push_back(position2);
-    positions.push_back(position3);
-    positions.push_back(position4);
-    positions.push_back(position5);
+    while (iteration < 20)
+    {
+      int randomIndex1 = rand() % tumorSafetyMarginPixels.size();
+      int randomIndex2 = rand() % tumorSafetyMarginPixels.size();
+      int randomIndex3 = rand() % tumorSafetyMarginPixels.size();
+      int randomIndex4 = rand() % tumorSafetyMarginPixels.size();
+      int randomIndex5 = rand() % tumorSafetyMarginPixels.size();
 
-    double radius1 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position1);
-    double radius2 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position2);
-    double radius3 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position3);
-    double radius4 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position4);
-    double radius5 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position5);
-    std::vector<double> radiusVector;
-    std::vector<double>::iterator result;
-    radiusVector.push_back(radius1);
-    radiusVector.push_back(radius2);
-    radiusVector.push_back(radius3);
-    radiusVector.push_back(radius4);
-    radiusVector.push_back(radius5);
-    result = std::max_element(radiusVector.begin(), radiusVector.end());
-    int index = std::distance(radiusVector.begin(), result);
+      itk::Index<3> position1 = tumorSafetyMarginPixels.at(randomIndex1);
+      itk::Index<3> position2 = tumorSafetyMarginPixels.at(randomIndex2);
+      itk::Index<3> position3 = tumorSafetyMarginPixels.at(randomIndex3);
+      itk::Index<3> position4 = tumorSafetyMarginPixels.at(randomIndex4);
+      itk::Index<3> position5 = tumorSafetyMarginPixels.at(randomIndex5);
 
-    return positions.at(index);
+      std::vector<itk::Index<3>> positions;
+      positions.push_back(position1);
+      positions.push_back(position2);
+      positions.push_back(position3);
+      positions.push_back(position4);
+      positions.push_back(position5);
+
+      double radius1 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position1);
+      double radius2 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position2);
+      double radius3 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position3);
+      double radius4 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position4);
+      double radius5 = this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position5);
+      std::vector<double> radiusVector;
+      std::vector<double>::iterator result;
+      radiusVector.push_back(radius1);
+      radiusVector.push_back(radius2);
+      radiusVector.push_back(radius3);
+      radiusVector.push_back(radius4);
+      radiusVector.push_back(radius5);
+      result = std::max_element(radiusVector.begin(), radiusVector.end());
+      int index = std::distance(radiusVector.begin(), result);
+
+      if (radiusVector.at(index) >= m_AblationRadius - 4 )
+      {
+        return positions.at(index);
+      }
+      else
+      {
+        ++iteration;
+      }
+      if( iteration > 10)
+      {
+        itk::Index<3> position = positions.at(index);
+        double radiusDifference = m_AblationRadius - radiusVector.at(index) + 1;
+        std::vector<itk::Index<3>> neighbourPositions =
+          this->CalculateIndicesOfDirectNeighbourAblationZones(position, radiusDifference);
+        for( int count = 0; count < neighbourPositions.size(); ++count )
+        {
+          double tempRadius =
+            this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+                                            neighbourPositions.at(count));
+          if (tempRadius >= m_AblationRadius - 4)
+          {
+            return neighbourPositions.at(count);
+          }
+        }
+        for (int count = 0; count < neighbourPositions.size(); ++count)
+        {
+          double tempRadius =
+            this->CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+              neighbourPositions.at(count));
+          if (tempRadius >= radiusVector.at(index))
+          {
+            return neighbourPositions.at(count);
+          }
+        }
+      }
+      if (iteration == 20)
+      {
+        return positions.at(index);
+      }
+    }
   }
   return itk::Index<3>();
 }
@@ -1458,7 +1514,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->FillVectorContainingIndicesOfTumorTissueSafetyMargin();
 
   //Start of for-loop:
-  for( int iteration = 1; iteration <= 20; ++iteration )
+  for( int iteration = 1; iteration <= 10; ++iteration )
   {
     MITK_INFO << "Iteration: " << iteration;
     if (!m_ManualAblationStartingPositionSet || iteration > 1 )
@@ -1487,13 +1543,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     //------------ Random distribution calculation model: ---------------
     else if( m_Controls.randomDistributionRadioButton->isChecked() )
     {
+      double size = m_TumorTissueSafetyMarginIndices.size();
       std::vector<itk::Index<3>> indices = m_TumorTissueSafetyMarginIndices;
       this->CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates);
       this->RemoveAblatedPixelsFromGivenVector(
         m_TempAblationStartingPositionIndexCoordinates, indices);
       m_TempAblationZoneCentersProcessed.push_back(m_TempAblationStartingPositionIndexCoordinates);
 
-      while( indices.size() != 0 )
+      while( indices.size() > 0 && (double)(indices.size() / size) > 0.01 )
       {
         itk::Index<3> newAblationCenter = this->SearchNextAblationCenter(indices);
         this->CalculateAblationVolume(newAblationCenter);

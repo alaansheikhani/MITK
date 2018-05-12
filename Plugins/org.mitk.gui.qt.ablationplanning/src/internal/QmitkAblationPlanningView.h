@@ -108,7 +108,7 @@ protected:
                               unsigned int &pixelDirectionZ,
                               itk::Index<3> &center );
 
-  std::vector<itk::Index<3>> CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3> &center);
+  std::vector<itk::Index<3>> CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3> &center, double &radius);
 
   bool IsAblationZoneAlreadyProcessed(itk::Index<3> &center);
 
