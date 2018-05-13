@@ -84,6 +84,8 @@ protected:
 
   void FillVectorContainingIndicesOfTumorTissueSafetyMargin();
 
+  std::vector<itk::Index<3>> FillVectorContainingIndicesOfTumorTissueOnly();
+
   void FindAblationStartingPosition();
 
   double CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2);
@@ -97,6 +99,8 @@ protected:
   double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point);
 
   bool CheckImageForNonAblatedTissue();
+
+  bool CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices);
 
   void ProcessDirectNeighbourAblationZones(itk::Index<3> &center);
 

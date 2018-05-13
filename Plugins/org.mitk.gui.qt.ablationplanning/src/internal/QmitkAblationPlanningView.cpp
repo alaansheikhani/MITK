@@ -308,6 +308,30 @@ void QmitkAblationPlanningView::FillVectorContainingIndicesOfTumorTissueSafetyMa
   }
 }
 
+std::vector<itk::Index<3>> QmitkAblationPlanningView::FillVectorContainingIndicesOfTumorTissueOnly()
+{
+  std::vector<itk::Index<3>> onlyTumorIndices;
+  if (m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if (imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED )
+          {
+            onlyTumorIndices.push_back(actualIndex);
+          }
+        }
+      }
+    }
+  }
+  return onlyTumorIndices;
+}
+
 void QmitkAblationPlanningView::FindAblationStartingPosition()
 {
   if( m_SegmentationImage.IsNotNull() )
@@ -558,6 +582,30 @@ bool QmitkAblationPlanningView::CheckImageForNonAblatedTissue()
       }
     }
   }
+  return false;
+}
+
+bool QmitkAblationPlanningView::CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>>& indices)
+{
+  if (m_SegmentationImage.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < m_ImageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < m_ImageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < m_ImageDimension[0]; actualIndex[0] += 1)
+        {
+          if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED )
+          {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
   return false;
 }
 
@@ -1842,12 +1890,111 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     }
   }
 
+  //Check, if ablation zones have a too short distance between each other:
+  for(int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    std::vector<int> indexToRemove;
+    itk::Index<3> actualIndex = m_AblationZoneCentersProcessed.at(index);
+    for (int counter = 0; counter < m_AblationZoneCentersProcessed.size(); ++counter)
+    {
+      if (counter == index)
+      {
+        continue;
+      }
+      itk::Index<3> indexToProof = m_AblationZoneCentersProcessed.at(counter);
+      double distance = this->CalculateScalarDistance(actualIndex, indexToProof);
+      if( distance <= (2.0/3.0) * m_AblationRadius )
+      {
+        indexToRemove.push_back(counter);
+      }
+    }
+    for (int position = indexToRemove.size() - 1; position >= 0; --position)
+    {
+      std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
+      m_AblationZoneCentersProcessed.erase(it + indexToRemove.at(position));
+      std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
+      m_AblationZoneCenters.erase(it2 + indexToRemove.at(position));
+      MITK_INFO << "Removed Ablation zone at index position: " << indexToRemove.at(position);
+      index = -1;
+    }
+
+  }
+
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     this->CalculateAblationVolume(m_AblationZoneCentersProcessed.at(index));
   }
 
   this->DetectNotNeededAblationVolume(m_AblationZoneCenters, m_AblationZoneCentersProcessed);
+
+
+  //------------------------------------------------------------------------------------------------
+  std::vector<itk::Index<3>> onlyTumorIndices = this->FillVectorContainingIndicesOfTumorTissueOnly();
+
+  while (onlyTumorIndices.size() > 0)
+  {
+    itk::Index<3> newAblationCenter = this->SearchNextAblationCenter(onlyTumorIndices);
+    this->CalculateAblationVolume(newAblationCenter);
+    this->RemoveAblatedPixelsFromGivenVector(newAblationCenter, onlyTumorIndices);
+    m_AblationZoneCentersProcessed.push_back(newAblationCenter);
+    m_AblationZoneCenters.push_back(newAblationCenter);
+  }
+
+
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //TEST TEST TEST
+  this->ResetSegmentationImage();
+
+  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    double ratio =
+      this->CalculateRatioAblatedTissueOutsideTumorToAblatedTissueInsideTumor(
+        m_AblationZoneCentersProcessed.at(index));
+    MITK_WARN << "RATIO: " << ratio;
+    if (ratio > 0.3)
+    {
+      this->MoveCenterOfAblationZone(m_AblationZoneCentersProcessed.at(index));
+    }
+  }
+
+  //Check, if ablation zones have a too short distance between each other:
+  /*for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    std::vector<int> indexToRemove;
+    itk::Index<3> actualIndex = m_AblationZoneCentersProcessed.at(index);
+    for (int counter = 0; counter < m_AblationZoneCentersProcessed.size(); ++counter)
+    {
+      if (counter == index)
+      {
+        continue;
+      }
+      itk::Index<3> indexToProof = m_AblationZoneCentersProcessed.at(counter);
+      double distance = this->CalculateScalarDistance(actualIndex, indexToProof);
+      if (distance <= (2.0 / 3.0) * m_AblationRadius)
+      {
+        indexToRemove.push_back(counter);
+      }
+    }
+    for (int position = indexToRemove.size() - 1; position >= 0; --position)
+    {
+      std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
+      m_AblationZoneCentersProcessed.erase(it + indexToRemove.at(position));
+      std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
+      m_AblationZoneCenters.erase(it2 + indexToRemove.at(position));
+      MITK_INFO << "Removed Ablation zone at index position: " << indexToRemove.at(position);
+      index = -1;
+    }
+
+  }*/
+
+  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    this->CalculateAblationVolume(m_AblationZoneCentersProcessed.at(index));
+  }
+
+  this->DetectNotNeededAblationVolume(m_AblationZoneCenters, m_AblationZoneCentersProcessed);
+  // ENDE TEST TEST TEST
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   //===================================================================================================
 
   MITK_INFO << "Finished calculating ablation zones!";
