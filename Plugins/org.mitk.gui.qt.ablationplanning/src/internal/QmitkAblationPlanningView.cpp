@@ -1514,7 +1514,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->FillVectorContainingIndicesOfTumorTissueSafetyMargin();
 
   //Start of for-loop:
-  for( int iteration = 1; iteration <= 10; ++iteration )
+  for( int iteration = 1; iteration <= m_Controls.repititionsCalculatingAblationZonesSpinBox->value(); ++iteration )
   {
     MITK_INFO << "Iteration: " << iteration;
     if (!m_ManualAblationStartingPositionSet || iteration > 1 )
