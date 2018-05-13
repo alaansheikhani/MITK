@@ -108,11 +108,22 @@ protected:
                               unsigned int &pixelDirectionZ,
                               itk::Index<3> &center );
 
+  void CalculateDistancesOfTumorBoundariesFromCenter(double &distanceLowerX,
+                                                     double &distanceUpperX,
+                                                     double &distanceLowerY,
+                                                     double &distanceUpperY,
+                                                     double &distanceLowerZ,
+                                                     double &distanceUpperZ,
+                                                     itk::Index<3> &center);
+
   std::vector<itk::Index<3>> CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3> &center, double &radius);
 
   bool IsAblationZoneAlreadyProcessed(itk::Index<3> &center);
 
   void DetectNotNeededAblationVolume();
+
+  void DetectNotNeededAblationVolume(std::vector<itk::Index<3>> &ablationZones,
+                                     std::vector<itk::Index<3>> &ablationZonesProcessed);
 
   bool CheckIfAblationVolumeIsNeeded(itk::Index<3> &center);
 
@@ -133,6 +144,10 @@ protected:
   bool CheckAllVonNeumannNeighbourPixelsAreTumorTissue(itk::Index<3> &pixel);
 
   void CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3> &pixel);
+
+  double CalculateRatioAblatedTissueOutsideTumorToAblatedTissueInsideTumor(itk::Index<3> &center);
+
+  void MoveCenterOfAblationZone(itk::Index<3> &center);
 
   int CalculateTumorVolume();
 

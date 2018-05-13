@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>440</width>
-    <height>386</height>
+    <height>414</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -164,6 +164,30 @@
        </property>
        <property name="value">
         <number>50</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="toleranceNonAblatedTumorSafetyMarginVolumeLabel">
+       <property name="text">
+        <string>Tolerance Non-ablated Volume (in %):</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="toleranceNonAblatedTumorSafetyMarginVolumeSpinBox">
+       <property name="maximum">
+        <number>20</number>
+       </property>
+       <property name="value">
+        <number>1</number>
        </property>
       </widget>
      </item>
