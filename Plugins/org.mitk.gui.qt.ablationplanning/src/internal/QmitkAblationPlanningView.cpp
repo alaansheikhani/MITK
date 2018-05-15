@@ -1527,30 +1527,61 @@ void QmitkAblationPlanningView::MoveCenterOfAblationZone(itk::Index<3>& center)
   if (distanceLowerX < radiusFactor)
   {
     distanceMoveUpX = radiusFactor - distanceLowerX;
+    if ((distanceLowerX + distanceMoveUpX) > ((distanceLowerX + distanceUpperX) / 2))
+    {
+      distanceMoveUpX = ((distanceLowerX + distanceUpperX) / 2) - distanceLowerX;
+    }
+    distanceMoveUpX -= 2.0;
   }
 
   if (distanceUpperX < radiusFactor)
   {
     distanceMoveDownX = radiusFactor - distanceUpperX;
+    if ((distanceUpperX + distanceMoveDownX) > ((distanceLowerX + distanceUpperX) / 2))
+    {
+      distanceMoveDownX = ((distanceLowerX + distanceUpperX) / 2) - distanceUpperX;
+    }
+    distanceMoveDownX -= 2.0;
   }
 
   if (distanceLowerY < radiusFactor)
   {
     distanceMoveUpY = radiusFactor - distanceLowerY;
+    if ((distanceLowerY + distanceMoveUpY) >((distanceLowerY + distanceUpperY) / 2))
+    {
+      distanceMoveUpY = ((distanceLowerY + distanceUpperY) / 2) - distanceLowerY;
+    }
+    distanceMoveUpY -= 2.0;
   }
 
   if (distanceUpperY < radiusFactor)
   {
     distanceMoveDownY = radiusFactor - distanceUpperY;
+    if ((distanceUpperY + distanceMoveDownY) >((distanceLowerY + distanceUpperY) / 2))
+    {
+      distanceMoveDownY = ((distanceLowerY + distanceUpperY) / 2) - distanceUpperY;
+    }
+    distanceMoveDownY -= 2.0;
   }
+
   if (distanceLowerZ < radiusFactor)
   {
     distanceMoveUpZ = radiusFactor - distanceLowerZ;
+    if ((distanceLowerZ + distanceMoveUpZ) >((distanceLowerZ + distanceUpperZ) / 2))
+    {
+      distanceMoveUpZ = ((distanceLowerZ + distanceUpperZ) / 2) - distanceLowerZ;
+    }
+    distanceMoveUpZ -= 2.0;
   }
 
   if (distanceUpperZ < radiusFactor)
   {
     distanceMoveDownZ = radiusFactor - distanceUpperZ;
+    if ((distanceUpperZ + distanceMoveDownZ) >((distanceLowerZ + distanceUpperZ) / 2))
+    {
+      distanceMoveDownZ = ((distanceLowerZ + distanceUpperZ) / 2) - distanceUpperZ;
+    }
+    distanceMoveDownZ -= 2.0;
   }
 
   resultMovingX = floor((distanceMoveUpX - distanceMoveDownX) / m_ImageSpacing[0]);
@@ -1903,7 +1934,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
       }
       itk::Index<3> indexToProof = m_AblationZoneCentersProcessed.at(counter);
       double distance = this->CalculateScalarDistance(actualIndex, indexToProof);
-      if( distance <= (2.0/3.0) * m_AblationRadius )
+      if( distance <= 0.5 * m_AblationRadius )
       {
         indexToRemove.push_back(counter);
       }
@@ -1929,7 +1960,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
 
   //------------------------------------------------------------------------------------------------
-  std::vector<itk::Index<3>> onlyTumorIndices = this->FillVectorContainingIndicesOfTumorTissueOnly();
+  /*std::vector<itk::Index<3>> onlyTumorIndices = this->FillVectorContainingIndicesOfTumorTissueOnly();
 
   while (onlyTumorIndices.size() > 0)
   {
@@ -1943,7 +1974,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   //TEST TEST TEST
-  this->ResetSegmentationImage();
+  /*this->ResetSegmentationImage();
 
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
@@ -1958,7 +1989,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
 
   //Check, if ablation zones have a too short distance between each other:
-  /*for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     std::vector<int> indexToRemove;
     itk::Index<3> actualIndex = m_AblationZoneCentersProcessed.at(index);
@@ -1985,14 +2016,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
       index = -1;
     }
 
-  }*/
+  }
 
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     this->CalculateAblationVolume(m_AblationZoneCentersProcessed.at(index));
   }
 
-  this->DetectNotNeededAblationVolume(m_AblationZoneCenters, m_AblationZoneCentersProcessed);
+  this->DetectNotNeededAblationVolume(m_AblationZoneCenters, m_AblationZoneCentersProcessed);*/
   // ENDE TEST TEST TEST
   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   //===================================================================================================
