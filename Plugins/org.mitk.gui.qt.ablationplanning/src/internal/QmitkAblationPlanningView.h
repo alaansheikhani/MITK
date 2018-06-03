@@ -82,84 +82,9 @@ protected:
 
   void CopyTemporaryAblationZoneDistribution();
 
-  void FillVectorContainingIndicesOfTumorTissueSafetyMargin();
-
-  std::vector<itk::Index<3>> FillVectorContainingIndicesOfTumorTissueOnly();
-
-  void FindAblationStartingPosition();
-
-  double CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2);
-
-  void CalculateAblationVolume(itk::Index<3> &center);
-
-  bool CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume);
-
-  bool CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(double &radius, itk::Index<3> &centerOfVolume);
-
-  double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point);
-
-  bool CheckImageForNonAblatedTissue();
-
-  bool CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices);
-
-  void ProcessDirectNeighbourAblationZones(itk::Index<3> &center);
-
-  void CalculateUpperLowerXYZ(unsigned int &upperX, unsigned int &lowerX,
-                              unsigned int &upperY, unsigned int &lowerY,
-                              unsigned int &upperZ, unsigned int &lowerZ,
-                              unsigned int &pixelDirectionX,
-                              unsigned int &pixelDirectionY,
-                              unsigned int &pixelDirectionZ,
-                              itk::Index<3> &center );
-
-  void CalculateDistancesOfTumorBoundariesFromCenter(double &distanceLowerX,
-                                                     double &distanceUpperX,
-                                                     double &distanceLowerY,
-                                                     double &distanceUpperY,
-                                                     double &distanceLowerZ,
-                                                     double &distanceUpperZ,
-                                                     itk::Index<3> &center);
-
-  std::vector<itk::Index<3>> CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3> &center, double &radius);
-
-  bool IsAblationZoneAlreadyProcessed(itk::Index<3> &center);
-
-  void DetectNotNeededAblationVolume();
-
-  void DetectNotNeededAblationVolume(std::vector<itk::Index<3>> &ablationZones,
-                                     std::vector<itk::Index<3>> &ablationZonesProcessed);
-
-  bool CheckIfAblationVolumeIsNeeded(itk::Index<3> &center);
-
-  void RemoveAblationVolume(itk::Index<3> &center);
-
-  void RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center, std::vector<itk::Index<3>> &tumorSafetyMarginPixels);
-
-  itk::Index<3> SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels);
-
   void CreateSpheresOfAblationVolumes();
 
   void DeleteAllSpheres();
-
-  void ResetSegmentationImage();
-
-  void ResetSafetyMargin();
-
-  bool CheckAllVonNeumannNeighbourPixelsAreTumorTissue(itk::Index<3> &pixel);
-
-  void CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3> &pixel);
-
-  double CalculateRatioAblatedTissueOutsideTumorToAblatedTissueInsideTumor(itk::Index<3> &center);
-
-  void MoveCenterOfAblationZone(itk::Index<3> &center);
-
-  int CalculateTumorVolume();
-
-  int CalculateSafetyMarginVolume();
-
-  int CalculateTotalAblationVolume();
-
-  int CalculateAblationVolumeAblatedMoreThanOneTime();
 
 protected slots:
   void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node);
@@ -169,7 +94,6 @@ protected slots:
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
   void OnAblationRadiusChanged(double radius);
-
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;
