@@ -362,6 +362,8 @@ void QmitkAblationPlanningView::CalculateAblationStatistics()
   double factorAblatedVolumeOutsideSafetyMargin =
     ((totalAblationVolume - tumorAndSafetyMarginVolume) / (double)totalAblationVolume) * 100;
 
+  m_Controls.numberAblationVoluminaLabel
+    ->setText(QString("%1").arg(m_AblationZoneCentersProcessed.size()));
   m_Controls.numberTumorVolumeLabel
     ->setText(QString("%1").arg(tumorVolume));
   m_Controls.numberTumorAndMarginVolumeLabel
@@ -763,6 +765,26 @@ void QmitkAblationPlanningView::OnConfirmNewPositionClicked()
   }
 }
 
+void QmitkAblationPlanningView::OnDeleteChosenAblationZoneClicked()
+{
+  if (m_Controls.ablationZonesComboBox->count() > 0 && m_SegmentationImage.IsNotNull())
+  {
+    int index = m_Controls.ablationZonesComboBox->currentIndex();
+    AblationUtils::RemoveAblationVolume(m_AblationZoneCentersProcessed.at(index), m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+
+    this->DeleteAllSpheres();
+
+    std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
+    m_AblationZoneCentersProcessed.erase(it + index);
+    std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
+    m_AblationZoneCenters.erase(it2 + index);
+
+    this->FillComboBoxAblationZones();
+    this->CreateSpheresOfAblationVolumes();
+    this->CalculateAblationStatistics();
+  }
+}
+
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 {
   // create GUI widgets from the Qt Designer's .ui file
@@ -788,6 +810,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnCalculateSafetyMargin()));
   connect(m_Controls.confirmNewPositionPushButton, SIGNAL(clicked()),
     this, SLOT(OnConfirmNewPositionClicked()));
+  connect(m_Controls.deleteChosenAblationZonePushButton, SIGNAL(clicked()),
+    this, SLOT(OnDeleteChosenAblationZoneClicked()));
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())

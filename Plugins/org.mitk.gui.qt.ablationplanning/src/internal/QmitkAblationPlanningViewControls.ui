@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>440</width>
+    <width>513</width>
     <height>721</height>
    </rect>
   </property>
@@ -384,6 +384,13 @@
        <widget class="QPushButton" name="confirmNewPositionPushButton">
         <property name="text">
          <string>Confirm New Position</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="deleteChosenAblationZonePushButton">
+        <property name="text">
+         <string>Delete Chosen Ablation Zone</string>
         </property>
        </widget>
       </item>
