@@ -311,15 +311,7 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     mySphere->SetVtkPolyData(vtkSphere->GetOutput());
 
     m_DataNode->SetData(mySphere);
-    QString name;
-    if (index == 0)
-    {
-      name = QString("Start-Ablationsvolumen");
-    }
-    else
-    {
-      name = QString("Kugel_%1").arg(index + 1);
-    }
+    QString name = QString("Kugel_%1").arg(index + 1);
 
     m_DataNode->SetName(name.toStdString());
     this->GetDataStorage()->Add(m_DataNode);
@@ -333,15 +325,7 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
 {
   for( int index = m_AblationZoneCentersProcessed.size(); index > 0; --index )
   {
-    QString name;
-    if( index > 1 )
-    {
-      name = QString("Kugel_%1").arg(index);
-    }
-    else
-    {
-      name = QString("Start-Ablationsvolumen");
-    }
+    QString name = QString("Kugel_%1").arg(index);
 
     mitk::DataNode::Pointer dataNode = this->GetDataStorage()->GetNamedNode(name.toStdString());
     if( dataNode.IsNotNull() )
@@ -351,6 +335,45 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
   }
   this->GetDataStorage()->Modified();
   this->RequestRenderWindowUpdate();
+}
+
+void QmitkAblationPlanningView::FillComboBoxAblationZones()
+{
+  m_Controls.ablationZonesComboBox->clear();
+
+  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    QString name = QString("Kugel_%1").arg(index + 1);
+    m_Controls.ablationZonesComboBox->addItem(name);
+  }
+}
+
+void QmitkAblationPlanningView::CalculateAblationStatistics()
+{
+  int tumorVolume = AblationUtils::CalculateTumorVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
+  int safetyMarginVolume = AblationUtils::CalculateSafetyMarginVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
+  int tumorAndSafetyMarginVolume = tumorVolume + safetyMarginVolume;
+  int totalAblationVolume = AblationUtils::CalculateTotalAblationVolume(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
+  int ablationVolumeAblatedMoreThanOneTime = AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
+
+  double factorOverlappingAblationZones =
+    ((double)ablationVolumeAblatedMoreThanOneTime / totalAblationVolume) * 100;
+
+  double factorAblatedVolumeOutsideSafetyMargin =
+    ((totalAblationVolume - tumorAndSafetyMarginVolume) / (double)totalAblationVolume) * 100;
+
+  m_Controls.numberTumorVolumeLabel
+    ->setText(QString("%1").arg(tumorVolume));
+  m_Controls.numberTumorAndMarginVolumeLabel
+    ->setText(QString("%1").arg(tumorAndSafetyMarginVolume));
+  m_Controls.numberAblationVolumeLabel
+    ->setText(QString("%1").arg(totalAblationVolume));
+  m_Controls.numberVolumeAblatedTwoAndMoreLabel
+    ->setText(QString("%1").arg(ablationVolumeAblatedMoreThanOneTime));
+  m_Controls.numberOverlappingAblationZonesLabel
+    ->setText(QString("%1").arg(factorOverlappingAblationZones));
+  m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel
+    ->setText(QString("%1").arg(factorAblatedVolumeOutsideSafetyMargin));
 }
 
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node)
@@ -703,36 +726,41 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
 
   this->CreateSpheresOfAblationVolumes();
+  this->FillComboBoxAblationZones();
+  this->CalculateAblationStatistics();
 
-  int tumorVolume = AblationUtils::CalculateTumorVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
-  int safetyMarginVolume = AblationUtils::CalculateSafetyMarginVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
-  int tumorAndSafetyMarginVolume = tumorVolume + safetyMarginVolume;
-  int totalAblationVolume = AblationUtils::CalculateTotalAblationVolume(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
-  int ablationVolumeAblatedMoreThanOneTime = AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
-
-  double factorOverlappingAblationZones =
-    ((double)ablationVolumeAblatedMoreThanOneTime / totalAblationVolume) * 100;
-
-  double factorAblatedVolumeOutsideSafetyMargin =
-    ((totalAblationVolume - tumorAndSafetyMarginVolume) / (double)totalAblationVolume) * 100;
-
-  m_Controls.numberTumorVolumeLabel
-    ->setText(QString("%1").arg(tumorVolume));
-  m_Controls.numberTumorAndMarginVolumeLabel
-    ->setText(QString("%1").arg(tumorAndSafetyMarginVolume));
-  m_Controls.numberAblationVolumeLabel
-    ->setText(QString("%1").arg(totalAblationVolume));
-  m_Controls.numberVolumeAblatedTwoAndMoreLabel
-    ->setText(QString("%1").arg(ablationVolumeAblatedMoreThanOneTime));
-  m_Controls.numberOverlappingAblationZonesLabel
-    ->setText(QString("%1").arg(factorOverlappingAblationZones));
-  m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel
-    ->setText(QString("%1").arg(factorAblatedVolumeOutsideSafetyMargin));
 }
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)
 {
   m_AblationRadius = radius;
+}
+
+void QmitkAblationPlanningView::OnConfirmNewPositionClicked()
+{
+  if( m_Controls.ablationZonesComboBox->count() > 0 && m_SegmentationImage.IsNotNull())
+  {
+    int index = m_Controls.ablationZonesComboBox->currentIndex();
+
+    AblationUtils::RemoveAblationVolume(m_AblationZoneCentersProcessed.at(index), m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+
+    //Get the actual marked position of the crosshair:
+    mitk::Point3D newPositionInWorldCoordinates = this->GetRenderWindowPart()->GetSelectedPosition();
+    itk::Index<3> newPositionInIndexCoordinates;
+
+    //Calculate the index coordinates of the new position:
+    m_SegmentationImage->GetGeometry()->WorldToIndex(newPositionInWorldCoordinates,
+      newPositionInIndexCoordinates);
+
+    m_AblationZoneCentersProcessed.at(index) = newPositionInIndexCoordinates;
+    m_AblationZoneCenters.at(index) = newPositionInIndexCoordinates;
+
+    AblationUtils::CalculateAblationVolume(newPositionInIndexCoordinates, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension);
+
+    this->DeleteAllSpheres();
+    this->CreateSpheresOfAblationVolumes();
+    this->CalculateAblationStatistics();
+  }
 }
 
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
@@ -758,6 +786,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnAblationRadiusChanged(double)));
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()),
     this, SLOT(OnCalculateSafetyMargin()));
+  connect(m_Controls.confirmNewPositionPushButton, SIGNAL(clicked()),
+    this, SLOT(OnConfirmNewPositionClicked()));
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())

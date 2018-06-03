@@ -239,6 +239,47 @@ void AblationUtils::CalculateAblationVolume(itk::Index<3>& center, mitk::Image::
   }
 }
 
+void AblationUtils::CalculateAblationVolume(itk::Index<3>& center, mitk::Image::Pointer image, double & radius, mitk::Vector3D & imageSpacing, mitk::Vector3D & imageDimension)
+{
+  MITK_INFO << "Calculate ablation volume for index: " << center;
+  if (image.IsNotNull())
+  {
+    unsigned int pixelDirectionX = floor(radius / imageSpacing[0]);
+    unsigned int pixelDirectionY = floor(radius / imageSpacing[1]);
+    unsigned int pixelDirectionZ = floor(radius / imageSpacing[2]);
+
+    unsigned int upperX;
+    unsigned int lowerX;
+    unsigned int upperY;
+    unsigned int lowerY;
+    unsigned int upperZ;
+    unsigned int lowerZ;
+
+    CalculateUpperLowerXYZ(upperX, lowerX, upperY, lowerY, upperZ, lowerZ,
+      pixelDirectionX, pixelDirectionY, pixelDirectionZ, center, imageDimension);
+
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = lowerY; actualIndex[1] <= upperY; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = lowerX; actualIndex[0] <= upperX; actualIndex[0] += 1)
+        {
+          if (radius >= CalculateScalarDistance(center, actualIndex, imageSpacing))
+          {
+            unsigned short pixelValue =
+              imagePixelWriter.GetPixelByIndex(actualIndex)
+              + ABLATION_VALUE;
+
+            imagePixelWriter.SetPixelByIndex(actualIndex, pixelValue);
+          }
+        }
+      }
+    }
+  }
+}
+
 bool AblationUtils::CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension)
 {
   if(image.IsNotNull())

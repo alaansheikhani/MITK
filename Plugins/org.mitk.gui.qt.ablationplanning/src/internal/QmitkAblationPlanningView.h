@@ -86,6 +86,10 @@ protected:
 
   void DeleteAllSpheres();
 
+  void FillComboBoxAblationZones();
+
+  void CalculateAblationStatistics();
+
 protected slots:
   void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node);
   void OnVisiblePropertyChanged();
@@ -94,6 +98,7 @@ protected slots:
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
   void OnAblationRadiusChanged(double radius);
+  void OnConfirmNewPositionClicked();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;

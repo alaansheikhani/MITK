@@ -50,6 +50,8 @@ public:
 
   static void CalculateAblationVolume(itk::Index<3> &center, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension, std::vector<itk::Index<3>> &tempAblationZoneCenters);
 
+  static void CalculateAblationVolume(itk::Index<3> &center, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
+
   static bool CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
 
   static bool CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(double &radius, itk::Index<3> &centerOfVolume, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
