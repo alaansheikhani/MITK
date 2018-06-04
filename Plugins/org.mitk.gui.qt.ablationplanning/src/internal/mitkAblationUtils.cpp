@@ -1334,7 +1334,7 @@ int AblationUtils::CalculateTumorVolume(mitk::Image::Pointer image, mitk::Vector
     }
   }
   double volumeFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
-  volume = (int) (volume * volumeFactor);
+  volume = (int) (volume * volumeFactor) / 1000;
   return volume;
 }
 
@@ -1353,7 +1353,7 @@ int AblationUtils::CalculateSafetyMarginVolume(mitk::Image::Pointer image, mitk:
     }
   }
   double volumeFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
-  volume = (int)(volume * volumeFactor);
+  volume = (int)(volume * volumeFactor) / 1000;
   return volume;
 }
 
@@ -1381,7 +1381,7 @@ int AblationUtils::CalculateTotalAblationVolume(mitk::Image::Pointer image, mitk
     }
   }
   double volumeFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
-  volume = (int)(volume * volumeFactor);
+  volume = (int)(volume * volumeFactor) / 1000;
   return volume;
 }
 
@@ -1412,6 +1412,6 @@ int AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Po
     }
   }
   double volumeFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
-  volume = (int)(volume * volumeFactor);
+  volume = (int)(volume * volumeFactor) / 1000;
   return volume;
 }
