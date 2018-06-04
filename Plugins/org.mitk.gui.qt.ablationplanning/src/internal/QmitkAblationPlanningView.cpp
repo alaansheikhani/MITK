@@ -785,6 +785,34 @@ void QmitkAblationPlanningView::OnDeleteChosenAblationZoneClicked()
   }
 }
 
+void QmitkAblationPlanningView::OnAddNewAblationZoneClicked()
+{
+  if( m_SegmentationImage.IsNotNull() )
+  {
+    if( m_TumorTissueSafetyMarginIndices.size() == 0 )
+    {
+      AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
+    }
+    //Get the actual marked position of the crosshair:
+    mitk::Point3D newPositionInWorldCoordinates = this->GetRenderWindowPart()->GetSelectedPosition();
+    itk::Index<3> newPositionInIndexCoordinates;
+
+    //Calculate the index coordinates of the new position:
+    m_SegmentationImage->GetGeometry()->WorldToIndex(newPositionInWorldCoordinates,
+      newPositionInIndexCoordinates);
+
+    m_AblationZoneCentersProcessed.push_back(newPositionInIndexCoordinates);
+    m_AblationZoneCenters.push_back(newPositionInIndexCoordinates);
+
+    AblationUtils::CalculateAblationVolume(newPositionInIndexCoordinates, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension);
+
+    this->FillComboBoxAblationZones();
+    this->DeleteAllSpheres();
+    this->CreateSpheresOfAblationVolumes();
+    this->CalculateAblationStatistics();
+  }
+}
+
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 {
   // create GUI widgets from the Qt Designer's .ui file
@@ -812,6 +840,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnConfirmNewPositionClicked()));
   connect(m_Controls.deleteChosenAblationZonePushButton, SIGNAL(clicked()),
     this, SLOT(OnDeleteChosenAblationZoneClicked()));
+  connect(m_Controls.addNewAblationZonePushButton, SIGNAL(clicked()),
+    this, SLOT(OnAddNewAblationZoneClicked()));
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())

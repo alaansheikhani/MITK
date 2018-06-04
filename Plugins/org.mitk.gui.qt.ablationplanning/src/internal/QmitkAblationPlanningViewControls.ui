@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>513</width>
-    <height>721</height>
+    <height>864</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -371,9 +371,9 @@
         <property name="text">
          <string>For changing the position of a given ablation zone, please:
 
- 1)Choose the ablation zone you want to move within the list below.
- 2)Mark the new center of the chosen ablation zone within the segmentation image by your mouse.
- 3)Confirm the new position by clicking the button &quot;Confirm New Position&quot;.</string>
+ 1) Choose the ablation zone you want to move within the list below.
+ 2) Mark the new center of the chosen ablation zone within the segmentation image by your mouse.
+ 3) Confirm the new position by clicking the button &quot;Confirm New Position&quot;.</string>
         </property>
        </widget>
       </item>
@@ -388,9 +388,36 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>For deleting an ablation zone, please:
+
+1) Choose the ablation zone you want to remove within the list above.
+2) Click the button &quot;Delete Chosen Ablation Zone&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="deleteChosenAblationZonePushButton">
         <property name="text">
          <string>Delete Chosen Ablation Zone</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>For adding a new ablation zone, please:
+
+ 1) Mark the center of the new ablation zone within the segmentation image by your mouse.
+ 2) Confirm the new ablation zone by clicking the button &quot;Add New Ablation Zone&quot;.</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="addNewAblationZonePushButton">
+        <property name="text">
+         <string>Add New Ablation Zone</string>
         </property>
        </widget>
       </item>

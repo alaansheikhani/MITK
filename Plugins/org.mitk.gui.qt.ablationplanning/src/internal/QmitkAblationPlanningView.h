@@ -100,6 +100,7 @@ protected slots:
   void OnAblationRadiusChanged(double radius);
   void OnConfirmNewPositionClicked();
   void OnDeleteChosenAblationZoneClicked();
+  void OnAddNewAblationZoneClicked();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;
