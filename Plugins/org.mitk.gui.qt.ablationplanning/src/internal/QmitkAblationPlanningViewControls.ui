@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>513</width>
+    <width>516</width>
     <height>864</height>
    </rect>
   </property>
@@ -21,12 +21,12 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="labelWarning">
+    <widget class="QLabel" name="infoSelectSegmentationImageLabel">
      <property name="styleSheet">
-      <string notr="true">QLabel { color: rgb(255, 0, 0) }</string>
+      <string notr="true"/>
      </property>
      <property name="text">
-      <string>Please select a segmentation!</string>
+      <string>Selected segmentation:</string>
      </property>
     </widget>
    </item>

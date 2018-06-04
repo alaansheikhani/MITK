@@ -459,7 +459,14 @@ void QmitkAblationPlanningView::OnCalculateSafetyMargin()
     mitk::RenderingManager::GetInstance()->Modified();
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   }
-  else if(m_Controls.safetyMarginSpinBox->value() > 0.0)
+  else if (m_SegmentationImage.IsNotNull() && m_Controls.safetyMarginSpinBox->value() == 0.0)
+  {
+    AblationUtils::ResetSafetyMargin(m_SegmentationImage, m_ImageDimension);
+    MITK_INFO << "Reset safety margin done.";
+    mitk::RenderingManager::GetInstance()->Modified();
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
+  else
   {
     QMessageBox msgBox;
     msgBox.setText("Cannot calculate safety margin: No segmentation image was chosen.");
@@ -820,10 +827,6 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 
   m_Controls.segmentationComboBox->SetDataStorage(GetDataStorage());
   m_Controls.segmentationComboBox->SetPredicate(m_IsASegmentationImagePredicate);
-  if (m_Controls.segmentationComboBox->GetSelectedNode().IsNotNull())
-  {
-    // TODO : update Text UpdateWarningLabel("");
-  }
 
   // create signal/slot connections
   connect(m_Controls.segmentationComboBox, SIGNAL(OnSelectionChanged(const mitk::DataNode*)),
