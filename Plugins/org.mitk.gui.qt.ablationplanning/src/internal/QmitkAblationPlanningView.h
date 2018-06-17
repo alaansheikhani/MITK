@@ -98,6 +98,7 @@ protected slots:
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
   void OnAblationRadiusChanged(double radius);
+  void OnTissueShrinkingFactorChanged(int tissueShrinking);
   void OnConfirmNewPositionClicked();
   void OnDeleteChosenAblationZoneClicked();
   void OnAddNewAblationZoneClicked();

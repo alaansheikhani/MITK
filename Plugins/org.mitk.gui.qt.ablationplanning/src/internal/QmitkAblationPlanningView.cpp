@@ -742,7 +742,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)
 {
-  m_AblationRadius = radius;
+  m_AblationRadius = radius * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+  MITK_INFO << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
+}
+
+void QmitkAblationPlanningView::OnTissueShrinkingFactorChanged(int tissueShrinking)
+{
+  m_AblationRadius = m_Controls.ablationRadiusSpinBox->value() * (1 + ((double)tissueShrinking/100.0));
+  MITK_INFO << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
 }
 
 void QmitkAblationPlanningView::OnConfirmNewPositionClicked()
@@ -837,6 +844,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnCalculateAblationZonesPushButtonClicked()));
   connect(m_Controls.ablationRadiusSpinBox, SIGNAL(valueChanged(double)),
     this, SLOT(OnAblationRadiusChanged(double)));
+  connect(m_Controls.tissueShrinkingSpinBox, SIGNAL(valueChanged(int)),
+    this, SLOT(OnTissueShrinkingFactorChanged(int)));
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()),
     this, SLOT(OnCalculateSafetyMargin()));
   connect(m_Controls.confirmNewPositionPushButton, SIGNAL(clicked()),
