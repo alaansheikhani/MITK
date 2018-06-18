@@ -708,82 +708,33 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
   }
 
+
+
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     AblationUtils::CalculateAblationVolume(m_AblationZoneCentersProcessed.at(index), m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension, m_TempAblationZoneCenters);
   }
 
-  AblationUtils::DetectNotNeededAblationVolume(m_AblationZoneCenters, m_AblationZoneCentersProcessed, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+  AblationUtils::DetectNotNeededAblationVolume(m_AblationZoneCentersProcessed, m_AblationZoneCenters, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
 
 
-  //------------------------------------------------------------------------------------------------
-  /*std::vector<itk::Index<3>> onlyTumorIndices = AblationUtils::FillVectorContainingIndicesOfTumorTissueOnly();
-
-  while (onlyTumorIndices.size() > 0)
+  //============
+  if(m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value() == 0)
   {
-    itk::Index<3> newAblationCenter = AblationUtils::SearchNextAblationCenter(onlyTumorIndices);
-    AblationUtils::CalculateAblationVolume(newAblationCenter);
-    AblationUtils::RemoveAblatedPixelsFromGivenVector(newAblationCenter, onlyTumorIndices);
-    m_AblationZoneCentersProcessed.push_back(newAblationCenter);
-    m_AblationZoneCenters.push_back(newAblationCenter);
-  }
+    std::vector<itk::Index<3>> onlyTumorIndices = AblationUtils::FillVectorContainingIndicesOfTumorTissueOnly(m_SegmentationImage, m_ImageDimension);
 
-
-  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //TEST TEST TEST
-  /*AblationUtils::ResetSegmentationImage();
-
-  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
-  {
-    double ratio =
-      AblationUtils::CalculateRatioAblatedTissueOutsideTumorToAblatedTissueInsideTumor(
-        m_AblationZoneCentersProcessed.at(index));
-    MITK_WARN << "RATIO: " << ratio;
-    if (ratio > 0.3)
+    while (onlyTumorIndices.size() > 0)
     {
-      AblationUtils::MoveCenterOfAblationZone(m_AblationZoneCentersProcessed.at(index));
+      itk::Index<3> newAblationCenter = AblationUtils::SearchNextAblationCenter(onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+      AblationUtils::MoveCenterOfAblationZone(newAblationCenter, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+      AblationUtils::CalculateAblationVolume(newAblationCenter, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension);
+      AblationUtils::RemoveAblatedPixelsFromGivenVector(newAblationCenter, onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+      m_AblationZoneCentersProcessed.push_back(newAblationCenter);
+      m_AblationZoneCenters.push_back(newAblationCenter);
     }
+    AblationUtils::DetectNotNeededAblationVolume(m_AblationZoneCentersProcessed, m_AblationZoneCenters, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
   }
-
-  //Check, if ablation zones have a too short distance between each other:
-  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
-  {
-    std::vector<int> indexToRemove;
-    itk::Index<3> actualIndex = m_AblationZoneCentersProcessed.at(index);
-    for (int counter = 0; counter < m_AblationZoneCentersProcessed.size(); ++counter)
-    {
-      if (counter == index)
-      {
-        continue;
-      }
-      itk::Index<3> indexToProof = m_AblationZoneCentersProcessed.at(counter);
-      double distance = this->CalculateScalarDistance(actualIndex, indexToProof);
-      if (distance <= (2.0 / 3.0) * m_AblationRadius)
-      {
-        indexToRemove.push_back(counter);
-      }
-    }
-    for (int position = indexToRemove.size() - 1; position >= 0; --position)
-    {
-      std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
-      m_AblationZoneCentersProcessed.erase(it + indexToRemove.at(position));
-      std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
-      m_AblationZoneCenters.erase(it2 + indexToRemove.at(position));
-      MITK_INFO << "Removed Ablation zone at index position: " << indexToRemove.at(position);
-      index = -1;
-    }
-
-  }
-
-  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
-  {
-    AblationUtils::CalculateAblationVolume(m_AblationZoneCentersProcessed.at(index));
-  }
-
-  this->DetectNotNeededAblationVolume(m_AblationZoneCenters, m_AblationZoneCentersProcessed);*/
-  // ENDE TEST TEST TEST
-  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //===================================================================================================
+  //============
 
   MITK_INFO << "Finished calculating ablation zones!";
 

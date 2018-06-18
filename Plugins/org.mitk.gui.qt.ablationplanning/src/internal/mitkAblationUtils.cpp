@@ -527,8 +527,8 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(
     for (int count = center[0] + 1; count < imageDimension[0]; ++count)
     {
       newIndex[0] = count;
-      if (imagePixelWriter.GetPixelByIndex(newIndex) == TUMOR_NOT_YET_ABLATED ||
-        imagePixelWriter.GetPixelByIndex(newIndex) == SAFETY_MARGIN)
+      if ((imagePixelWriter.GetPixelByIndex(newIndex) & TUMOR_NOT_YET_ABLATED) == TUMOR_NOT_YET_ABLATED ||
+        (imagePixelWriter.GetPixelByIndex(newIndex) & SAFETY_MARGIN) == SAFETY_MARGIN)
       {
         continue;
       }
@@ -544,8 +544,8 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(
     for (int count = center[0] - 1; count >= 0; --count)
     {
       newIndex[0] = count;
-      if (imagePixelWriter.GetPixelByIndex(newIndex) == TUMOR_NOT_YET_ABLATED ||
-        imagePixelWriter.GetPixelByIndex(newIndex) == SAFETY_MARGIN)
+      if ((imagePixelWriter.GetPixelByIndex(newIndex) & TUMOR_NOT_YET_ABLATED) == TUMOR_NOT_YET_ABLATED ||
+        (imagePixelWriter.GetPixelByIndex(newIndex) & SAFETY_MARGIN) == SAFETY_MARGIN)
       {
         continue;
       }
@@ -561,8 +561,8 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(
     for (int count = center[1] + 1; count < imageDimension[1]; ++count)
     {
       newIndex[1] = count;
-      if (imagePixelWriter.GetPixelByIndex(newIndex) == TUMOR_NOT_YET_ABLATED ||
-        imagePixelWriter.GetPixelByIndex(newIndex) == SAFETY_MARGIN)
+      if ((imagePixelWriter.GetPixelByIndex(newIndex) & TUMOR_NOT_YET_ABLATED) == TUMOR_NOT_YET_ABLATED ||
+        (imagePixelWriter.GetPixelByIndex(newIndex) & SAFETY_MARGIN) == SAFETY_MARGIN)
       {
         continue;
       }
@@ -578,8 +578,8 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(
     for (int count = center[1] - 1; count >= 0; --count)
     {
       newIndex[1] = count;
-      if (imagePixelWriter.GetPixelByIndex(newIndex) == TUMOR_NOT_YET_ABLATED ||
-        imagePixelWriter.GetPixelByIndex(newIndex) == SAFETY_MARGIN)
+      if ((imagePixelWriter.GetPixelByIndex(newIndex) & TUMOR_NOT_YET_ABLATED) == TUMOR_NOT_YET_ABLATED ||
+        (imagePixelWriter.GetPixelByIndex(newIndex) & SAFETY_MARGIN) == SAFETY_MARGIN)
       {
         continue;
       }
@@ -594,8 +594,8 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(
     for (int count = center[2] + 1; count < imageDimension[2]; ++count)
     {
       newIndex[2] = count;
-      if (imagePixelWriter.GetPixelByIndex(newIndex) == TUMOR_NOT_YET_ABLATED ||
-        imagePixelWriter.GetPixelByIndex(newIndex) == SAFETY_MARGIN)
+      if ((imagePixelWriter.GetPixelByIndex(newIndex) & TUMOR_NOT_YET_ABLATED) == TUMOR_NOT_YET_ABLATED ||
+        (imagePixelWriter.GetPixelByIndex(newIndex) & SAFETY_MARGIN) == SAFETY_MARGIN)
       {
         continue;
       }
@@ -611,8 +611,8 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(
     for (int count = center[2] - 1; count >= 0; --count)
     {
       newIndex[2] = count;
-      if (imagePixelWriter.GetPixelByIndex(newIndex) == TUMOR_NOT_YET_ABLATED ||
-        imagePixelWriter.GetPixelByIndex(newIndex) == SAFETY_MARGIN)
+      if ((imagePixelWriter.GetPixelByIndex(newIndex) & TUMOR_NOT_YET_ABLATED) == TUMOR_NOT_YET_ABLATED ||
+        (imagePixelWriter.GetPixelByIndex(newIndex) & SAFETY_MARGIN) == SAFETY_MARGIN)
       {
         continue;
       }
