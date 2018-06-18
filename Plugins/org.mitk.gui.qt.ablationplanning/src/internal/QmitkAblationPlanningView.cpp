@@ -381,6 +381,17 @@ void QmitkAblationPlanningView::CalculateAblationStatistics()
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node)
 {
   MITK_INFO << "OnSegmentationComboBoxSelectionChanged()";
+
+  if( m_SegmentationImage.IsNotNull() )
+  {
+    AblationUtils::ResetSafetyMargin(m_SegmentationImage, m_ImageDimension);
+    AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
+    this->DeleteAllSpheres();
+    this->CalculateAblationStatistics();
+    mitk::RenderingManager::GetInstance()->Modified();
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
+
   if (node == nullptr)
   {
     this->UnsetSegmentationImageGeometry();
@@ -407,7 +418,6 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
 
   m_SegmentationImage = segmentationImage;
   this->SetSegmentationImageGeometryInformation(segmentationImage.GetPointer());
-
 }
 
 void QmitkAblationPlanningView::OnVisiblePropertyChanged()
