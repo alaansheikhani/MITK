@@ -317,6 +317,37 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     this->GetDataStorage()->Add(m_DataNode);
   }
 
+  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
+  {
+    mitk::DataNode::Pointer m_DataNode = mitk::DataNode::New();
+
+    mitk::Surface::Pointer mySphere = mitk::Surface::New();
+
+    vtkSmartPointer<vtkSphereSource> vtkSphere = vtkSmartPointer<vtkSphereSource>::New();
+    vtkSmartPointer<vtkAppendPolyData> appendPolyData = vtkSmartPointer<vtkAppendPolyData>::New();
+    vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
+    mitk::Point3D centerInWorldCoordinates;
+
+    m_SegmentationImage->GetGeometry()->IndexToWorld(
+      m_AblationZoneCentersProcessed.at(index),
+      centerInWorldCoordinates);
+
+    //Center
+    vtkSphere->SetRadius(0.75);
+    vtkSphere->SetCenter(centerInWorldCoordinates[0], centerInWorldCoordinates[1], centerInWorldCoordinates[2]);
+    vtkSphere->Update();
+
+    appendPolyData->AddInputData(vtkSphere->GetOutput());
+
+    mySphere->SetVtkPolyData(vtkSphere->GetOutput());
+
+    m_DataNode->SetData(mySphere);
+    QString name = QString("Center_Kugel_%1").arg(index + 1);
+
+    m_DataNode->SetName(name.toStdString());
+    this->GetDataStorage()->Add(m_DataNode);
+  }
+
   this->GetDataStorage()->Modified();
   this->RequestRenderWindowUpdate();
 }
@@ -329,6 +360,16 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
 
     mitk::DataNode::Pointer dataNode = this->GetDataStorage()->GetNamedNode(name.toStdString());
     if( dataNode.IsNotNull() )
+    {
+      this->GetDataStorage()->Remove(dataNode);
+    }
+  }
+  for (int index = m_AblationZoneCentersProcessed.size(); index > 0; --index)
+  {
+    QString name = QString("Center_Kugel_%1").arg(index);
+
+    mitk::DataNode::Pointer dataNode = this->GetDataStorage()->GetNamedNode(name.toStdString());
+    if (dataNode.IsNotNull())
     {
       this->GetDataStorage()->Remove(dataNode);
     }
