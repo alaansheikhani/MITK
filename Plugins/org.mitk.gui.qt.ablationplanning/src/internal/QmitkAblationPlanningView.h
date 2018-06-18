@@ -102,6 +102,7 @@ protected slots:
   void OnConfirmNewPositionClicked();
   void OnDeleteChosenAblationZoneClicked();
   void OnAddNewAblationZoneClicked();
+  void OnCalculationModelChanged(bool);
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;

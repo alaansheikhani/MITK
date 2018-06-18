@@ -428,6 +428,13 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
     AblationUtils::ResetSafetyMargin(m_SegmentationImage, m_ImageDimension);
     AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
     this->DeleteAllSpheres();
+
+    m_TumorTissueSafetyMarginIndices.clear();
+    m_AblationZoneCenters.clear();
+    m_TempAblationZoneCenters.clear();
+    m_AblationZoneCentersProcessed.clear();
+    m_TempAblationZoneCentersProcessed.clear();
+
     this->CalculateAblationStatistics();
     mitk::RenderingManager::GetInstance()->Modified();
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
@@ -878,6 +885,25 @@ void QmitkAblationPlanningView::OnAddNewAblationZoneClicked()
   }
 }
 
+void QmitkAblationPlanningView::OnCalculationModelChanged(bool)
+{
+  if (m_SegmentationImage.IsNotNull())
+  {
+    AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
+    this->DeleteAllSpheres();
+
+    m_TumorTissueSafetyMarginIndices.clear();
+    m_AblationZoneCenters.clear();
+    m_TempAblationZoneCenters.clear();
+    m_AblationZoneCentersProcessed.clear();
+    m_TempAblationZoneCentersProcessed.clear();
+
+    this->CalculateAblationStatistics();
+    mitk::RenderingManager::GetInstance()->Modified();
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
+}
+
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 {
   // create GUI widgets from the Qt Designer's .ui file
@@ -905,6 +931,12 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnDeleteChosenAblationZoneClicked()));
   connect(m_Controls.addNewAblationZonePushButton, SIGNAL(clicked()),
     this, SLOT(OnAddNewAblationZoneClicked()));
+  connect(m_Controls.gridModelRadioButton, SIGNAL(toggled(bool)),
+    this, SLOT(OnCalculationModelChanged(bool)));
+  connect(m_Controls.randomDistributionRadioButton, SIGNAL(toggled(bool)),
+    this, SLOT(OnCalculationModelChanged(bool)));
+
+
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())
