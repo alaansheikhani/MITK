@@ -103,6 +103,8 @@ protected slots:
   void OnDeleteChosenAblationZoneClicked();
   void OnAddNewAblationZoneClicked();
   void OnCalculationModelChanged(bool);
+  void OnNumberOfRepetitionsChanged();
+  void OnPercentageNonAblatedVolumeChanged();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;
@@ -165,6 +167,8 @@ private:
   */
   mitk::Vector3D m_ImageDimension;
   mitk::Vector3D m_ImageSpacing;
+
+  bool m_AblationCalculationMade;
 };
 
 #endif // QMITKABLATIONPLANNINGVIEW_H

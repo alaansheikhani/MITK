@@ -56,7 +56,8 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   m_AblationStartingPositionInWorldCoordinates(),
   m_AblationStartingPositionIndexCoordinates(),
   m_ManualAblationStartingPositionSet(false),
-  m_AblationRadius(0.5)
+  m_AblationRadius(0.5),
+  m_AblationCalculationMade(false)
 {
   this->UnsetSegmentationImageGeometry();
 
@@ -594,6 +595,9 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     return;
   }
 
+  m_AblationCalculationMade = true;
+  m_Controls.refreshCalculationsPushButton->setVisible(false);
+
   //Reset earlier calculations:
   this->DeleteAllSpheres();
   AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
@@ -800,12 +804,20 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)
 {
+  if (m_AblationCalculationMade)
+  {
+    m_Controls.refreshCalculationsPushButton->setVisible(true);
+  }
   m_AblationRadius = radius * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
   MITK_INFO << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
 }
 
 void QmitkAblationPlanningView::OnTissueShrinkingFactorChanged(int tissueShrinking)
 {
+  if (m_AblationCalculationMade)
+  {
+    m_Controls.refreshCalculationsPushButton->setVisible(true);
+  }
   m_AblationRadius = m_Controls.ablationRadiusSpinBox->value() * (1 + ((double)tissueShrinking/100.0));
   MITK_INFO << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
 }
@@ -904,10 +916,28 @@ void QmitkAblationPlanningView::OnCalculationModelChanged(bool)
   }
 }
 
+void QmitkAblationPlanningView::OnNumberOfRepetitionsChanged()
+{
+  if (m_AblationCalculationMade)
+  {
+    m_Controls.refreshCalculationsPushButton->setVisible(true);
+  }
+}
+
+void QmitkAblationPlanningView::OnPercentageNonAblatedVolumeChanged()
+{
+  if (m_AblationCalculationMade)
+  {
+    m_Controls.refreshCalculationsPushButton->setVisible(true);
+  }
+}
+
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 {
   // create GUI widgets from the Qt Designer's .ui file
   m_Controls.setupUi(parent);
+
+  m_Controls.refreshCalculationsPushButton->setVisible(false);
 
   m_Controls.segmentationComboBox->SetDataStorage(GetDataStorage());
   m_Controls.segmentationComboBox->SetPredicate(m_IsASegmentationImagePredicate);
@@ -935,7 +965,12 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnCalculationModelChanged(bool)));
   connect(m_Controls.randomDistributionRadioButton, SIGNAL(toggled(bool)),
     this, SLOT(OnCalculationModelChanged(bool)));
-
+  connect(m_Controls.refreshCalculationsPushButton, SIGNAL(clicked()),
+    this, SLOT(OnCalculateAblationZonesPushButtonClicked()));
+  connect(m_Controls.repititionsCalculatingAblationZonesSpinBox, SIGNAL(valueChanged(int)),
+    this, SLOT(OnNumberOfRepetitionsChanged()));
+  connect(m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox, SIGNAL(valueChanged(int)),
+    this, SLOT(OnPercentageNonAblatedVolumeChanged()));
 
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
