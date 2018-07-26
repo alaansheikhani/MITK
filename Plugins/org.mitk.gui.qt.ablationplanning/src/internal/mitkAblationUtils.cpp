@@ -1048,7 +1048,7 @@ bool AblationUtils::CheckAllVonNeumannNeighbourPixelsAreTumorTissue(itk::Index<3
   {
     //MITK_INFO << "CheckAllVonNeumannNeighbourPixels... " << pixel[0] << " " << pixel[1] << " " << pixel[2];
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
-    if (imagePixelWriter.GetPixelByIndex(pixel) != TUMOR_NOT_YET_ABLATED)
+    if ((imagePixelWriter.GetPixelByIndex(pixel) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED)
     {
       //If true --> actual pixel is no tumor tissue, so skip this pixel:
       return true;
@@ -1093,27 +1093,27 @@ bool AblationUtils::CheckAllVonNeumannNeighbourPixelsAreTumorTissue(itk::Index<3
     itk::Index<3> pixelZUpper = pixel;
     pixelZUpper[2] = zUpper;
 
-    if( imagePixelWriter.GetPixelByIndex(pixelXLower) != TUMOR_NOT_YET_ABLATED )
+    if((imagePixelWriter.GetPixelByIndex(pixelXLower) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED )
     {
       return false;
     }
-    if (imagePixelWriter.GetPixelByIndex(pixelYLower) != TUMOR_NOT_YET_ABLATED)
+    if((imagePixelWriter.GetPixelByIndex(pixelYLower) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED)
     {
       return false;
     }
-    if (imagePixelWriter.GetPixelByIndex(pixelZLower) != TUMOR_NOT_YET_ABLATED)
+    if((imagePixelWriter.GetPixelByIndex(pixelZLower) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED)
     {
       return false;
     }
-    if (imagePixelWriter.GetPixelByIndex(pixelXUpper) != TUMOR_NOT_YET_ABLATED)
+    if((imagePixelWriter.GetPixelByIndex(pixelXUpper) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED)
     {
       return false;
     }
-    if (imagePixelWriter.GetPixelByIndex(pixelYUpper) != TUMOR_NOT_YET_ABLATED)
+    if((imagePixelWriter.GetPixelByIndex(pixelYUpper) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED)
     {
       return false;
     }
-    if (imagePixelWriter.GetPixelByIndex(pixelZUpper) != TUMOR_NOT_YET_ABLATED)
+    if((imagePixelWriter.GetPixelByIndex(pixelZUpper) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED)
     {
       return false;
     }
@@ -1149,7 +1149,7 @@ void AblationUtils::CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3>& pixel,
         {
           if( margin >= CalculateScalarDistance(pixel, actualIndex, imageSpacing) )
           {
-            if( imagePixelWriter.GetPixelByIndex(actualIndex) != TUMOR_NOT_YET_ABLATED &&
+            if((imagePixelWriter.GetPixelByIndex(actualIndex) & TUMOR_NOT_YET_ABLATED) != TUMOR_NOT_YET_ABLATED &&
                 imagePixelWriter.GetPixelByIndex(actualIndex) != SAFETY_MARGIN )
             {
               imagePixelWriter.SetPixelByIndex(actualIndex, SAFETY_MARGIN );
