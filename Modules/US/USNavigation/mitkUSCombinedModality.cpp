@@ -20,27 +20,30 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNavigationDataDelayFilter.h>
 #include "mitkTrackingDeviceSource.h"
 
+// US Control Interfaces
+#include "mitkUSControlInterfaceProbes.h"
+#include "mitkUSControlInterfaceBMode.h"
+#include "mitkUSControlInterfaceDoppler.h"
+
 mitk::USCombinedModality::USCombinedModality( USDevice::Pointer usDevice,
                                               NavigationDataSource::Pointer trackingDevice,
                                               bool trackedUltrasoundActive )
   : AbstractUltrasoundTrackerDevice( usDevice, trackingDevice, trackedUltrasoundActive )
 {
-
 }
 
 mitk::USCombinedModality::~USCombinedModality()
 {
 }
 
-}
 
 void mitk::USCombinedModality::GenerateData()
 {
   if (m_UltrasoundDevice->GetIsFreezed()) { return; } //if the image is freezed: do nothing
-
   //get next image from ultrasound image source
-  mitk::Image::Pointer image = m_UltrasoundDevice->GetOutput(); //GetUSImageSource()->GetNextImage();
-
+  //FOR LATER: Be aware if the for loop behaves correct, if the UltrasoundDevice has more than 1 output.
+  int i = 0;
+  mitk::Image::Pointer image = m_UltrasoundDevice->GetUSImageSource()->GetNextImage().at(i);
   if (image.IsNull() || !image->IsInitialized()) //check the image
   {
     MITK_WARN << "Invalid image in USCombinedModality, aborting!";

@@ -41,9 +41,12 @@ void mitk::TrackedUltrasound::GenerateData()
 
   if (m_UltrasoundDevice->GetIsFreezed()) { return; } //if the image is freezed: do nothing
 
-  //get actual image from ultrasound image source
+  //get next image from ultrasound image source
   //FOR LATER: Be aware if the for loop behaves correct, if the UltrasoundDevice has more than 1 output.
-  for( unsigned int i = 0; i < m_UltrasoundDevice->GetSizeOfImageVector(); ++i )
+  int i = 0;
+  mitk::Image::Pointer image = m_UltrasoundDevice->GetUSImageSource()->GetNextImage().at(i);
+
+  if (image.IsNull() || !image->IsInitialized()) //check the image
   {
     mitk::Image::Pointer image = m_UltrasoundDevice->GetOutput(i);
     if (image.IsNull() || !image->IsInitialized()) //check the image
