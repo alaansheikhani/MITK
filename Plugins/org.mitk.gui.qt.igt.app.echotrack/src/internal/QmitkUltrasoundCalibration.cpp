@@ -66,7 +66,7 @@ m_USDeviceChanged(this, &QmitkUltrasoundCalibration::OnUSDepthChanged)
   if (pluginContext)
   {
     // to be notified about service event of an USDevice
-    pluginContext->connectServiceListener(this, "OnDeciveServiceEvent",
+    pluginContext->connectServiceListener(this, "OnDeviceServiceEvent",
       QString::fromStdString("(" + us::ServiceConstants::OBJECTCLASS() + "=" + us_service_interface_iid<mitk::USDevice>() + ")"));
   }
 }
@@ -631,7 +631,7 @@ void QmitkUltrasoundCalibration::OnStopCalibrationProcess()
   m_Controls.m_ToolBox->setCurrentIndex(0);
 }
 
-void QmitkUltrasoundCalibration::OnDeciveServiceEvent(const ctkServiceEvent event)
+void QmitkUltrasoundCalibration::OnDeviceServiceEvent(const ctkServiceEvent event)
 {
   if (m_CombinedModality.IsNull() || event.getType() != ctkServiceEvent::MODIFIED) { return; }
 
@@ -950,7 +950,7 @@ void QmitkUltrasoundCalibration::SwitchFreeze()
     }
 
     m_CombinedModality->Update();
-    m_Image = m_CombinedModality->GetUltrasoundDevice()->GetOutput();
+    m_Image = m_CombinedModality->GetOutput(); 
     if (m_Image.IsNotNull() && m_Image->IsInitialized())
     {
       m_Node->SetData(m_Image);
@@ -1072,16 +1072,30 @@ void QmitkUltrasoundCalibration::ApplyTransformToPointSet(mitk::PointSet::Pointe
 void QmitkUltrasoundCalibration::OnFreezeClicked()
 {
   if (m_CombinedModality->GetUltrasoundDevice()->GetIsFreezed())
-  { //device was already frozen so we need to delete all Spacing points because they need to be collected all at once
+  {
+    if (!m_Timer->isActive()) // Activate Imaging
+    {
+      // if (m_Node) m_Node->ReleaseData();
+      if (m_CombinedModality.IsNull()) {
+        m_Timer->stop();
+        return;
+      }
+      m_Timer->start();
+    }  
+    
+    //device was already frozen so we need to delete all Spacing points because they need to be collected all at once
     // no need to check if all four points are already collected, because if thats the case you can no longer click the Freeze Button
     m_SpacingPoints->Clear();
     m_Controls.m_SpacingPointsList->clear();
     m_SpacingPointsCount = 0;
     m_Controls.m_SpacingAddPoint->setEnabled(false);
     m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(false);
+
   }
   else
   {
+    //deactivate Imaging
+    m_Timer->stop();
     m_CombinedModality->GetUltrasoundDevice()->SetIsFreezed(true);
     m_Controls.m_SpacingAddPoint->setEnabled(true);
   }
