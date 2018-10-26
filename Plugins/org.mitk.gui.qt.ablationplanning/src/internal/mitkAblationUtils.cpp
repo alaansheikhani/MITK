@@ -60,7 +60,7 @@ void AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(mitk::I
 {
   if(image.IsNotNull() )
   {
-    MITK_INFO << "Detecting the tumor tissue and safety margin is in progress...";
+    MITK_DEBUG << "Detecting the tumor tissue and safety margin is in progress...";
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
     itk::Index<3> actualIndex;
     for (actualIndex[2] = 0; actualIndex[2] < imageDimension[2]; actualIndex[2] += 1)
@@ -109,7 +109,7 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image, 
 {
   if(image.IsNotNull() )
   {
-    MITK_INFO << "Finding a random ablation starting position...";
+    MITK_DEBUG << "Finding a random ablation starting position...";
 
     bool positionFound = false;
     int iteration = 1;
@@ -164,7 +164,7 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image, 
       {
         ++iteration;
       }
-      MITK_INFO << "Iteration: " << iteration;
+      MITK_DEBUG << "Iteration: " << iteration;
       tempAblationStartingPositionIndexCoordinates = startingPositions.at(index);
     }
 
@@ -177,11 +177,11 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image, 
     double z = tempAblationStartingPositionInWorldCoordinates[2];
     QString text = QString("Set Ablation Startingposition to: %1 | %2 | %3").arg(x).arg(y).arg(z);
 
-    MITK_INFO << "Set Ablation Startingposition to: " << tempAblationStartingPositionInWorldCoordinates;
-    MITK_INFO << "Startingposition in Index: " << tempAblationStartingPositionIndexCoordinates;
-    MITK_INFO << "Spacing: " << image->GetGeometry()->GetSpacing();
+    MITK_DEBUG << "Set Ablation Startingposition to: " << tempAblationStartingPositionInWorldCoordinates;
+    MITK_DEBUG << "Startingposition in Index: " << tempAblationStartingPositionIndexCoordinates;
+    MITK_DEBUG << "Spacing: " << image->GetGeometry()->GetSpacing();
     //Get number of voxels in the three dimensions:
-    MITK_INFO << "Dimension: " << imageDimension[0] << " " << imageDimension[1] << " " << imageDimension[2];
+    MITK_DEBUG << "Dimension: " << imageDimension[0] << " " << imageDimension[1] << " " << imageDimension[2];
     return text;
   }
   return "";
@@ -199,7 +199,7 @@ double AblationUtils::CalculateScalarDistance(itk::Index<3> &point1, itk::Index<
 
 void AblationUtils::CalculateAblationVolume(itk::Index<3>& center, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension, std::vector<itk::Index<3>> &tempAblationZoneCenters)
 {
-  MITK_INFO << "Calculate ablation volume for index: " << center;
+  MITK_DEBUG << "Calculate ablation volume for index: " << center;
   if(image.IsNotNull() )
   {
     unsigned int pixelDirectionX = floor(radius / imageSpacing[0]);
@@ -241,7 +241,7 @@ void AblationUtils::CalculateAblationVolume(itk::Index<3>& center, mitk::Image::
 
 void AblationUtils::CalculateAblationVolume(itk::Index<3>& center, mitk::Image::Pointer image, double & radius, mitk::Vector3D & imageSpacing, mitk::Vector3D & imageDimension)
 {
-  MITK_INFO << "Calculate ablation volume for index: " << center;
+  MITK_DEBUG << "Calculate ablation volume for index: " << center;
   if (image.IsNotNull())
   {
     unsigned int pixelDirectionX = floor(radius / imageSpacing[0]);
@@ -864,7 +864,7 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(
                                 itk::Index<3> &center,
                                 std::vector<itk::Index<3>> &tumorSafetyMarginPixels, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing)
 {
-  MITK_INFO << "Removing ablated pixels...";
+  MITK_DEBUG << "Removing ablated pixels...";
   if (image.IsNotNull())
   {
     unsigned int pixelDirectionX = floor(radius / imageSpacing[0]);
@@ -882,7 +882,7 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(
       pixelDirectionX, pixelDirectionY, pixelDirectionZ, center, imageDimension);
 
     itk::Index<3> actualIndex;
-    MITK_INFO << "Size of tumorPixels before: " << tumorSafetyMarginPixels.size();
+    MITK_DEBUG << "Size of tumorPixels before: " << tumorSafetyMarginPixels.size();
 
     for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
     {
@@ -905,7 +905,7 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(
         }
       }
     }
-    MITK_INFO << "Size of tumorPixels after: " << tumorSafetyMarginPixels.size();
+    MITK_DEBUG << "Size of tumorPixels after: " << tumorSafetyMarginPixels.size();
   }
 }
 
@@ -913,7 +913,7 @@ itk::Index<3> AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>>
 {
   if (image.IsNotNull())
   {
-    MITK_INFO << "Searching the next ablation center...";
+    MITK_DEBUG << "Searching the next ablation center...";
 
     int iteration = 1;
 

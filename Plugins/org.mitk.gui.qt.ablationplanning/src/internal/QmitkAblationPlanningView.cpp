@@ -109,7 +109,7 @@ QmitkAblationPlanningView::~QmitkAblationPlanningView()
 
 void QmitkAblationPlanningView::OnSelectionChanged(mitk::DataNode * node)
 {
-  MITK_INFO << "OnSelectionChanged()";
+  MITK_DEBUG << "OnSelectionChanged()";
   berry::IWorkbenchPart::Pointer nullPart;
   QList<mitk::DataNode::Pointer> nodes;
   nodes.push_back(node);
@@ -118,7 +118,7 @@ void QmitkAblationPlanningView::OnSelectionChanged(mitk::DataNode * node)
 
 void QmitkAblationPlanningView::OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes)
 {
-  MITK_INFO << "OnSelectionChanged()";
+  MITK_DEBUG << "OnSelectionChanged()";
 
   if (nodes.size() == 1)
   {
@@ -187,7 +187,7 @@ void QmitkAblationPlanningView::SetFocus()
 
 void QmitkAblationPlanningView::NodeRemoved(const mitk::DataNode * node)
 {
-  MITK_INFO << "NodeRemoved()";
+  MITK_DEBUG << "NodeRemoved()";
   if (m_IsASegmentationImagePredicate->CheckNode(node))
   {
     //First of all remove all possible contour markers of the segmentation
@@ -217,7 +217,7 @@ void QmitkAblationPlanningView::NodeRemoved(const mitk::DataNode * node)
 
 void QmitkAblationPlanningView::NodeAdded(const mitk::DataNode * node)
 {
-  MITK_INFO << "NodeAdded()";
+  MITK_DEBUG << "NodeAdded()";
   if (!m_IsOfTypeImagePredicate->CheckNode(node))
   {
     return;
@@ -422,7 +422,7 @@ void QmitkAblationPlanningView::CalculateAblationStatistics()
 
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node)
 {
-  MITK_INFO << "OnSegmentationComboBoxSelectionChanged()";
+  MITK_DEBUG << "OnSegmentationComboBoxSelectionChanged()";
 
   if( m_SegmentationImage.IsNotNull() )
   {
@@ -471,13 +471,13 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
 
 void QmitkAblationPlanningView::OnVisiblePropertyChanged()
 {
-  MITK_INFO << "OnVisiblePropertyChanged()";
+  MITK_DEBUG << "OnVisiblePropertyChanged()";
 
 }
 
 void QmitkAblationPlanningView::OnBinaryPropertyChanged()
 {
-  MITK_INFO << "OnBinaryPropertyChanged()";
+  MITK_DEBUG << "OnBinaryPropertyChanged()";
   mitk::DataStorage::SetOfObjects::ConstPointer segImages = m_Controls.segmentationComboBox->GetNodes();
 
   for (mitk::DataStorage::SetOfObjects::ConstIterator it = segImages->Begin(); it != segImages->End(); ++it)
@@ -563,7 +563,7 @@ void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
   mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(m_SegmentationImage);
   unsigned short pixelType = imagePixelWriter.GetPixelByIndex(m_AblationStartingPositionIndexCoordinates);
 
-  MITK_INFO << "PixelType: " << pixelType;
+  MITK_DEBUG << "PixelType: " << pixelType;
   if (pixelType < 1)
   {
     m_ManualAblationStartingPositionSet = false;
@@ -577,11 +577,11 @@ void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
   double z = m_AblationStartingPositionInWorldCoordinates[2];
   QString text = QString("Set Ablation Startingposition to: %1 | %2 | %3").arg(x).arg(y).arg(z);
   m_Controls.ablationStartingPointLabel->setText(text);
-  MITK_INFO << "Set Ablation Startingposition to: " << m_AblationStartingPositionInWorldCoordinates;
-  MITK_INFO << "Startingposition in Index: " << m_AblationStartingPositionIndexCoordinates;
-  MITK_INFO << "Spacing: " << m_SegmentationImage->GetGeometry()->GetSpacing();
+  MITK_DEBUG << "Set Ablation Startingposition to: " << m_AblationStartingPositionInWorldCoordinates;
+  MITK_DEBUG << "Startingposition in Index: " << m_AblationStartingPositionIndexCoordinates;
+  MITK_DEBUG << "Spacing: " << m_SegmentationImage->GetGeometry()->GetSpacing();
   //Get number of voxels in the three dimensions:
-  MITK_INFO << "Dimension: " << m_ImageDimension[0] << " " << m_ImageDimension[1] << " " << m_ImageDimension[2];
+  MITK_DEBUG << "Dimension: " << m_ImageDimension[0] << " " << m_ImageDimension[1] << " " << m_ImageDimension[2];
 
 }
 
@@ -626,7 +626,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
       AblationUtils::ProcessDirectNeighbourAblationZones(m_TempAblationStartingPositionIndexCoordinates, m_SegmentationImage, m_ImageSpacing, m_ImageDimension, m_AblationRadius, m_TempAblationZoneCentersProcessed, m_TempAblationZoneCenters);
       while( m_TempAblationZoneCenters.size() != m_TempAblationZoneCentersProcessed.size() )
       {
-        MITK_INFO << "Size1: " << m_TempAblationZoneCenters.size() << " Size2: " << m_TempAblationZoneCentersProcessed.size();
+        MITK_DEBUG << "Size1: " << m_TempAblationZoneCenters.size()
+                   << " Size2: " << m_TempAblationZoneCentersProcessed.size();
         for( int index = 0; index < m_TempAblationZoneCenters.size(); ++index )
         {
           if (!AblationUtils::IsAblationZoneAlreadyProcessed(m_TempAblationZoneCenters.at(index), m_TempAblationZoneCentersProcessed))
@@ -702,7 +703,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
       m_AblationZoneCentersProcessed.erase(it + indexToRemove.at(position));
       std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
       m_AblationZoneCenters.erase(it2 + indexToRemove.at(position));
-      MITK_INFO << "Removed Ablation zone at index position: " << indexToRemove.at(position);
+      MITK_DEBUG << "Removed Ablation zone at index position: " << indexToRemove.at(position);
       index = -1;
     }
 
@@ -760,7 +761,7 @@ void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)
     m_Controls.refreshCalculationsPushButton->setVisible(true);
   }
   m_AblationRadius = radius * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
-  MITK_INFO << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
+  MITK_DEBUG << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
 }
 
 void QmitkAblationPlanningView::OnTissueShrinkingFactorChanged(int tissueShrinking)
@@ -770,7 +771,7 @@ void QmitkAblationPlanningView::OnTissueShrinkingFactorChanged(int tissueShrinki
     m_Controls.refreshCalculationsPushButton->setVisible(true);
   }
   m_AblationRadius = m_Controls.ablationRadiusSpinBox->value() * (1 + ((double)tissueShrinking/100.0));
-  MITK_INFO << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
+  MITK_DEBUG << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
 }
 
 void QmitkAblationPlanningView::OnConfirmNewPositionClicked()
@@ -887,6 +888,7 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 {
   // create GUI widgets from the Qt Designer's .ui file
   m_Controls.setupUi(parent);
+  OnTissueShrinkingFactorChanged(m_Controls.tissueShrinkingSpinBox->value());
 
   m_Controls.refreshCalculationsPushButton->setVisible(false);
 
