@@ -56,7 +56,7 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   m_AblationStartingPositionInWorldCoordinates(),
   m_AblationStartingPositionIndexCoordinates(),
   m_ManualAblationStartingPositionSet(false),
-  m_AblationRadius(0.5),
+  m_AblationRadius(15.0),
   m_AblationCalculationMade(false)
 {
   this->UnsetSegmentationImageGeometry();
