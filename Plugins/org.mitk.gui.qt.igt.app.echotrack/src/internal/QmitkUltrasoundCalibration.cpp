@@ -1085,7 +1085,6 @@ void QmitkUltrasoundCalibration::ApplyTransformToPointSet(mitk::PointSet::Pointe
 
 void QmitkUltrasoundCalibration::OnFreezeClicked()
 {
-  MITK_INFO << "OnFreezeClicked()";
   if (m_CombinedModality->GetIsFreezed())
   {
     //device was already frozen so we need to delete all Spacing points because they need to be collected all at once
