@@ -33,6 +33,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateNot.h>
 #include <mitkNodePredicateProperty.h>
 #include <mitkLabelSetImage.h>
+#include <mitkPointSet.h>
 #include "mitkProperties.h"
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkImagePixelWriteAccessor.h>
@@ -57,7 +58,8 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   m_AblationStartingPositionIndexCoordinates(),
   m_ManualAblationStartingPositionSet(false),
   m_AblationRadius(15.0),
-  m_AblationCalculationMade(false)
+  m_AblationCalculationMade(false),
+  m_AblationCentersNode(mitk::DataNode::New())
 {
   this->UnsetSegmentationImageGeometry();
 
@@ -287,6 +289,7 @@ void QmitkAblationPlanningView::CopyTemporaryAblationZoneDistribution()
 
 void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
 {
+  mitk::PointSet::Pointer centerPoints = mitk::PointSet::New();
   for( int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     mitk::DataNode::Pointer m_DataNode = mitk::DataNode::New();
@@ -304,6 +307,8 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
 
     //Center
     vtkSphere->SetRadius(m_AblationRadius);
+    vtkSphere->SetPhiResolution(360);
+    vtkSphere->SetThetaResolution(360);
     vtkSphere->SetCenter(centerInWorldCoordinates[0], centerInWorldCoordinates[1], centerInWorldCoordinates[2]);
     vtkSphere->Update();
 
@@ -311,43 +316,22 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
 
     mySphere->SetVtkPolyData(vtkSphere->GetOutput());
 
+    //Add Node
     m_DataNode->SetData(mySphere);
     QString name = QString("Kugel_%1").arg(index + 1);
-
     m_DataNode->SetName(name.toStdString());
     this->GetDataStorage()->Add(m_DataNode);
+
+    //Add Center Points
+    MITK_INFO << "Ablation Zone " << index << "[" << centerInWorldCoordinates[0] << ";" << centerInWorldCoordinates[1]
+              << ";" << centerInWorldCoordinates[2] << "]";
+    centerPoints->InsertPoint(centerInWorldCoordinates);
   }
 
-  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
-  {
-    mitk::DataNode::Pointer m_DataNode = mitk::DataNode::New();
-
-    mitk::Surface::Pointer mySphere = mitk::Surface::New();
-
-    vtkSmartPointer<vtkSphereSource> vtkSphere = vtkSmartPointer<vtkSphereSource>::New();
-    vtkSmartPointer<vtkAppendPolyData> appendPolyData = vtkSmartPointer<vtkAppendPolyData>::New();
-    vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
-    mitk::Point3D centerInWorldCoordinates;
-
-    m_SegmentationImage->GetGeometry()->IndexToWorld(
-      m_AblationZoneCentersProcessed.at(index),
-      centerInWorldCoordinates);
-
-    //Center
-    vtkSphere->SetRadius(0.75);
-    vtkSphere->SetCenter(centerInWorldCoordinates[0], centerInWorldCoordinates[1], centerInWorldCoordinates[2]);
-    vtkSphere->Update();
-
-    appendPolyData->AddInputData(vtkSphere->GetOutput());
-
-    mySphere->SetVtkPolyData(vtkSphere->GetOutput());
-
-    m_DataNode->SetData(mySphere);
-    QString name = QString("Center_Kugel_%1").arg(index + 1);
-
-    m_DataNode->SetName(name.toStdString());
-    this->GetDataStorage()->Add(m_DataNode);
-  }
+  m_AblationCentersNode = mitk::DataNode::New();
+  m_AblationCentersNode->SetName("Ablation Centers");
+  m_AblationCentersNode->SetData(centerPoints);
+  this->GetDataStorage()->Add(m_AblationCentersNode);
 
   this->GetDataStorage()->Modified();
   this->RequestRenderWindowUpdate();
@@ -365,16 +349,7 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
       this->GetDataStorage()->Remove(dataNode);
     }
   }
-  for (int index = m_AblationZoneCentersProcessed.size(); index > 0; --index)
-  {
-    QString name = QString("Center_Kugel_%1").arg(index);
-
-    mitk::DataNode::Pointer dataNode = this->GetDataStorage()->GetNamedNode(name.toStdString());
-    if (dataNode.IsNotNull())
-    {
-      this->GetDataStorage()->Remove(dataNode);
-    }
-  }
+  this->GetDataStorage()->Remove(m_AblationCentersNode);
   this->GetDataStorage()->Modified();
   this->RequestRenderWindowUpdate();
 }

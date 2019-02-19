@@ -14,7 +14,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-
 #ifndef QMITKABLATIONPLANNINGVIEW_H
 #define QMITKABLATIONPLANNINGVIEW_H
 
@@ -44,12 +43,10 @@ class QmitkAblationPlanningView : public QmitkAbstractView
   Q_OBJECT
 
 public:
-
   // a type for handling lists of DataNodes
-  typedef std::vector<mitk::DataNode*> NodeList;
+  typedef std::vector<mitk::DataNode *> NodeList;
 
-  typedef std::map<mitk::DataNode*, unsigned long> NodeTagMapType;
-
+  typedef std::map<mitk::DataNode *, unsigned long> NodeTagMapType;
 
   QmitkAblationPlanningView();
   virtual ~QmitkAblationPlanningView();
@@ -57,13 +54,12 @@ public:
   /*!
   \brief Invoked when the DataManager selection changed
   */
-  virtual void OnSelectionChanged(mitk::DataNode* node);
+  virtual void OnSelectionChanged(mitk::DataNode *node);
   virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part,
-    const QList<mitk::DataNode::Pointer>& nodes) override;
-
+                                  const QList<mitk::DataNode::Pointer> &nodes) override;
 
   void UnsetSegmentationImageGeometry();
-  void SetSegmentationImageGeometryInformation(mitk::Image* image);
+  void SetSegmentationImageGeometryInformation(mitk::Image *image);
 
   static const std::string VIEW_ID;
 
@@ -71,14 +67,14 @@ protected:
   virtual void CreateQtPartControl(QWidget *parent) override;
   virtual void SetFocus() override;
 
-  //void ResetMouseCursor();
-  //void SetMouseCursor(const us::ModuleResource&, int hotspotX, int hotspotY);
+  // void ResetMouseCursor();
+  // void SetMouseCursor(const us::ModuleResource&, int hotspotX, int hotspotY);
 
-  void NodeRemoved(const mitk::DataNode* node) override;
+  void NodeRemoved(const mitk::DataNode *node) override;
 
   void NodeAdded(const mitk::DataNode *node) override;
 
-  bool CheckForSameGeometry(const mitk::DataNode*, const mitk::DataNode*) const;
+  bool CheckForSameGeometry(const mitk::DataNode *, const mitk::DataNode *) const;
 
   void CopyTemporaryAblationZoneDistribution();
 
@@ -91,7 +87,7 @@ protected:
   void CalculateAblationStatistics();
 
 protected slots:
-  void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node);
+  void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode *node);
   void OnVisiblePropertyChanged();
   void OnBinaryPropertyChanged();
   void OnCalculateSafetyMargin();
@@ -113,8 +109,8 @@ private:
   mitk::NodePredicateOr::Pointer m_IsASegmentationImagePredicate;
   mitk::NodePredicateAnd::Pointer m_IsAPatientImagePredicate;
 
-  NodeTagMapType  m_WorkingDataObserverTags;
-  NodeTagMapType  m_BinaryPropertyObserverTags;
+  NodeTagMapType m_WorkingDataObserverTags;
+  NodeTagMapType m_BinaryPropertyObserverTags;
 
   unsigned long m_VisibilityChangedObserverTag;
   bool m_MouseCursorSet;
@@ -136,37 +132,39 @@ private:
   std::vector<itk::Index<3>> m_AblationZoneCenters;
 
   /*!
-  * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
-  * when calculating the best ablation zone distribution.
-  */
+   * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
+   * when calculating the best ablation zone distribution.
+   */
   std::vector<itk::Index<3>> m_TempAblationZoneCenters;
 
   /*!
-  * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
-  * which are finally processed after the calculation of the best ablation zone distribution.
-  * This means: All 12 direct neighbour ablation zones are checked for remaining non-ablated tumor issue.
-  */
+   * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
+   * which are finally processed after the calculation of the best ablation zone distribution.
+   * This means: All 12 direct neighbour ablation zones are checked for remaining non-ablated tumor issue.
+   */
   std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
 
   /*!
-  * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones,
-  * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
-  * for remaining non-ablated tumor issue.
-  */
+   * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones,
+   * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
+   * for remaining non-ablated tumor issue.
+   */
   std::vector<itk::Index<3>> m_TempAblationZoneCentersProcessed;
 
   /*!
-  * \brief Vector storing the index coordinates of all pixels, which are tumor tissue or
-  * safety margin.
-  */
+   * \brief Vector storing the index coordinates of all pixels, which are tumor tissue or
+   * safety margin.
+   */
   std::vector<itk::Index<3>> m_TumorTissueSafetyMarginIndices;
-
 
   /*!
   \brief The 3D dimension of the segmentation image given in index size.
   */
   mitk::Vector3D m_ImageDimension;
   mitk::Vector3D m_ImageSpacing;
+
+  /** Holds a point set with the centers of all ablation zones */
+  mitk::DataNode::Pointer m_AblationCentersNode;
 
   bool m_AblationCalculationMade;
 };
