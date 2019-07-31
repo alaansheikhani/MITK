@@ -95,6 +95,13 @@ public:
 
   static void DetectNotNeededAblationVolume(std::vector<itk::Index<3>> &tempAblationZoneCentersProcessed, std::vector<itk::Index<3>> &tempAblationZoneCenters, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 
+  static double FindMinimalAblationRadius(itk::Index<3> &center,
+                                          mitk::Image::Pointer image,
+                                          double &maxRadius,
+                                          double &minRadius,
+                                          mitk::Vector3D &imageDimension,
+                                          mitk::Vector3D &imageSpacing);
+
   static bool CheckIfAblationVolumeIsNeeded(itk::Index<3> &center, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 
   static void RemoveAblationVolume(itk::Index<3> &center, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
