@@ -582,9 +582,10 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_AblationZoneCentersProcessed.clear();
   m_TempAblationZoneCentersProcessed.clear();
 
+  //==================== Find ablation proposal by iteratively create and test random propsals ==========================================
   AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
 
-  //Start of for-loop:
+  //Start of for-loop (main iterative loop, each iteration = one proposal):
   for( int iteration = 1; iteration <= m_Controls.repititionsCalculatingAblationZonesSpinBox->value(); ++iteration )
   {
     MITK_INFO << "Iteration: " << iteration;
@@ -641,7 +642,9 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
   } //End of for loop
 
-  //=========================================================================================
+  //==================== Optimization of final proposal ==================================================
+
+  //Check if ablation zones are too far outside the tumor, if yes move them towards the center
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     double ratio =
@@ -654,7 +657,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     }
   }
 
-  //Check, if ablation zones have a too short distance between each other:
+  //Check, if ablation zones have a too short distance between each other, if yes they can be removed
   for(int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
     std::vector<int> indexToRemove;
