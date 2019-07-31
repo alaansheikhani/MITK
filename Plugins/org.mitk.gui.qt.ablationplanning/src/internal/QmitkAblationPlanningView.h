@@ -122,7 +122,8 @@ private:
   itk::Index<3> m_TempAblationStartingPositionIndexCoordinates;
 
   bool m_ManualAblationStartingPositionSet;
-  double m_AblationRadius;
+  double m_AblationRadius; // Maximal ablation radius
+  double m_MinAblationRadius; // Minimal ablation radius
   mitk::Image::Pointer m_SegmentationImage;
 
   /*!
@@ -143,6 +144,9 @@ private:
    * This means: All 12 direct neighbour ablation zones are checked for remaining non-ablated tumor issue.
    */
   std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
+
+  /*! Radi of all ablation centers after optimization */
+  std::vector<double> m_AblationZoneCentersProcessedRadi;
 
   /*!
    * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones,
