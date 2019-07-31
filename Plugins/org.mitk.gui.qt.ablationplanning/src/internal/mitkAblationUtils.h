@@ -44,6 +44,15 @@ public:
   static std::vector<itk::Index<3>> FillVectorContainingIndicesOfTumorTissueOnly( mitk::Image::Pointer image,
                                                                                   mitk::Vector3D &imageDimension);
 
+  /** Searches for a new starting point for the first ablation sphere.
+   *  @param[in] image  image on which the ablation is planned (needed for geometry calculations)
+   *  @param[in] tumorTissueSafetyMarginIndices   Indices of tumor (+ safety margin) that are not ablated yet
+   *  @param[in] ablationRadius   Radius of the ablation
+   *  @param[out] tempAblationStartingPositionIndexCoordinates    Returns the corrdinates of the best starting point that was found
+   *  @param[out] tempAblationStartingPositionInWorldCoordinates  Returns the corrdinates of the best starting point that was found
+   *  @param[in]  imageDimension
+   *  @param[in]  imageSpacing
+   */
   static QString FindAblationStartingPosition(mitk::Image::Pointer image, std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices, double &ablationRadius, itk::Index<3> &tempAblationStartingPositionIndexCoordinates, mitk::Point3D &tempAblationStartingPositionInWorldCoordinates, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 
   static double CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2, mitk::Vector3D &imageSpacing);
