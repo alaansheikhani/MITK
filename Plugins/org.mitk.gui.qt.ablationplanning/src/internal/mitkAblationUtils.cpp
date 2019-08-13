@@ -962,7 +962,7 @@ double AblationUtils::FindMinimalAblationRadius(itk::Index<3> &center,
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
     itk::Index<3> actualIndex;
 
-    while (currentRadius >= minRadius)
+    while (currentRadius > minRadius)
     {
       for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
       {
@@ -976,7 +976,7 @@ double AblationUtils::FindMinimalAblationRadius(itk::Index<3> &center,
               if (imagePixelWriter.GetPixelByIndex(actualIndex) - ABLATION_VALUE == TUMOR_NOT_YET_ABLATED ||
                   imagePixelWriter.GetPixelByIndex(actualIndex) - ABLATION_VALUE == SAFETY_MARGIN)
               {
-                break;
+                return currentRadius;
               }
             }
           }
