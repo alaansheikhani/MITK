@@ -26,6 +26,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkImage.h>
 
+#include "mitkAblationUtils.h"
+
 #include "ui_QmitkAblationPlanningViewControls.h"
 
 /**
@@ -118,20 +120,20 @@ private:
   * \brief Final vector storing the index coordinates of all circle centers of the ablation zones
     after the calculation of the best ablation zone distribution.
   */
-  std::vector<itk::Index<3>> m_AblationZoneCenters;
+  std::vector<AblationZone> m_AblationZones;
 
   /*!
    * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
    * when calculating the best ablation zone distribution.
    */
-  std::vector<itk::Index<3>> m_TempAblationZoneCenters;
+  std::vector<AblationZone> m_TempAblationZones;
 
   /*!
    * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
    * which are finally processed after the calculation of the best ablation zone distribution.
    * This means: All 12 direct neighbour ablation zones are checked for remaining non-ablated tumor issue.
    */
-  std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
+  std::vector<AblationZone> m_AblationZonesProcessed;
 
   /*! Radi of all ablation centers after optimization */
   std::vector<double> m_AblationZoneCentersProcessedRadi;
@@ -141,7 +143,7 @@ private:
    * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
    * for remaining non-ablated tumor issue.
    */
-  std::vector<itk::Index<3>> m_TempAblationZoneCentersProcessed;
+  std::vector<AblationZone> m_TempAblationZonesProcessed;
 
   /*!
    * \brief Vector storing the index coordinates of all pixels, which are tumor tissue or
