@@ -407,8 +407,7 @@ bool AblationUtils::CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafet
         {
           if (radius >= CalculateScalarDistance(centerOfVolume, actualIndex, imageSpacing))
           {
-            if (imagePixelWriter.GetPixelByIndex(actualIndex) != TUMOR_NOT_YET_ABLATED &&
-                imagePixelWriter.GetPixelByIndex(actualIndex) != SAFETY_MARGIN)
+            if (imagePixelWriter.GetPixelByIndex(actualIndex) == NO_TUMOR_ISSUE)
             {
               return false;
             }
@@ -431,7 +430,7 @@ double AblationUtils::CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::In
   {
     radius += 1;
   }
-  ++radius;
+  //++radius;
   // MITK_INFO << "Calculated max radius for given point: " << radius;
   return radius;
 }
