@@ -37,6 +37,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 class AblationUtils
 {
 public:
+  struct AblationZone
+  {
+    itk::Index<3> indexCenter;
+    double radius;
+  };
+
   static void FillVectorContainingIndicesOfTumorTissueSafetyMargin( mitk::Image::Pointer image,
                                                                     mitk::Vector3D &imageDimension,
                                                                     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices);
