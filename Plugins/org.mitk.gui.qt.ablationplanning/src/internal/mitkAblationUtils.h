@@ -83,7 +83,8 @@ public:
 
   static double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension, double startRadius, double maxRadius);
 
-  static bool CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
+  /** @returns Returns the percentage of non ablated tumor tissue (based on voxels) */
+  static double CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
   static bool CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices, mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 

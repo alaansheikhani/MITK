@@ -441,8 +441,10 @@ double AblationUtils::CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::In
   return radius;
 }
 
-bool AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension)
+double AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension)
 {
+  int numberOfNonAblatedPixels = 0;
+  int numberOfTumorPixels = 0;
   if (image.IsNotNull())
   {
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
@@ -456,13 +458,18 @@ bool AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mi
           if (imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED ||
               imagePixelWriter.GetPixelByIndex(actualIndex) == SAFETY_MARGIN)
           {
-            return true;
+            numberOfTumorPixels++;
+            numberOfNonAblatedPixels++;
+          }
+          else if (imagePixelWriter.GetPixelByIndex(actualIndex) == ABLATION_VALUE)
+          {
+            numberOfTumorPixels++;
           }
         }
       }
     }
   }
-  return false;
+  return ((double)numberOfNonAblatedPixels / numberOfTumorPixels) * 100;
 }
 
 bool AblationUtils::CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices,

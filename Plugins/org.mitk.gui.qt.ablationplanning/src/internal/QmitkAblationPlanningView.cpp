@@ -579,7 +579,10 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
                                                                      m_ImageSpacing);
       m_Controls.ablationStartingPointLabel->setText(position);
     }
-
+    else
+    {
+      startingZoneRadius = this->m_AblationRadius;
+    }
 
     //------------ Random distribution model calculations: ---------------
     {
@@ -736,9 +739,10 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   mitk::RenderingManager::GetInstance()->Modified();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 
-  if (AblationUtils::CheckImageForNonAblatedTissue(m_SegmentationImage, m_ImageDimension) )
+  double notAblated = AblationUtils::CheckImageForNonAblatedTissue(m_SegmentationImage, m_ImageDimension);
+  if (notAblated>0)
   {
-    MITK_WARN << "There is still non ablated tumor tissue.";
+    MITK_WARN << "There is still non ablated tumor tissue (" << notAblated << " percent).";
   }
 
   this->CreateSpheresOfAblationVolumes();
