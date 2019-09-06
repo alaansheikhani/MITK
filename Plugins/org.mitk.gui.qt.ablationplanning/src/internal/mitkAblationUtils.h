@@ -53,7 +53,7 @@ public:
    *  @param[in]  imageDimension
    *  @param[in]  imageSpacing
    */
-  static QString FindAblationStartingPosition(mitk::Image::Pointer image, std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices, double &ablationRadius, itk::Index<3> &tempAblationStartingPositionIndexCoordinates, mitk::Point3D &tempAblationStartingPositionInWorldCoordinates, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
+  static QString FindAblationStartingPosition(mitk::Image::Pointer image, std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices, double &ablationRadius, double &maxRadius, itk::Index<3> &tempAblationStartingPositionIndexCoordinates, mitk::Point3D &tempAblationStartingPositionInWorldCoordinates, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 
   static double CalculateScalarDistance(itk::Index<3> &point1, itk::Index<3> &point2, mitk::Vector3D &imageSpacing);
 
@@ -65,7 +65,7 @@ public:
 
   static bool CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(double &radius, itk::Index<3> &centerOfVolume, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
 
-  static double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
+  static double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension, double startRadius, double maxRadius);
 
   static bool CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
@@ -108,7 +108,7 @@ public:
 
   static void RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center, std::vector<itk::Index<3>> &tumorSafetyMarginPixels, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 
-  static itk::Index<3> SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
+  static itk::Index<3> SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels, mitk::Image::Pointer image, double &radius, double &maxRadius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 
   static void ResetSegmentationImage(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 

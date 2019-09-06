@@ -122,7 +122,8 @@ private:
   itk::Index<3> m_TempAblationStartingPositionIndexCoordinates;
 
   bool m_ManualAblationStartingPositionSet;
-  double m_AblationRadius; // Maximal ablation radius
+  double m_MaxAblationRadius; // Maximal ablation radius
+  double m_AblationRadius; // Desired ablation radius
   double m_MinAblationRadius; // Minimal ablation radius
   mitk::Image::Pointer m_SegmentationImage;
 

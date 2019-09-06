@@ -582,6 +582,12 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_AblationZoneCentersProcessed.clear();
   m_TempAblationZoneCentersProcessed.clear();
 
+  //Get some parameters from UI
+  m_MinAblationRadius =  m_Controls.minAblationRadiusSpinBox->value() * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+  m_AblationRadius = m_Controls.ablationRadiusSpinBox->value() * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+  m_MaxAblationRadius = m_Controls.maxAblationRadiusSpinBox->value() * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+
+
   //==================== Find ablation proposal by iteratively create and test random propsals ==========================================
   AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
 
@@ -591,7 +597,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     MITK_INFO << "Iteration: " << iteration;
     if (!m_ManualAblationStartingPositionSet || iteration > 1 )
     {
-      QString position = AblationUtils::FindAblationStartingPosition(m_SegmentationImage, m_TumorTissueSafetyMarginIndices, m_AblationRadius, m_TempAblationStartingPositionIndexCoordinates, m_TempAblationStartingPositionInWorldCoordinates, m_ImageDimension, m_ImageSpacing);
+      QString position = AblationUtils::FindAblationStartingPosition(m_SegmentationImage, m_TumorTissueSafetyMarginIndices, m_AblationRadius, m_MaxAblationRadius, m_TempAblationStartingPositionIndexCoordinates, m_TempAblationStartingPositionInWorldCoordinates, m_ImageDimension, m_ImageSpacing);
       m_Controls.ablationStartingPointLabel->setText(position);
     }
 
@@ -628,7 +634,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
              (double)(indices.size() / size) >
              ((double)m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value() / 100) )
       {
-        itk::Index<3> newAblationCenter = AblationUtils::SearchNextAblationCenter(indices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+        itk::Index<3> newAblationCenter = AblationUtils::SearchNextAblationCenter(indices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
         AblationUtils::CalculateAblationVolume(newAblationCenter, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension, m_TempAblationZoneCenters);
         AblationUtils::RemoveAblatedPixelsFromGivenVector(newAblationCenter, indices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
         m_TempAblationZoneCentersProcessed.push_back(newAblationCenter);
@@ -637,7 +643,6 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     //------------ End calculation models -------------------------------
 
     // Check if the radius of some ablation zones can be reduced
-    m_MinAblationRadius = 2.0;
     m_AblationZoneCentersProcessedRadi = std::vector<double>();
     for (itk::Index<3> idx : m_TempAblationZoneCentersProcessed)
     {
@@ -717,7 +722,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
     while (onlyTumorIndices.size() > 0)
     {
-      itk::Index<3> newAblationCenter = AblationUtils::SearchNextAblationCenter(onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
+      itk::Index<3> newAblationCenter = AblationUtils::SearchNextAblationCenter(onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::MoveCenterOfAblationZone(newAblationCenter, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::CalculateAblationVolume(newAblationCenter, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension);
       AblationUtils::RemoveAblatedPixelsFromGivenVector(newAblationCenter, onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);

@@ -106,6 +106,7 @@ std::vector<itk::Index<3>> AblationUtils::FillVectorContainingIndicesOfTumorTiss
 QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
                                                     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
                                                     double &ablationRadius,
+                                                    double &maxRadius,
                                                     itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
                                                     mitk::Point3D &tempAblationStartingPositionInWorldCoordinates,
                                                     mitk::Vector3D &imageDimension,
@@ -139,16 +140,16 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
       startingPositions.push_back(startingPosition4);
       startingPositions.push_back(startingPosition5);
 
-      double radius1 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition1, image, imageSpacing, imageDimension);
-      double radius2 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition2, image, imageSpacing, imageDimension);
-      double radius3 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition3, image, imageSpacing, imageDimension);
-      double radius4 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition4, image, imageSpacing, imageDimension);
-      double radius5 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(startingPosition5, image, imageSpacing, imageDimension);
+      double radius1 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        startingPosition1, image, imageSpacing, imageDimension, ablationRadius,maxRadius);
+      double radius2 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        startingPosition2, image, imageSpacing, imageDimension, ablationRadius, maxRadius);
+      double radius3 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        startingPosition3, image, imageSpacing, imageDimension, ablationRadius, maxRadius);
+      double radius4 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        startingPosition4, image, imageSpacing, imageDimension, ablationRadius, maxRadius);
+      double radius5 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        startingPosition5, image, imageSpacing, imageDimension, ablationRadius, maxRadius);
       std::vector<double> radiusVector;
       std::vector<double>::iterator result;
       radiusVector.push_back(radius1);
@@ -422,16 +423,19 @@ bool AblationUtils::CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafet
 double AblationUtils::CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point,
                                                                          mitk::Image::Pointer image,
                                                                          mitk::Vector3D &imageSpacing,
-                                                                         mitk::Vector3D &imageDimension)
+                                                                         mitk::Vector3D &imageDimension,
+                                                                         double startRadius,
+                                                                         double maxRadius)
 {
-  double radius = 1.0;
+  double radius = startRadius;
   while (CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(
-    radius, point, image, imageSpacing, imageDimension))
+           radius, point, image, imageSpacing, imageDimension) &&
+         radius <= maxRadius)
   {
     radius += 1;
   }
-  //++radius;
-  // MITK_INFO << "Calculated max radius for given point: " << radius;
+  MITK_INFO << "Calculated max radius for given point "
+            << point << " : " << radius;
   return radius;
 }
 
@@ -1103,6 +1107,7 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center,
 itk::Index<3> AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                       mitk::Image::Pointer image,
                                                       double &radius,
+                                                      double &maxRadius,
                                                       mitk::Vector3D &imageDimension,
                                                       mitk::Vector3D &imageSpacing)
 {
@@ -1133,16 +1138,15 @@ itk::Index<3> AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>>
       positions.push_back(position4);
       positions.push_back(position5);
 
-      double radius1 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position1, image, imageSpacing, imageDimension);
-      double radius2 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position2, image, imageSpacing, imageDimension);
-      double radius3 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position3, image, imageSpacing, imageDimension);
-      double radius4 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position4, image, imageSpacing, imageDimension);
-      double radius5 =
-        CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position5, image, imageSpacing, imageDimension);
+      double radius1 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position1, image, imageSpacing, imageDimension, radius, maxRadius);
+      double radius2 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        position2, image, imageSpacing, imageDimension, radius, maxRadius);
+      double radius3 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        position3, image, imageSpacing, imageDimension, radius, maxRadius);
+      double radius4 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        position4, image, imageSpacing, imageDimension, radius, maxRadius);
+      double radius5 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        position5, image, imageSpacing, imageDimension, radius, maxRadius);
       std::vector<double> radiusVector;
       std::vector<double>::iterator result;
       radiusVector.push_back(radius1);
