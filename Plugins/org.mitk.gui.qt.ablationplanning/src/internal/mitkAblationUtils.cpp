@@ -109,6 +109,7 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
                                                     double &maxRadius,
                                                     itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
                                                     mitk::Point3D &tempAblationStartingPositionInWorldCoordinates,
+                                                    double &tempAblationStartingRadius,
                                                     mitk::Vector3D &imageDimension,
                                                     mitk::Vector3D &imageSpacing)
 {
@@ -175,6 +176,7 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
       }
       MITK_DEBUG << "Iteration: " << iteration;
       tempAblationStartingPositionIndexCoordinates = startingPositions.at(index);
+      tempAblationStartingRadius = radiusVector.at(index);
     }
 
     // Calculate the index coordinates of the starting position:

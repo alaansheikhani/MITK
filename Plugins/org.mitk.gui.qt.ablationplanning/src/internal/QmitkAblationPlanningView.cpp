@@ -564,10 +564,19 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   //Start of for-loop (main iterative loop, each iteration = one proposal):
   for( int iteration = 1; iteration <= m_Controls.repititionsCalculatingAblationZonesSpinBox->value(); ++iteration )
   {
+    double startingZoneRadius = 0;
     MITK_INFO << "Iteration: " << iteration;
     if (!m_ManualAblationStartingPositionSet || iteration > 1 )
     {
-      QString position = AblationUtils::FindAblationStartingPosition(m_SegmentationImage, m_TumorTissueSafetyMarginIndices, m_AblationRadius, m_MaxAblationRadius, m_TempAblationStartingPositionIndexCoordinates, m_TempAblationStartingPositionInWorldCoordinates, m_ImageDimension, m_ImageSpacing);
+      QString position = AblationUtils::FindAblationStartingPosition(m_SegmentationImage,
+                                                                     m_TumorTissueSafetyMarginIndices,
+                                                                     m_AblationRadius,
+                                                                     m_MaxAblationRadius,
+                                                                     m_TempAblationStartingPositionIndexCoordinates,
+                                                                     m_TempAblationStartingPositionInWorldCoordinates,
+                                                                     startingZoneRadius,
+                                                                     m_ImageDimension,
+                                                                     m_ImageSpacing);
       m_Controls.ablationStartingPointLabel->setText(position);
     }
 
@@ -576,10 +585,19 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     {
       double size = m_TumorTissueSafetyMarginIndices.size();
       std::vector<itk::Index<3>> indices = m_TumorTissueSafetyMarginIndices;
-      AblationUtils::CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension, m_TempAblationZones);
-      AblationUtils::RemoveAblatedPixelsFromGivenVector(
-        m_TempAblationStartingPositionIndexCoordinates, indices, m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
-      m_TempAblationZonesProcessed.push_back({m_TempAblationStartingPositionIndexCoordinates,m_AblationRadius});
+      AblationUtils::CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates,
+                                             m_SegmentationImage,
+                                             startingZoneRadius,
+                                             m_ImageSpacing,
+                                             m_ImageDimension,
+                                             m_TempAblationZones);
+      AblationUtils::RemoveAblatedPixelsFromGivenVector(m_TempAblationZones.at(0).indexCenter,
+                                                        indices,
+                                                        m_SegmentationImage,
+                                                        m_TempAblationZones.at(0).radius,
+                                                        m_ImageDimension,
+                                                        m_ImageSpacing);
+      m_TempAblationZonesProcessed.push_back(m_TempAblationZones.at(0));
 
       while( indices.size() > 0 &&
              (double)(indices.size() / size) >
@@ -657,7 +675,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
       }
       itk::Index<3> indexToProof = m_AblationZonesProcessed.at(counter).indexCenter;
       double distance = AblationUtils::CalculateScalarDistance(actualIndex, indexToProof, m_ImageSpacing);
-      if( distance <= 0.5 * m_AblationRadius )
+      if (distance <= 0.5 * m_AblationZonesProcessed.at(counter).radius)
       {
         indexToRemove.push_back(counter);
       }
