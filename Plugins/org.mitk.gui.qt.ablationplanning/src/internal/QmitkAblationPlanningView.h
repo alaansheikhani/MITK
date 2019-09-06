@@ -93,7 +93,6 @@ protected slots:
   void OnCalculateAblationZonesPushButtonClicked();
   void OnAblationRadiusChanged(double radius);
   void OnTissueShrinkingFactorChanged(int tissueShrinking);
-  void OnCalculationModelChanged(bool);
   void OnNumberOfRepetitionsChanged();
   void OnPercentageNonAblatedVolumeChanged();
 

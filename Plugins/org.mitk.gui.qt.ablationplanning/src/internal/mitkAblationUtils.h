@@ -77,8 +77,6 @@ public:
 
   static bool CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices, mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
-  static void ProcessDirectNeighbourAblationZones(itk::Index<3> &center, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension, double &ablationRadius, std::vector<itk::Index<3>> &tempAblationZoneCentersProcessed, std::vector<itk::Index<3>> &tempAblationZoneCenters);
-
   static void CalculateUpperLowerXYZ(unsigned int &upperX, unsigned int &lowerX,
                               unsigned int &upperY, unsigned int &lowerY,
                               unsigned int &upperZ, unsigned int &lowerZ,
@@ -94,10 +92,6 @@ public:
                                                      double &distanceLowerZ,
                                                      double &distanceUpperZ,
                                                      itk::Index<3> &center, mitk::Image::Pointer image, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
-
-  static std::vector<itk::Index<3>> CalculateIndicesOfDirectNeighbourAblationZones(itk::Index<3> &center, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
-
-  static bool IsAblationZoneAlreadyProcessed(itk::Index<3> &center, std::vector<itk::Index<3>> &tempAblationZoneCentersProcessed);
 
   static void DetectNotNeededAblationVolume(std::vector<itk::Index<3>> &tempAblationZoneCentersProcessed, std::vector<itk::Index<3>> &tempAblationZoneCenters, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing);
 

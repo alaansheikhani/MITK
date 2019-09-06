@@ -584,27 +584,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
       m_Controls.ablationStartingPointLabel->setText(position);
     }
 
-    //------------ Grid calculation model: ---------------
-    if( m_Controls.gridModelRadioButton->isChecked() )
-    {
-      AblationUtils::CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension, m_TempAblationZoneCenters);
-      AblationUtils::ProcessDirectNeighbourAblationZones(m_TempAblationStartingPositionIndexCoordinates, m_SegmentationImage, m_ImageSpacing, m_ImageDimension, m_AblationRadius, m_TempAblationZoneCentersProcessed, m_TempAblationZoneCenters);
-      while( m_TempAblationZoneCenters.size() != m_TempAblationZoneCentersProcessed.size() )
-      {
-        MITK_DEBUG << "Size1: " << m_TempAblationZoneCenters.size()
-                   << " Size2: " << m_TempAblationZoneCentersProcessed.size();
-        for( int index = 0; index < m_TempAblationZoneCenters.size(); ++index )
-        {
-          if (!AblationUtils::IsAblationZoneAlreadyProcessed(m_TempAblationZoneCenters.at(index), m_TempAblationZoneCentersProcessed))
-          {
-            AblationUtils::ProcessDirectNeighbourAblationZones(m_TempAblationZoneCenters.at(index), m_SegmentationImage, m_ImageSpacing, m_ImageDimension, m_AblationRadius, m_TempAblationZoneCentersProcessed, m_TempAblationZoneCenters);
-            break;
-          }
-        }
-      }
-    }
-    //------------ Random distribution calculation model: ---------------
-    else if( m_Controls.randomDistributionRadioButton->isChecked() )
+
+    //------------ Random distribution model calculations: ---------------
     {
       double size = m_TumorTissueSafetyMarginIndices.size();
       std::vector<itk::Index<3>> indices = m_TumorTissueSafetyMarginIndices;
@@ -752,25 +733,6 @@ void QmitkAblationPlanningView::OnTissueShrinkingFactorChanged(int tissueShrinki
   MITK_DEBUG << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
 }
 
-void QmitkAblationPlanningView::OnCalculationModelChanged(bool)
-{
-  if (m_SegmentationImage.IsNotNull())
-  {
-    AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
-    this->DeleteAllSpheres();
-
-    m_TumorTissueSafetyMarginIndices.clear();
-    m_AblationZoneCenters.clear();
-    m_TempAblationZoneCenters.clear();
-    m_AblationZoneCentersProcessed.clear();
-    m_TempAblationZoneCentersProcessed.clear();
-
-    this->CalculateAblationStatistics();
-    mitk::RenderingManager::GetInstance()->Modified();
-    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-  }
-}
-
 void QmitkAblationPlanningView::OnNumberOfRepetitionsChanged()
 {
   if (m_AblationCalculationMade)
@@ -811,10 +773,6 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnTissueShrinkingFactorChanged(int)));
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()),
     this, SLOT(OnCalculateSafetyMargin()));
-  connect(m_Controls.gridModelRadioButton, SIGNAL(toggled(bool)),
-    this, SLOT(OnCalculationModelChanged(bool)));
-  connect(m_Controls.randomDistributionRadioButton, SIGNAL(toggled(bool)),
-    this, SLOT(OnCalculationModelChanged(bool)));
   connect(m_Controls.refreshCalculationsPushButton, SIGNAL(clicked()),
     this, SLOT(OnCalculateAblationZonesPushButtonClicked()));
   connect(m_Controls.repititionsCalculatingAblationZonesSpinBox, SIGNAL(valueChanged(int)),
