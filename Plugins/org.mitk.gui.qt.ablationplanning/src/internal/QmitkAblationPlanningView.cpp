@@ -295,9 +295,9 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
                                           centerInWorldCoordinates );
 
     //Center
-    vtkSphere->SetRadius(m_AblationRadius);
-    vtkSphere->SetPhiResolution(120);
-    vtkSphere->SetThetaResolution(120);
+    vtkSphere->SetRadius(m_AblationZonesProcessed.at(index).radius);
+    vtkSphere->SetPhiResolution(40);
+    vtkSphere->SetThetaResolution(40);
     vtkSphere->SetCenter(centerInWorldCoordinates[0], centerInWorldCoordinates[1], centerInWorldCoordinates[2]);
     vtkSphere->Update();
 
@@ -312,8 +312,11 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     this->GetDataStorage()->Add(m_DataNode);
 
     //Add Center Points
+    double finalRadius =
+      m_AblationZonesProcessed.at(index).radius / (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+    ;
     MITK_INFO << "Ablation Zone " << index << "[" << centerInWorldCoordinates[0] << ";" << centerInWorldCoordinates[1]
-              << ";" << centerInWorldCoordinates[2] << "]";
+              << ";" << centerInWorldCoordinates[2] << "] / Radius: " << finalRadius;
     centerPoints->InsertPoint(centerInWorldCoordinates);
   }
 
@@ -601,13 +604,12 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     //------------ End calculation models -------------------------------
 
     // Check if the radius of some ablation zones can be reduced
-    m_AblationZoneCentersProcessedRadi = std::vector<double>();
     for (AblationZone zone : m_TempAblationZonesProcessed)
     {
       double currentRadius = AblationUtils::FindMinimalAblationRadius(
-        zone.indexCenter, m_SegmentationImage, m_AblationRadius, m_MinAblationRadius, m_ImageDimension, m_ImageSpacing);
+        zone.indexCenter, m_SegmentationImage, zone.radius, m_MinAblationRadius, m_ImageDimension, m_ImageSpacing);
       MITK_INFO << "Found minimal radius: " << currentRadius;
-      m_AblationZoneCentersProcessedRadi.push_back(currentRadius);
+      zone.radius = currentRadius;
     }
 
     AblationUtils::DetectNotNeededAblationVolume(
@@ -671,8 +673,6 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     }
 
   }
-
-
 
   for (int index = 0; index < m_AblationZonesProcessed.size(); ++index)
   {

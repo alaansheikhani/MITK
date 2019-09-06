@@ -135,9 +135,6 @@ private:
    */
   std::vector<AblationZone> m_AblationZonesProcessed;
 
-  /*! Radi of all ablation centers after optimization */
-  std::vector<double> m_AblationZoneCentersProcessedRadi;
-
   /*!
    * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones,
    * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
