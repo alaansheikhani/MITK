@@ -260,17 +260,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="refreshCalculationsPushButton">
-     <property name="text">
-      <string>Values Changed - A Refresh Of Calculations Might Be Needed</string>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>:/USUI/restart.png</normaloff>:/USUI/restart.png</iconset>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QPushButton" name="calculateAblationZonesPushButton">
      <property name="text">
       <string>Calculate Ablation Zones</string>

@@ -67,9 +67,6 @@ protected:
   virtual void CreateQtPartControl(QWidget *parent) override;
   virtual void SetFocus() override;
 
-  // void ResetMouseCursor();
-  // void SetMouseCursor(const us::ModuleResource&, int hotspotX, int hotspotY);
-
   void NodeRemoved(const mitk::DataNode *node) override;
 
   void NodeAdded(const mitk::DataNode *node) override;
@@ -91,10 +88,6 @@ protected slots:
   void OnCalculateSafetyMargin();
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
-  void OnAblationRadiusChanged(double radius);
-  void OnTissueShrinkingFactorChanged(int tissueShrinking);
-  void OnNumberOfRepetitionsChanged();
-  void OnPercentageNonAblatedVolumeChanged();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;
