@@ -82,8 +82,6 @@ protected:
 
   void DeleteAllSpheres();
 
-  void FillComboBoxAblationZones();
-
   void CalculateAblationStatistics();
 
 protected slots:
@@ -95,9 +93,6 @@ protected slots:
   void OnCalculateAblationZonesPushButtonClicked();
   void OnAblationRadiusChanged(double radius);
   void OnTissueShrinkingFactorChanged(int tissueShrinking);
-  void OnConfirmNewPositionClicked();
-  void OnDeleteChosenAblationZoneClicked();
-  void OnAddNewAblationZoneClicked();
   void OnCalculationModelChanged(bool);
   void OnNumberOfRepetitionsChanged();
   void OnPercentageNonAblatedVolumeChanged();

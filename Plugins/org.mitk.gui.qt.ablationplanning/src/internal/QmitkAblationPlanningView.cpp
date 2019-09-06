@@ -64,16 +64,10 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   this->UnsetSegmentationImageGeometry();
 
   mitk::TNodePredicateDataType<mitk::Image>::Pointer isImage = mitk::TNodePredicateDataType<mitk::Image>::New();
-  //mitk::NodePredicateDataType::Pointer isDwi = mitk::NodePredicateDataType::New("DiffusionImage");
-  //mitk::NodePredicateDataType::Pointer isDti = mitk::NodePredicateDataType::New("TensorImage");
-  //mitk::NodePredicateDataType::Pointer isOdf = mitk::NodePredicateDataType::New("OdfImage");
   auto isSegmentation = mitk::NodePredicateDataType::New("Segment");
 
   mitk::NodePredicateOr::Pointer validImages = mitk::NodePredicateOr::New();
   validImages->AddPredicate(mitk::NodePredicateAnd::New(isImage, mitk::NodePredicateNot::New(isSegmentation)));
-  //validImages->AddPredicate(isDwi);
-  //validImages->AddPredicate(isDti);
-  //validImages->AddPredicate(isOdf);
 
   mitk::NodePredicateNot::Pointer isNotAHelperObject = mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("helper object", mitk::BoolProperty::New(true)));
 
@@ -352,17 +346,6 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
   this->GetDataStorage()->Remove(m_AblationCentersNode);
   this->GetDataStorage()->Modified();
   this->RequestRenderWindowUpdate();
-}
-
-void QmitkAblationPlanningView::FillComboBoxAblationZones()
-{
-  m_Controls.ablationZonesComboBox->clear();
-
-  for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
-  {
-    QString name = QString("Kugel_%1").arg(index + 1);
-    m_Controls.ablationZonesComboBox->addItem(name);
-  }
 }
 
 void QmitkAblationPlanningView::CalculateAblationStatistics()
@@ -745,7 +728,6 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   }
 
   this->CreateSpheresOfAblationVolumes();
-  this->FillComboBoxAblationZones();
   this->CalculateAblationStatistics();
 
 }
@@ -768,81 +750,6 @@ void QmitkAblationPlanningView::OnTissueShrinkingFactorChanged(int tissueShrinki
   }
   m_AblationRadius = m_Controls.ablationRadiusSpinBox->value() * (1 + ((double)tissueShrinking/100.0));
   MITK_DEBUG << "TissueShrinkingFactor increased ablation radius to: " << m_AblationRadius;
-}
-
-void QmitkAblationPlanningView::OnConfirmNewPositionClicked()
-{
-  if( m_Controls.ablationZonesComboBox->count() > 0 && m_SegmentationImage.IsNotNull())
-  {
-    int index = m_Controls.ablationZonesComboBox->currentIndex();
-
-    AblationUtils::RemoveAblationVolume(m_AblationZoneCentersProcessed.at(index), m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
-
-    //Get the actual marked position of the crosshair:
-    mitk::Point3D newPositionInWorldCoordinates = this->GetRenderWindowPart()->GetSelectedPosition();
-    itk::Index<3> newPositionInIndexCoordinates;
-
-    //Calculate the index coordinates of the new position:
-    m_SegmentationImage->GetGeometry()->WorldToIndex(newPositionInWorldCoordinates,
-      newPositionInIndexCoordinates);
-
-    m_AblationZoneCentersProcessed.at(index) = newPositionInIndexCoordinates;
-    m_AblationZoneCenters.at(index) = newPositionInIndexCoordinates;
-
-    AblationUtils::CalculateAblationVolume(newPositionInIndexCoordinates, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension);
-
-    this->DeleteAllSpheres();
-    this->CreateSpheresOfAblationVolumes();
-    this->CalculateAblationStatistics();
-  }
-}
-
-void QmitkAblationPlanningView::OnDeleteChosenAblationZoneClicked()
-{
-  if (m_Controls.ablationZonesComboBox->count() > 0 && m_SegmentationImage.IsNotNull())
-  {
-    int index = m_Controls.ablationZonesComboBox->currentIndex();
-    AblationUtils::RemoveAblationVolume(m_AblationZoneCentersProcessed.at(index), m_SegmentationImage, m_AblationRadius, m_ImageDimension, m_ImageSpacing);
-
-    this->DeleteAllSpheres();
-
-    std::vector<itk::Index<3>>::iterator it = m_AblationZoneCentersProcessed.begin();
-    m_AblationZoneCentersProcessed.erase(it + index);
-    std::vector<itk::Index<3>>::iterator it2 = m_AblationZoneCenters.begin();
-    m_AblationZoneCenters.erase(it2 + index);
-
-    this->FillComboBoxAblationZones();
-    this->CreateSpheresOfAblationVolumes();
-    this->CalculateAblationStatistics();
-  }
-}
-
-void QmitkAblationPlanningView::OnAddNewAblationZoneClicked()
-{
-  if( m_SegmentationImage.IsNotNull() )
-  {
-    if( m_TumorTissueSafetyMarginIndices.size() == 0 )
-    {
-      AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
-    }
-    //Get the actual marked position of the crosshair:
-    mitk::Point3D newPositionInWorldCoordinates = this->GetRenderWindowPart()->GetSelectedPosition();
-    itk::Index<3> newPositionInIndexCoordinates;
-
-    //Calculate the index coordinates of the new position:
-    m_SegmentationImage->GetGeometry()->WorldToIndex(newPositionInWorldCoordinates,
-      newPositionInIndexCoordinates);
-
-    m_AblationZoneCentersProcessed.push_back(newPositionInIndexCoordinates);
-    m_AblationZoneCenters.push_back(newPositionInIndexCoordinates);
-
-    AblationUtils::CalculateAblationVolume(newPositionInIndexCoordinates, m_SegmentationImage, m_AblationRadius, m_ImageSpacing, m_ImageDimension);
-
-    this->FillComboBoxAblationZones();
-    this->DeleteAllSpheres();
-    this->CreateSpheresOfAblationVolumes();
-    this->CalculateAblationStatistics();
-  }
 }
 
 void QmitkAblationPlanningView::OnCalculationModelChanged(bool)
@@ -904,12 +811,6 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnTissueShrinkingFactorChanged(int)));
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()),
     this, SLOT(OnCalculateSafetyMargin()));
-  connect(m_Controls.confirmNewPositionPushButton, SIGNAL(clicked()),
-    this, SLOT(OnConfirmNewPositionClicked()));
-  connect(m_Controls.deleteChosenAblationZonePushButton, SIGNAL(clicked()),
-    this, SLOT(OnDeleteChosenAblationZoneClicked()));
-  connect(m_Controls.addNewAblationZonePushButton, SIGNAL(clicked()),
-    this, SLOT(OnAddNewAblationZoneClicked()));
   connect(m_Controls.gridModelRadioButton, SIGNAL(toggled(bool)),
     this, SLOT(OnCalculationModelChanged(bool)));
   connect(m_Controls.randomDistributionRadioButton, SIGNAL(toggled(bool)),
