@@ -21,9 +21,7 @@ mitk::AblationPlan::AblationPlan()
 {
 }
 
-mitk::AblationPlan::~AblationPlan()
-{
-}
+mitk::AblationPlan::~AblationPlan() {}
 
 bool mitk::AblationPlan::AddAblationZone(AblationUtils::AblationZone newZone)
 {
@@ -52,4 +50,29 @@ bool mitk::AblationPlan::RemoveAblationZone(AblationUtils::AblationZone &zone)
     }
   }
   return false;
+}
+
+void mitk::AblationPlan::DetectAndRemoveNotNeededVolumes()
+{
+  std::vector<AblationUtils::AblationZone> newZones;
+  AblationUtils::DetectNotNeededAblationVolume(
+    m_AblationZones, newZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
+  m_AblationZones = newZones;
+}
+
+int mitk::AblationPlan::CompareTo(mitk::AblationPlan::Pointer b)
+{
+  if (this->GetNumberOfZones() > b->GetNumberOfZones())
+  {
+    return 1;
+  }
+  else if (this->GetNumberOfZones() < b->GetNumberOfZones())
+  {
+    return -1;
+  }
+  else
+  {
+    //todo: other criteria!
+    return 0;
+  }
 }

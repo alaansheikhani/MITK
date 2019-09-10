@@ -115,7 +115,7 @@ private:
   double m_AblationRadius; // Desired ablation radius
   double m_MinAblationRadius; // Minimal ablation radius
   mitk::Image::Pointer m_SegmentationImage;
-
+  mitk::AblationPlan::Pointer m_AblationPlan;
   /*!
   * \brief Final vector storing the index coordinates of all circle centers of the ablation zones
     after the calculation of the best ablation zone distribution.
