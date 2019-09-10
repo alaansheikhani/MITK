@@ -654,8 +654,12 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
     {
       AblationUtils::AblationZone *zone = currentPlan->GetAblationZone(i);
-      double currentRadius = AblationUtils::FindMinimalAblationRadius(
-        zone->indexCenter, m_SegmentationImage, zone->radius, m_MinAblationRadius, m_ImageDimension, m_ImageSpacing);
+      double currentRadius = AblationUtils::FindMinimalAblationRadius(zone->indexCenter,
+                                                                      currentPlan->GetSegmentationImage(),
+                                                                      zone->radius,
+                                                                      m_MinAblationRadius,
+                                                                      m_ImageDimension,
+                                                                      m_ImageSpacing);
       // MITK_INFO << "Found minimal radius: " << currentRadius;
       (*zone).radius = currentRadius;
     }
@@ -677,7 +681,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   mitk::AblationPlan::Pointer finalProposal = AllFoundPlans.at(0);
   for (int i = 1; i < AllFoundPlans.size(); i++)
   {
-    if (AllFoundPlans.at(i)->CompareTo(finalProposal) == 1)
+    if (finalProposal->CompareTo(AllFoundPlans.at(i)) == 1)
     {
       finalProposal = AllFoundPlans.at(i);
       MITK_INFO << "Best proposal: " << i;
