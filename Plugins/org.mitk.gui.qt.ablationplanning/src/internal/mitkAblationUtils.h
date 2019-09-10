@@ -79,7 +79,16 @@ public:
 
   static bool CheckVolumeForNonAblatedTissue(itk::Index<3> &centerOfVolume, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
 
+  /** @return Returns the percentage of a sphere with the given center and radius that is inside the tumor volume of the given image */
+  static double GetPercentageOfVolumeInsideTumor(double &radius,
+                                                 itk::Index<3> &centerOfVolume,
+                                                 mitk::Image::Pointer image,
+                                                 mitk::Vector3D &imageSpacing,
+                                                 mitk::Vector3D &imageDimension);
+
+  /** Checks if a sphere with the given center and radius is totally inside the tumor volume of the given image */
   static bool CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(double &radius, itk::Index<3> &centerOfVolume, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
+
 
   static double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point, mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension, double startRadius, double maxRadius);
 

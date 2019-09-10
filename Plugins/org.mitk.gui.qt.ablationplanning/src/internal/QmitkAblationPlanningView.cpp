@@ -629,7 +629,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     {
       double currentRadius = AblationUtils::FindMinimalAblationRadius(
         zone.indexCenter, m_SegmentationImage, zone.radius, m_MinAblationRadius, m_ImageDimension, m_ImageSpacing);
-      MITK_INFO << "Found minimal radius: " << currentRadius;
+      //MITK_INFO << "Found minimal radius: " << currentRadius;
       zone.radius = currentRadius;
     }
 
