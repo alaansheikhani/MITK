@@ -606,7 +606,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
              (double)(indices.size() / size) >
              ((double)m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value() / 100) )
       {
-        AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(indices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
+        AblationUtils::AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(
+          indices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
         AblationUtils::CalculateAblationVolume(newAblationCenter.indexCenter,
                                                m_SegmentationImage,
                                                newAblationCenter.radius,
@@ -625,7 +626,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     //------------ End calculation models -------------------------------
 
     // Check if the radius of some ablation zones can be reduced
-    for (AblationZone zone : m_TempAblationZonesProcessed)
+    for (AblationUtils::AblationZone zone : m_TempAblationZonesProcessed)
     {
       double currentRadius = AblationUtils::FindMinimalAblationRadius(
         zone.indexCenter, m_SegmentationImage, zone.radius, m_MinAblationRadius, m_ImageDimension, m_ImageSpacing);
@@ -685,9 +686,9 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     }
     for (int position = indexToRemove.size() - 1; position >= 0; --position)
     {
-      std::vector<AblationZone>::iterator it = m_AblationZonesProcessed.begin();
+      std::vector<AblationUtils::AblationZone>::iterator it = m_AblationZonesProcessed.begin();
       m_AblationZonesProcessed.erase(it + indexToRemove.at(position));
-      std::vector<AblationZone>::iterator it2 = m_AblationZones.begin();
+      std::vector<AblationUtils::AblationZone>::iterator it2 = m_AblationZones.begin();
       m_AblationZones.erase(it2 + indexToRemove.at(position));
       MITK_DEBUG << "Removed Ablation zone at index position: " << indexToRemove.at(position);
       index = -1;
@@ -715,7 +716,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
     while (onlyTumorIndices.size() > 0)
     {
-      AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
+      AblationUtils::AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(
+        onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::MoveCenterOfAblationZone(
         newAblationCenter.indexCenter, m_SegmentationImage, newAblationCenter.radius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::CalculateAblationVolume(

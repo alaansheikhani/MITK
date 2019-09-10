@@ -1016,7 +1016,7 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center,
   }
 }
 
-AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
+AblationUtils::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                       mitk::Image::Pointer image,
                                                       double &radius,
                                                       double &maxRadius,
