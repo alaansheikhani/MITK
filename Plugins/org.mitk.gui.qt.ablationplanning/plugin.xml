@@ -5,7 +5,7 @@
     <view id="org.mitk.views.ablationplanning"
           name="Ablation Planning"
           class="QmitkAblationPlanningView"
-          icon="resources/icon.xpm" />
+          icon="resources/icon.svg" />
   </extension>
 
 </plugin>
