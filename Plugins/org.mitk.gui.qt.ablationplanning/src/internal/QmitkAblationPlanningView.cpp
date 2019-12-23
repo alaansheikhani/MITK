@@ -313,8 +313,8 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
 
     //Center
     vtkSphere->SetRadius(m_AblationRadius);
-    vtkSphere->SetPhiResolution(360);
-    vtkSphere->SetThetaResolution(360);
+    vtkSphere->SetPhiResolution(120);
+    vtkSphere->SetThetaResolution(120);
     vtkSphere->SetCenter(centerInWorldCoordinates[0], centerInWorldCoordinates[1], centerInWorldCoordinates[2]);
     vtkSphere->Update();
 
