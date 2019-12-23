@@ -88,6 +88,12 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
   m_IsASegmentationImagePredicate = mitk::NodePredicateOr::New(isABinaryImagePredicate, mitk::TNodePredicateDataType<mitk::LabelSetImage>::New());
   m_IsAPatientImagePredicate = mitk::NodePredicateAnd::New(isNotABinaryImagePredicate, mitk::NodePredicateNot::New(mitk::TNodePredicateDataType<mitk::LabelSetImage>::New()));
 
+  // to initialize with the first image, if nothing was selected yet...
+  if (this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate) != nullptr) {
+    m_SegmentationImage = dynamic_cast<mitk::Image*>(this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate)->GetData());
+    SetSegmentationImageGeometryInformation(m_SegmentationImage);
+    OnSelectionChanged(this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate));
+  }
 }
 
 QmitkAblationPlanningView::~QmitkAblationPlanningView()
