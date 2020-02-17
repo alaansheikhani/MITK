@@ -28,6 +28,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <igtlTrackingDataMessage.h>
 #include <igtlTransformMessage.h>
 #include "mitkIGTLTrackingDataDeviceSource.h"
+#include <mitkNavigationDataLandmarkTransformFilter.h>
 
 namespace mitk
 {

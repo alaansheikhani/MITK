@@ -435,7 +435,6 @@ void mitk::OpenIGTLinkTrackingDevice::UpdateTools()
           m_PointSetSource->InsertPoint(sourcePoint2);
           m_PointSetSource->InsertPoint(sourcePoint3);
           m_LandmarkTransformFilter->SetSourceLandmarks(m_PointSetSource);
-          m_LandmarkTransformFilter->
 
           m_PointSetTarget->InsertPoint(targetPoint1);
           m_PointSetTarget->InsertPoint(targetPoint2);
