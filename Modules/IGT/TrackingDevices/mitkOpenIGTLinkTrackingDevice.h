@@ -174,6 +174,11 @@ namespace mitk
     void AddNewToolForName(std::string name, int i);
 
     mitk::NavigationTool::Pointer ConstructDefaultOpenIGTLinkTool(std::string name, std::string identifier);
+
+    //LandmarkTransform
+    mitk::NavigationDataLandmarkTransformFilter::Pointer m_LandmarkTransformFilter;
+    mitk::PointSet::Pointer m_PointSetSource;
+    mitk::PointSet::Pointer m_PointSetTarget;
   };
 }//mitk
 #endif /* MITKOpenIGTLinkTRACKINGDEVICE_H_HEADER_INCLUDED_ */

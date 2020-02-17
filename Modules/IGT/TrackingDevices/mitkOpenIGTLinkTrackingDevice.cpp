@@ -20,6 +20,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkIGTTimeStamp.h"
 #include "mitkIGTHardwareException.h"
 #include "mitkTrackingTypes.h"
+//#----
+#include "Algorithms/mitkNavigationDataLandmarkTransformFilter.h"
+#include "mitkPointSet.h"
+//-----#
 #include <itksys/SystemTools.hxx>
 #include <iostream>
 #include <itkMutexLockHolder.h>
@@ -330,6 +334,7 @@ mitk::NavigationTool::Pointer mitk::OpenIGTLinkTrackingDevice::ConstructDefaultO
   return newTool;
 
 }
+//##################################################################################################
 
 void mitk::OpenIGTLinkTrackingDevice::UpdateTools()
 {
@@ -341,21 +346,112 @@ void mitk::OpenIGTLinkTrackingDevice::UpdateTools()
 
   m_IGTLMsgToNavDataFilter->Update();
 
+
+
+// for (std::size_t j = 0; j < m_IGTLMsgToNavDataFilter->GetNumberOfIndexedOutputs(); ++j)
+// {
+//    mitk::NavigationData::Pointer currentNavData = m_IGTLMsgToNavDataFilter->GetOutput(j); //currentNavData bekommt den Wert von Output j des IGTLMsgToNavDataFilter übergeben (dh. currentNavData ist jeweils ein Output)
+//    const char* name = currentNavData->GetName(); //Name vom jeweiligen currentNav/Output unten zum Vergleich genommen für den Namen des Tools
+//   for (std::size_t i = 0; i < m_AllTools.size(); i++) //Alle Tools
+//    {
+//      if (strcmp(m_AllTools.at(i)->GetToolName(), name) == 0) //wenn der Name des Tools und der Name des currentNav/Outputs übereinstimmen
+//      {
+//        m_AllTools.at(i)->SetDataValid(currentNavData->IsDataValid()); //für Tool an Stelle i das Attribut DataValid (bool) setzen, indem vom jeweiligen Output (currentNavData) das Attribut IsDataValid geholt wird
+//        m_AllTools.at(i)->SetPosition(currentNavData->GetPosition()); //für Tool an Stelle i die Position setzen, indem vom jeweiligen Output (currentNavData) die Position geholt wird
+//        m_AllTools.at(i)->SetOrientation(currentNavData->GetOrientation());
+//        m_AllTools.at(i)->SetIGTTimeStamp(currentNavData->GetIGTTimeStamp());
+//      }
+//    }
+//  }
+//}
   for (std::size_t j = 0; j < m_IGTLMsgToNavDataFilter->GetNumberOfIndexedOutputs(); ++j)
-  {
-    mitk::NavigationData::Pointer currentNavData = m_IGTLMsgToNavDataFilter->GetOutput(j);
-    const char* name = currentNavData->GetName();
-    for (std::size_t i = 0; i < m_AllTools.size(); i++)
-    {
-      if (strcmp(m_AllTools.at(i)->GetToolName(), name) == 0)
-      {
-        m_AllTools.at(i)->SetDataValid(currentNavData->IsDataValid());
-        m_AllTools.at(i)->SetPosition(currentNavData->GetPosition());
-        m_AllTools.at(i)->SetOrientation(currentNavData->GetOrientation());
-        m_AllTools.at(i)->SetIGTTimeStamp(currentNavData->GetIGTTimeStamp());
-      }
-    }
-  }
+ {
+   mitk::NavigationData::Pointer currentNavData = m_IGTLMsgToNavDataFilter->GetOutput(j);
+   Vector3D vector3D1;
+   Vector3D vector3D2;
+   Vector3D normal;
+
+     if (j == 0){
+       m_AllTools.at(0)->SetDataValid(currentNavData->IsDataValid());
+       m_AllTools.at(0)->SetPosition(currentNavData->GetPosition());
+       m_AllTools.at(0)->SetOrientation(currentNavData->GetOrientation());
+       m_AllTools.at(0)->SetIGTTimeStamp(currentNavData->GetIGTTimeStamp());
+
+
+     }
+  if (j == 1){ //Transformation
+
+
+     /*  m_AllTools.at(1)->SetDataValid(currentNavData->IsDataValid());
+       m_AllTools.at(1)->SetPosition(currentNavData->GetPosition());
+       m_AllTools.at(1)->SetOrientation(currentNavData->GetOrientation());
+       m_AllTools.at(1)->SetIGTTimeStamp(currentNavData->GetIGTTimeStamp());*/
+
+
+       vector3D1[0] = currentNavData->GetPosition()[0];
+       vector3D1[1] = currentNavData->GetPosition()[1];
+       vector3D1[2] = currentNavData->GetPosition()[2];
+
+
+
+        //SetSource (x, y, z) vom Toolkoordinatensystem
+        //Settarget (z, y, -x) vom Trackingkoordinatensystem
+        //InitializeLandmarkTransform(source, target) --> macht das Update wenn alles passt
+        //GenerateData?
+
+
+     }
+      if (j == 2){
+
+          vector3D2[0] = currentNavData->GetPosition()[0];
+          vector3D2[1] = currentNavData->GetPosition()[1];
+          vector3D2[2] = currentNavData->GetPosition()[2];
+
+
+          normal[0] = (vector3D1[1] * vector3D2[2]) - (vector3D1[2] * vector3D2[1]);
+          normal[1] = (vector3D1[2] * vector3D2[0]) - (vector3D1[0] * vector3D2[2]);
+          normal[2] = (vector3D1[0] * vector3D2[1]) - (vector3D1[1] * vector3D2[0]);
+
+          //Source-Points; falscher Ursprung hier ist es der normale Ursprung also eig TargetPoints, suche Ursprung!
+          double s1 = vector3D1[0] + vector3D1[1] + vector3D1[2];
+          double s2 = vector3D2[0] + vector3D2[1] + vector3D2[2];
+          double s3 = normal[0] + normal[1] + normal[2];
+
+          //Target-Points (Abstand)
+          double t1 = vector3D1[0] + vector3D1[1] + vector3D1[2];
+          double t2 = vector3D2[0] + vector3D2[1] + vector3D2[2];
+          double t3 = normal[0] + normal[1] + normal[2];
+
+
+          double sourcePoint1[3] = {s1, 0.0, 0.0};
+          double sourcePoint2[3] = {0.0, s2, 0.0};
+          double sourcePoint3[3] = {0.0, 0.0, s3};
+
+          double targetPoint1[3] = {0.0, 0.0, t3};
+          double targetPoint2[3] = {0.0, t2, 0.0};
+          double targetPoint3[3] = {-t1, 0.0, 0.0};
+
+          m_PointSetSource->InsertPoint(sourcePoint1);
+          m_PointSetSource->InsertPoint(sourcePoint2);
+          m_PointSetSource->InsertPoint(sourcePoint3);
+          m_LandmarkTransformFilter->SetSourceLandmarks(m_PointSetSource);
+          m_LandmarkTransformFilter->
+
+          m_PointSetTarget->InsertPoint(targetPoint1);
+          m_PointSetTarget->InsertPoint(targetPoint2);
+          m_PointSetTarget->InsertPoint(targetPoint3);
+          m_LandmarkTransformFilter->SetSourceLandmarks(m_PointSetTarget);
+
+          //m_AllTools.at(1)->SetPosition(currentNavData->GetPosition());
+          /*m_AllTools.at(1)->SetPosition(currentNavData->GetPosition());
+          m_AllTools.at(1)->SetOrientation(currentNavData->GetOrientation());
+          m_AllTools.at(1)->SetIGTTimeStamp(currentNavData->GetIGTTimeStamp());*/
+
+
+     }
+
+   }
+
 }
 
 bool mitk::OpenIGTLinkTrackingDevice::StartTracking()
@@ -386,6 +482,12 @@ bool mitk::OpenIGTLinkTrackingDevice::StartTracking()
   m_IGTLMsgToNavDataFilter = mitk::IGTLMessageToNavigationDataFilter::New();
   m_IGTLMsgToNavDataFilter->SetNumberOfExpectedOutputs(this->GetToolCount());
   m_IGTLMsgToNavDataFilter->ConnectTo(m_IGTLDeviceSource);
+
+  //create LandmarkTranform
+  m_LandmarkTransformFilter = mitk::NavigationDataLandmarkTransformFilter::New();
+  m_PointSetSource = mitk::PointSet::New();
+  m_PointSetTarget = mitk::PointSet::New();
+
 
   //connect itk events
   typedef itk::SimpleMemberCommand< mitk::OpenIGTLinkTrackingDevice > CurCommandType;
