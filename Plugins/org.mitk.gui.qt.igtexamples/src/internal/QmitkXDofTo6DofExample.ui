@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>668</width>
+    <width>296</width>
     <height>392</height>
    </rect>
   </property>
@@ -19,86 +19,84 @@
   <property name="windowTitle">
    <string>QmitkTemplate</string>
   </property>
-  <layout class="QGridLayout">
-   <item row="1" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QPushButton" name="butStart">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Start Pipeline</string>
+        <string>Source</string>
        </property>
       </widget>
      </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Update Rate:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="visualizationUpdateRateSpinBox">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="maximum">
-          <number>200</number>
-         </property>
-         <property name="value">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
      </item>
-     <item>
-      <layout class="QGridLayout" name="gridLayout11">
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="visualizeCheckBox">
-         <property name="text">
-          <string>Visualize</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Number of expected channels:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QSpinBox" name="channelSpinBox">
-         <property name="value">
-          <number>3</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+     <item row="0" column="2">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
      </item>
-     <item>
-      <spacer name="spacer2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
+     <item row="0" column="3">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Target</string>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>220</height>
-        </size>
-       </property>
-      </spacer>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_4"/>
+     </item>
+     <item row="1" column="2">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_5"/>
+     </item>
+     <item row="1" column="3">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_6"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="butStart">
+     <property name="text">
+      <string>Add Landmark</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QmitkNavigationDataSourceSelectionWidget" name="NavigationDataSourceSelectionWidget" native="true">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>50</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="spacer2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>232</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QmitkNavigationDataSourceSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>QmitkNavigationDataSourceSelectionWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

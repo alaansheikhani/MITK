@@ -22,6 +22,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkRenderWindow.h"
 
 #include "QmitkXDofTo6DofExample.h"
+#include "mitkNavigationDataObjectVisualizationFilter.h"
 
 
 
@@ -50,4 +51,11 @@ void QmitkXDofTo6DofExample::CreateQtPartControl( QWidget *parent )
 void QmitkXDofTo6DofExample::Start()
 {
   MITK_INFO << "Test";
+  mitk::NavigationDataSource::Pointer source = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource();
+  //m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource()
+  //m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID()
+  mitk::NavigationDataObjectVisualizationFilter::Pointer visFilter =
+    mitk::NavigationDataObjectVisualizationFilter::New();
+  //visFilter->ConnectTo(...)
+  visFilter->SetRepresentationObject(0, source->GetToolMetaDataCollection()->GetTool(0)->GetDataNode()->GetData());
 }
