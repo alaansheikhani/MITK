@@ -39,5 +39,13 @@
           class="OpenIGTLinkPlugin"
           icon="resources/icon_openigtlink_extended_example.svg" />
   </extension>
+  <extension point="org.blueberry.ui.views">
+    <view id="org.mitk.views.qmitkxdofto6dofexample"
+          name="IGT X Dof to 6 Dof example"
+          category="IGT"
+          class="QmitkXDofTo6DofExample"
+          icon="resources/icon_openigtlink_extended_example.svg" />
+  </extension>
+
 
 </plugin>

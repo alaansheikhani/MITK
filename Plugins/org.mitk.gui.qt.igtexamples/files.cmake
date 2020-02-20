@@ -8,6 +8,7 @@ set(INTERNAL_CPP_FILES
   OpenIGTLinkExample.cpp
   OpenIGTLinkProviderExample.cpp
   OpenIGTLinkPlugin.cpp
+  QmitkXDofTo6DofExample.cpp
   mitkPluginActivator.cpp
 )
 
@@ -17,6 +18,7 @@ set(UI_FILES
   src/internal/OpenIGTLinkProviderExampleControls.ui
   src/internal/OpenIGTLinkExampleControls.ui
   src/internal/OpenIGTLinkPluginControls.ui
+  src/internal/QmitkXDofTo6DofExample.ui
 )
 
 set(MOC_H_FILES
@@ -26,6 +28,7 @@ set(MOC_H_FILES
   src/internal/OpenIGTLinkExample.h
   src/internal/mitkPluginActivator.h
   src/internal/OpenIGTLinkPlugin.h
+  src/internal/QmitkXDofTo6DofExample.h
 )
 
 set(CACHED_RESOURCE_FILES
