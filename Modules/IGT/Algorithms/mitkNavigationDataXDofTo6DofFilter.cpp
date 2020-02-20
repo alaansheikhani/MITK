@@ -31,7 +31,6 @@ mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
 
 void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
 {
-  /*
   //m_LastValuesList = std::map<int, std::map<int, mitk::Point3D>>();
   // get each input and transfer the data
 
@@ -84,25 +83,28 @@ void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
       mitk::NavigationData::Pointer transformedND = mitk::NavigationData::New(mitkTransform); // this is stored in a member because it is needed for permanent registration later on
       transformedND->SetName("Test6D");
     }
-  }*/
+  }
 
 
 }
 
-/*
+
 int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsigned int outputID)
 {
   int count = 0;
   for (int i = 0; i < landmarks.size(); i++)
   {
+
     LANDMARK landmark = landmarks.at(i);
     if (landmark.outputID == outputID)
     {
       count++;
     }
-  return count;
+
   }
+  return count;
 }
+
 
 void mitk::NavigationDataXDofTo6DofFilter::SetLandmarksForOutput(unsigned int outputID)
 {
@@ -173,7 +175,7 @@ void mitk::NavigationDataXDofTo6DofFilter::PassThrough(unsigned int inputID, uns
   output->SetDataValid(nd->IsDataValid());
 
 }
-*/
+
 //2 Methoden (1. Berechnung, 2. Daten durch)
 //Listen mit Input, Landmarken und outputs
 //Vector (stdVector) 1d Liste

@@ -49,6 +49,14 @@ namespace mitk
   class MITKIGT_EXPORT NavigationDataXDofTo6DofFilter : public NavigationDataToNavigationDataFilter
   {
   public:
+    struct LANDMARK
+    {
+      mitk::Point3D source_pt;
+      mitk::Point3D target_pt_sensor_coordinates;
+      unsigned int inputID;
+      unsigned int outputID;
+    };
+
     mitkClassMacro(NavigationDataXDofTo6DofFilter, NavigationDataToNavigationDataFilter) itkNewMacro(Self)
 
       protected : NavigationDataXDofTo6DofFilter();
@@ -72,22 +80,15 @@ namespace mitk
     void PassThrough(unsigned int inputID, unsigned int outputID);
     void SetLandmarksForOutput(unsigned int outputID);
 
-    /*
     std::vector<LANDMARK> landmarks;
     vtkSmartPointer<vtkPoints> m_SourcePoints;
     vtkSmartPointer<vtkPoints> m_TargetPoints;
-    */
+
   };
 
 } // namespace mitk
 
-struct LANDMARK
-{
-  mitk::Point3D source_pt;
-  mitk::Point3D target_pt_sensor_coordinates;
-  unsigned int inputID;
-  unsigned int outputID;
-};
+
 
 
 #endif // NAVIGATIONDATAXDOFTO6DOFFILTER_H
