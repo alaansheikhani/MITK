@@ -45,17 +45,42 @@ void QmitkXDofTo6DofExample::CreateQtPartControl( QWidget *parent )
   // connect the widget items with the methods
   connect( m_Controls.butStart, SIGNAL(clicked()),
            this, SLOT(Start()) );
+  //connect(m_Controls.but)
+
+  //m_TrackingDeviceSource->SetTrackingDevice()
 }
 
 
 void QmitkXDofTo6DofExample::Start()
 {
+
+  static bool isFirstTime = true;
+  if (isFirstTime)
+  {
+    //this->CreatePipeline();
+    isFirstTime = false;
+  }
+/*
+  m_Timer.setInterval(this->m_Controls.visualizationUpdateRateSpinBox->value());
+  m_Timer.start();
+  m_Controls.*/
+
   MITK_INFO << "Test";
-  mitk::NavigationDataSource::Pointer source = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource();
+  m_Source = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource();
   //m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource()
-  //m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID()
-  mitk::NavigationDataObjectVisualizationFilter::Pointer visFilter =
-    mitk::NavigationDataObjectVisualizationFilter::New();
-  //visFilter->ConnectTo(...)
-  visFilter->SetRepresentationObject(0, source->GetToolMetaDataCollection()->GetTool(0)->GetDataNode()->GetData());
+  int toolID = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID();
+  //double source1 = m_Controls.
+  m_XDofTo6DofFilter = mitk::NavigationDataXDofTo6DofFilter::New();
+  m_XDofTo6DofFilter->ConnectTo(m_Source);
+  m_VisFilter = mitk::NavigationDataObjectVisualizationFilter::New();
+  m_VisFilter->ConnectTo(m_XDofTo6DofFilter);
+  //1. Parameter 0, wenn nur ein Tool
+  m_VisFilter->SetRepresentationObject(0, m_Source->GetToolMetaDataCollection()->GetTool(0)->GetDataNode()->GetData());
 }
+
+//void QmitkXDofTo6DofExample::CreatePipeline()
+//{
+//  // create a visualization filter
+//  m_VisFilter = mitk::NavigationDataObjectVisualizationFilter::New();
+//
+//}

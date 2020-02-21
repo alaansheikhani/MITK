@@ -14,7 +14,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-
 #ifndef QmitkXDofTo6DofExample_h
 #define QmitkXDofTo6DofExample_h
 
@@ -24,7 +23,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "ui_QmitkXDofTo6DofExample.h"
 
-
+#include "mitkNavigationDataObjectVisualizationFilter.h"
+#include "mitkTrackingDeviceSource.h"
+#include "mitkNavigationDataXDofTo6DofFilter.h"
 
 /**
   \brief OpenIGTLinkExample
@@ -40,23 +41,27 @@ class QmitkXDofTo6DofExample : public QmitkAbstractView
   // (everything that derives from QObject and wants to have signal/slots)
   Q_OBJECT
 
-  public:
-    ~QmitkXDofTo6DofExample();
+public:
+  ~QmitkXDofTo6DofExample();
 
-    static const std::string VIEW_ID;
+  static const std::string VIEW_ID;
 
-  protected slots:
+protected slots:
 
-    void Start();
+  void Start();
+  //void CreatePipeline();
 
-  protected:
+protected:
+  Ui::QmitkXDofTo6DofExampleControls m_Controls;
 
-    Ui::QmitkXDofTo6DofExampleControls m_Controls;
+  virtual void CreateQtPartControl(QWidget *parent) override;
 
-    virtual void CreateQtPartControl(QWidget *parent) override;
+  virtual void SetFocus() override;
 
-    virtual void SetFocus() override;
-
+  mitk::NavigationDataXDofTo6DofFilter::Pointer m_XDofTo6DofFilter;
+  mitk::NavigationDataObjectVisualizationFilter::Pointer m_VisFilter;
+  mitk::NavigationDataSource::Pointer m_Source;
+  //QTimer m_Timer;
 };
 
 #endif // QmitkXDofTo6DofExample_h
