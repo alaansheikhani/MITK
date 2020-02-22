@@ -26,6 +26,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkNavigationDataObjectVisualizationFilter.h"
 #include "mitkTrackingDeviceSource.h"
 #include "mitkNavigationDataXDofTo6DofFilter.h"
+#include <QTimer>
 
 /**
   \brief OpenIGTLinkExample
@@ -49,6 +50,8 @@ public:
 protected slots:
 
   void Start();
+  void StartUpdating();
+  void Update();
   //void CreatePipeline();
 
 protected:
@@ -61,7 +64,7 @@ protected:
   mitk::NavigationDataXDofTo6DofFilter::Pointer m_XDofTo6DofFilter;
   mitk::NavigationDataObjectVisualizationFilter::Pointer m_VisFilter;
   mitk::NavigationDataSource::Pointer m_Source;
-  //QTimer m_Timer;
+  QTimer* m_Timer;
 };
 
 #endif // QmitkXDofTo6DofExample_h
