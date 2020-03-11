@@ -125,6 +125,10 @@ public:
 
   static int MergeSegmentationAndSecurityMargin(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
+  static mitk::Point3D ComputeCenterOfGravity(mitk::Image::Pointer image,
+                                              mitk::Vector3D &imageSpacing,
+                                              mitk::Vector3D &imageDimension);
+
 private:
   AblationUtils();
   virtual ~AblationUtils();

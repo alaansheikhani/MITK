@@ -1437,3 +1437,41 @@ int AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Po
   volume = (int)(volume * volumeFactor) / 1000;
   return volume;
 }
+
+mitk::Point3D AblationUtils::ComputeCenterOfGravity(mitk::Image::Pointer image,
+                                                    mitk::Vector3D &imageSpacing,
+                                                    mitk::Vector3D &imageDimension)
+{
+  /*
+  int counter;
+  long mean_x = 0;
+  long mean_y = 0;
+  long mean_z = 0;
+  if (image.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < imageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < imageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < imageDimension[0]; actualIndex[0] += 1)
+        {
+          if (imagePixelWriter.GetPixelByIndex(actualIndex) == 1)
+          {
+            // NOT IMPLEMENTED YET
+            image->
+            mean_x = imageSpacing[0] * actualIndex[0];
+            counter++;
+
+          }
+        }
+      }
+    }
+  }
+  */
+  mitk::Point3D returnValue;
+  return returnValue;
+
+
+}
