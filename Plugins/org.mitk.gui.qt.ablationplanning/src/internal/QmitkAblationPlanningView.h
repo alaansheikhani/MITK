@@ -101,6 +101,7 @@ protected slots:
   void OnCalculationModelChanged(bool);
   void OnNumberOfRepetitionsChanged();
   void OnPercentageNonAblatedVolumeChanged();
+  void OnMergeTumorSafetyMargin();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;

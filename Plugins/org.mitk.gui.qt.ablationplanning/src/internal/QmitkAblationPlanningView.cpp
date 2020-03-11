@@ -472,6 +472,11 @@ void QmitkAblationPlanningView::OnBinaryPropertyChanged()
   }
 }
 
+void QmitkAblationPlanningView::OnMergeTumorSafetyMargin() {
+  MITK_INFO << "Merging tumor segmentation an safety margin";
+  AblationUtils::MergeSegmentationAndSecurityMargin(m_SegmentationImage, m_ImageDimension);
+}
+
 void QmitkAblationPlanningView::OnCalculateSafetyMargin()
 {
   if(m_SegmentationImage.IsNotNull() && m_Controls.safetyMarginSpinBox->value() > 0.0 )
@@ -908,6 +913,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     this, SLOT(OnNumberOfRepetitionsChanged()));
   connect(m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox, SIGNAL(valueChanged(int)),
     this, SLOT(OnPercentageNonAblatedVolumeChanged()));
+  connect(m_Controls.mergeTumor, SIGNAL(clicked()), this, SLOT(OnMergeTumorSafetyMargin()));
+
 
 
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages = GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);

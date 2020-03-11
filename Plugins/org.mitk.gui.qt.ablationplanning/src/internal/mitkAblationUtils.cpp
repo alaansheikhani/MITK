@@ -1161,6 +1161,28 @@ void AblationUtils::CreateSafetyMarginInfluenceAreaOfPixel(itk::Index<3>& pixel,
   }
 }
 
+int AblationUtils::MergeSegmentationAndSecurityMargin(mitk::Image::Pointer image, mitk::Vector3D &imageDimension) {
+  if (image.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < imageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < imageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < imageDimension[0]; actualIndex[0] += 1)
+        {
+          if (imagePixelWriter.GetPixelByIndex(actualIndex) == SAFETY_MARGIN)
+          {
+            imagePixelWriter.SetPixelByIndex(actualIndex,1);
+          }
+        }
+      }
+    }
+  }
+  return 0;
+}
+
 double AblationUtils::CalculateRatioAblatedTissueOutsideTumorToAblatedTissueInsideTumor(itk::Index<3>& center, mitk::Image::Pointer image, double &radius, mitk::Vector3D &imageDimension, mitk::Vector3D &imageSpacing)
 {
   double pixelsOutsideTumorAndSafetyMargin = 0.0;

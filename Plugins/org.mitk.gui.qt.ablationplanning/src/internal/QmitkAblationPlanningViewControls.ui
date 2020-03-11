@@ -72,6 +72,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="mergeTumor">
+     <property name="text">
+      <string>Merge Tumor With Safety Margin</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="ablationStartingPointPushButton">
      <property name="toolTip">
       <string>Do image processing</string>

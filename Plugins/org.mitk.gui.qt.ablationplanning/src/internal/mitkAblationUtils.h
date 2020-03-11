@@ -123,6 +123,8 @@ public:
 
   static int CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Pointer image, mitk::Vector3D &imageSpacing, mitk::Vector3D &imageDimension);
 
+  static int MergeSegmentationAndSecurityMargin(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
+
 private:
   AblationUtils();
   virtual ~AblationUtils();
