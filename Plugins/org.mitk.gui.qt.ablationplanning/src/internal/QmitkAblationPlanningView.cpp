@@ -37,6 +37,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkProperties.h"
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkImagePixelWriteAccessor.h>
+#include <mitkSceneIO.h>
 
 #include <vtkSphereSource.h>
 #include <vtkAppendPolyData.h>
@@ -740,6 +741,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->CreateSpheresOfAblationVolumes();
   this->FillComboBoxAblationZones();
   this->CalculateAblationStatistics();
+  this->SaveResults();
 
 }
 
@@ -872,6 +874,18 @@ void QmitkAblationPlanningView::OnPercentageNonAblatedVolumeChanged()
     m_Controls.refreshCalculationsPushButton->setVisible(true);
   }
 }
+
+void QmitkAblationPlanningView::SaveResults() {
+  QString filename = "C:/temp/test123";
+  //Save MITK scene
+  mitk::SceneIO::Pointer mySceneIO = mitk::SceneIO::New();
+  QString filenameScene = filename + "_mitkScene.mitk";
+  mitk::NodePredicateNot::Pointer isNotHelperObject =
+    mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("helper object", mitk::BoolProperty::New(true)));
+  mitk::DataStorage::SetOfObjects::ConstPointer nodesToBeSaved = this->GetDataStorage()->GetSubset(isNotHelperObject);
+  mySceneIO->SaveScene(nodesToBeSaved, this->GetDataStorage(), filenameScene.toStdString().c_str());
+}
+
 
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
 {

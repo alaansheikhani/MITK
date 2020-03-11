@@ -86,6 +86,8 @@ protected:
 
   void CalculateAblationStatistics();
 
+  void SaveResults();
+
 protected slots:
   void OnSegmentationComboBoxSelectionChanged(const mitk::DataNode *node);
   void OnVisiblePropertyChanged();
