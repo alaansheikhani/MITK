@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>516</width>
-    <height>864</height>
+    <height>876</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -224,7 +224,7 @@
      <item>
       <widget class="QSpinBox" name="toleranceNonAblatedTumorSafetyMarginVolumeSpinBox">
        <property name="maximum">
-        <number>20</number>
+        <number>50</number>
        </property>
        <property name="value">
         <number>3</number>
