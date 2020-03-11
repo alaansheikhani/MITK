@@ -170,6 +170,21 @@ private:
   mitk::DataNode::Pointer m_AblationCentersNode;
 
   bool m_AblationCalculationMade;
+
+  struct ablationStats
+  {
+    int numberOfZones;
+    int tumorVolume;
+    int safetyMarginVolume;
+    int tumorAndSafetyMarginVolume;
+    int totalAblationVolume;
+    int ablationVolumeAblatedMoreThanOneTime;
+    double factorOverlappingAblationZones;
+    double factorAblatedVolumeOutsideSafetyMargin;
+    int time;
+  };
+
+  ablationStats m_Stats;
 };
 
 #endif // QMITKABLATIONPLANNINGVIEW_H

@@ -24,6 +24,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qt
 #include <QMessageBox>
+#include <QFileDialog>
+#include <QTextStream>
 
 // mitk
 #include "mitkAblationUtils.h"
@@ -42,6 +44,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkSphereSource.h>
 #include <vtkAppendPolyData.h>
 #include <mitkSurface.h>
+#include <chrono>
 
 const std::string QmitkAblationPlanningView::VIEW_ID = "org.mitk.views.ablationplanning";
 const static short ABLATION_VALUE = 2;
@@ -374,32 +377,33 @@ void QmitkAblationPlanningView::FillComboBoxAblationZones()
 
 void QmitkAblationPlanningView::CalculateAblationStatistics()
 {
-  int tumorVolume = AblationUtils::CalculateTumorVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
-  int safetyMarginVolume = AblationUtils::CalculateSafetyMarginVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
-  int tumorAndSafetyMarginVolume = tumorVolume + safetyMarginVolume;
-  int totalAblationVolume = AblationUtils::CalculateTotalAblationVolume(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
-  int ablationVolumeAblatedMoreThanOneTime = AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
+  m_Stats.tumorVolume =
+    AblationUtils::CalculateTumorVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
+  m_Stats.safetyMarginVolume =
+    AblationUtils::CalculateSafetyMarginVolume(m_SegmentationImage, m_ImageSpacing, m_TumorTissueSafetyMarginIndices);
+  m_Stats.tumorAndSafetyMarginVolume = m_Stats.tumorVolume + m_Stats.safetyMarginVolume;
+  m_Stats.totalAblationVolume =
+    AblationUtils::CalculateTotalAblationVolume(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
+  m_Stats.ablationVolumeAblatedMoreThanOneTime =
+    AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(m_SegmentationImage, m_ImageSpacing, m_ImageDimension);
 
-  double factorOverlappingAblationZones =
-    ((double)ablationVolumeAblatedMoreThanOneTime / totalAblationVolume) * 100;
+  m_Stats.factorOverlappingAblationZones =
+    ((double)m_Stats.ablationVolumeAblatedMoreThanOneTime / m_Stats.totalAblationVolume) * 100;
 
-  double factorAblatedVolumeOutsideSafetyMargin =
-    ((totalAblationVolume - tumorAndSafetyMarginVolume) / (double)totalAblationVolume) * 100;
+  m_Stats.factorAblatedVolumeOutsideSafetyMargin =
+    ((m_Stats.totalAblationVolume - m_Stats.tumorAndSafetyMarginVolume) / (double)m_Stats.totalAblationVolume) * 100;
 
+  m_Stats.numberOfZones = m_AblationZoneCentersProcessed.size();
   m_Controls.numberAblationVoluminaLabel
     ->setText(QString("%1").arg(m_AblationZoneCentersProcessed.size()));
-  m_Controls.numberTumorVolumeLabel
-    ->setText(QString("%1").arg(tumorVolume));
-  m_Controls.numberTumorAndMarginVolumeLabel
-    ->setText(QString("%1").arg(tumorAndSafetyMarginVolume));
-  m_Controls.numberAblationVolumeLabel
-    ->setText(QString("%1").arg(totalAblationVolume));
-  m_Controls.numberVolumeAblatedTwoAndMoreLabel
-    ->setText(QString("%1").arg(ablationVolumeAblatedMoreThanOneTime));
-  m_Controls.numberOverlappingAblationZonesLabel
-    ->setText(QString("%1").arg(factorOverlappingAblationZones));
-  m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel
-    ->setText(QString("%1").arg(factorAblatedVolumeOutsideSafetyMargin));
+  m_Controls.numberTumorVolumeLabel->setText(QString("%1").arg(m_Stats.tumorVolume));
+  m_Controls.numberTumorAndMarginVolumeLabel->setText(QString("%1").arg(m_Stats.tumorAndSafetyMarginVolume));
+  m_Controls.numberAblationVolumeLabel->setText(QString("%1").arg(m_Stats.totalAblationVolume));
+  m_Controls.numberVolumeAblatedTwoAndMoreLabel->setText(
+    QString("%1").arg(m_Stats.ablationVolumeAblatedMoreThanOneTime));
+  m_Controls.numberOverlappingAblationZonesLabel->setText(QString("%1").arg(m_Stats.factorOverlappingAblationZones));
+  m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel->setText(
+    QString("%1").arg(m_Stats.factorAblatedVolumeOutsideSafetyMargin));
 }
 
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode* node)
@@ -594,6 +598,9 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_AblationZoneCentersProcessed.clear();
   m_TempAblationZoneCentersProcessed.clear();
 
+  std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+
   //==================== Find ablation proposal by iteratively create and test random propsals ==========================================
   AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
 
@@ -737,12 +744,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   {
     MITK_WARN << "There is still non ablated tumor tissue.";
   }
-
+  std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+  std::chrono::milliseconds diff = end - start;
+  m_Stats.time = diff.count();
   this->CreateSpheresOfAblationVolumes();
   this->FillComboBoxAblationZones();
   this->CalculateAblationStatistics();
   this->SaveResults();
-
 }
 
 void QmitkAblationPlanningView::OnAblationRadiusChanged(double radius)
@@ -876,7 +885,30 @@ void QmitkAblationPlanningView::OnPercentageNonAblatedVolumeChanged()
 }
 
 void QmitkAblationPlanningView::SaveResults() {
-  QString filename = "C:/temp/test123";
+  QString filename = m_Controls.outFolder->text() + m_Controls.expName->text();
+
+  //Save CSV file with output
+  QFile file(filename + ".csv");
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+  {
+    MITK_WARN << "Cannot open file '" << filename.toStdString() << ".csv" << "' for writing.";
+    return;
+  }
+  QTextStream outStream(&file);
+  //write header
+  outStream << "numberOfZones;tumorVolume[ml];safetyMarginVolume[ml];tumorAndSafetyMarginVolume[ml];totalAblationVolume[ml];ablationVolumeAblatedMoreThanOneTime[ml];factorOverlappingAblationZones;factorAblatedVolumeOutsideSafetyMargin;time[ms]\n";
+  //write data
+  outStream << m_Stats.numberOfZones << ";"
+            << m_Stats.tumorVolume << ";"
+            << m_Stats.safetyMarginVolume << ";"
+            << m_Stats.tumorAndSafetyMarginVolume << ";"
+            << m_Stats.totalAblationVolume << ";"
+            << m_Stats.ablationVolumeAblatedMoreThanOneTime << ";"
+            << m_Stats.factorOverlappingAblationZones << ";"
+            << m_Stats.factorAblatedVolumeOutsideSafetyMargin << ";"
+            << m_Stats.time << ";" << "\n";
+
+
   //Save MITK scene
   mitk::SceneIO::Pointer mySceneIO = mitk::SceneIO::New();
   QString filenameScene = filename + "_mitkScene.mitk";
