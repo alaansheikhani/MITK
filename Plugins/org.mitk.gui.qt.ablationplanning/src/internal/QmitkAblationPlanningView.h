@@ -173,6 +173,11 @@ private:
 
   struct ablationStats
   {
+    double ablationRadius;
+    int tissueShrinking;
+    char model;
+    int interations;
+    int toleranceNonAblated;
     int numberOfZones;
     int tumorVolume;
     int safetyMarginVolume;

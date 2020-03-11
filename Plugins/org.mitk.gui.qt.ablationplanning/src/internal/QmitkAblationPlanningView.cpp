@@ -885,6 +885,13 @@ void QmitkAblationPlanningView::OnPercentageNonAblatedVolumeChanged()
 }
 
 void QmitkAblationPlanningView::SaveResults() {
+  m_Stats.ablationRadius = m_Controls.ablationRadiusSpinBox->value();
+  m_Stats.tissueShrinking = m_Controls.tissueShrinkingSpinBox->value();
+  if (m_Controls.randomDistributionRadioButton->isChecked()) m_Stats.model = 'R';
+  else m_Stats.model = 'G';
+  m_Stats.interations = m_Controls.repititionsCalculatingAblationZonesSpinBox->value();
+  m_Stats.toleranceNonAblated = m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value();
+
   QString filename = m_Controls.outFolder->text() + m_Controls.expName->text();
 
   //Save CSV file with output
@@ -896,9 +903,14 @@ void QmitkAblationPlanningView::SaveResults() {
   }
   QTextStream outStream(&file);
   //write header
-  outStream << "numberOfZones;tumorVolume[ml];safetyMarginVolume[ml];tumorAndSafetyMarginVolume[ml];totalAblationVolume[ml];ablationVolumeAblatedMoreThanOneTime[ml];factorOverlappingAblationZones;factorAblatedVolumeOutsideSafetyMargin;time[ms]\n";
+  outStream << "ablationRadius[mm];tissueShrinking;model[R=rand, G=grid];interations;toleranceNonAblated;numberOfZones;tumorVolume[ml];safetyMarginVolume[ml];tumorAndSafetyMarginVolume[ml];totalAblationVolume[ml];ablationVolumeAblatedMoreThanOneTime[ml];factorOverlappingAblationZones;factorAblatedVolumeOutsideSafetyMargin;time[ms]\n";
   //write data
-  outStream << m_Stats.numberOfZones << ";"
+  outStream << m_Stats.ablationRadius << ";"
+            << m_Stats.tissueShrinking << ";"
+            << m_Stats.model << ";"
+            << m_Stats.interations << ";"
+            << m_Stats.toleranceNonAblated << ";"
+            << m_Stats.numberOfZones << ";"
             << m_Stats.tumorVolume << ";"
             << m_Stats.safetyMarginVolume << ";"
             << m_Stats.tumorAndSafetyMarginVolume << ";"
