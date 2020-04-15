@@ -23,6 +23,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "QmitkXDofTo6DofExample.h"
 #include "mitkNavigationDataObjectVisualizationFilter.h"
+#include <vtkMarchingCubes.h>
+#include <mitkSurface.h>
+#include <mitkCone.h>
 
 const std::string QmitkXDofTo6DofExample::VIEW_ID = "org.mitk.views.QmitkXDofTo6DofExample";
 
@@ -37,7 +40,7 @@ void QmitkXDofTo6DofExample::CreateQtPartControl(QWidget *parent)
   m_Timer = new QTimer(this);
 
   // connect the widget items with the methods
-  connect(m_Controls.butStart, SIGNAL(clicked()), this, SLOT(Start()));
+  connect(m_Controls.butStart, SIGNAL(clicked()), this, SLOT(AddLandmark()));
   connect(m_Timer, SIGNAL(timeout()), this, SLOT(Update()));
   // connect(m_Controls.but)
   // m_TrackingDeviceSource->SetTrackingDevice()
@@ -49,7 +52,7 @@ void QmitkXDofTo6DofExample::Update()
   MITK_INFO << "Update!";
 }
 
-void QmitkXDofTo6DofExample::Start()
+void QmitkXDofTo6DofExample::AddLandmark()
 {
   static bool isFirstTime = true;
   if (isFirstTime)
@@ -65,23 +68,43 @@ void QmitkXDofTo6DofExample::Start()
   MITK_INFO << "Test";
   m_Source = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource();
   // m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource()
-  int toolID = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID();
-  // double source1 = m_Controls.
-  m_XDofTo6DofFilter = mitk::NavigationDataXDofTo6DofFilter::New();
-  m_XDofTo6DofFilter->ConnectTo(m_Source);
-  m_VisFilter = mitk::NavigationDataObjectVisualizationFilter::New();
-  m_VisFilter->ConnectTo(m_XDofTo6DofFilter);
-  // 1. Parameter 0, wenn nur ein Tool
+  int inputID = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID();
+
+  double source1 = m_Controls.source1->value;
+  double source2 = m_Controls.source2->value;
+  double source3 = m_Controls.source3->value;
+
+  double target1 = m_Controls.target1->value;
+  double target2 = m_Controls.target2->value;
+  double target3 = m_Controls.target3->value;
+
+  int outputID = m_Controls.outputID->value;
+
+
+
+  //Surface nötig für Data Node
+
+  mitk::Cone::Pointer cone = mitk::Cone::New();
+  //mitk::Surface::Pointer surface = mitk::Surface::New();
+
+
   mitk::DataNode::Pointer representationObject = mitk::DataNode::New();
   representationObject->SetName("X Dof to 6 Dof Example Object");
   //set name, set data (z.B. Cone)
+  representationObject->SetData(cone);
   this->GetDataStorage()->Add(representationObject);
+  // 1. Parameter 0, wenn nur ein Tool
   m_VisFilter->SetRepresentationObject(0, representationObject->GetData());
 }
 
 void QmitkXDofTo6DofExample::StartUpdating() {
 
     //Hier Pipeline aufbauen
+
+    m_XDofTo6DofFilter = mitk::NavigationDataXDofTo6DofFilter::New();
+    m_XDofTo6DofFilter->ConnectTo(m_Source);
+    m_VisFilter = mitk::NavigationDataObjectVisualizationFilter::New();
+    m_VisFilter->ConnectTo(m_XDofTo6DofFilter);
 
     m_Timer->start(200);
 

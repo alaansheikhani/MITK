@@ -49,7 +49,7 @@ public:
 
 protected slots:
 
-  void Start();
+  void AddLandmark();
   void StartUpdating();
   void Update();
   //void CreatePipeline();
