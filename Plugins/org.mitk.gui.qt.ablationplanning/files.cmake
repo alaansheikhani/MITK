@@ -7,6 +7,7 @@ set(INTERNAL_CPP_FILES
   QmitkAblationPlanningView.cpp
   mitkAblationUtils.cpp
   mitkAblationPlan.cpp
+  mitkAblationPlanningAlgorithm.cpp
 )
 
 set(UI_FILES
