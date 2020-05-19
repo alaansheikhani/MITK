@@ -644,6 +644,18 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
   //==================== Optimization of final proposal ==================================================
 
+  //Check if the radius of some ablation zones can be reduced
+  m_MinAblationRadius = 10.0;
+  m_AblationZoneCentersProcessedRadi = std::vector<double>();
+  for (itk::Index<3> idx : m_AblationZoneCentersProcessed)
+  {
+    double currentRadius = AblationUtils::FindMinimalAblationRadius(idx, m_SegmentationImage,
+                                                                    m_AblationRadius, m_MinAblationRadius,
+                                                                    m_ImageDimension, m_ImageSpacing);
+    MITK_INFO << "Found minimal radius: " << currentRadius;
+    m_AblationZoneCentersProcessedRadi.push_back(currentRadius);
+  }
+
   //Check if ablation zones are too far outside the tumor, if yes move them towards the center
   for (int index = 0; index < m_AblationZoneCentersProcessed.size(); ++index)
   {
