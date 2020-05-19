@@ -25,6 +25,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateOr.h>
 
 #include <mitkImage.h>
+#include "mitkAblationPlan.h"
+#include "mitkAblationUtils.h"
 
 #include "ui_QmitkAblationPlanningViewControls.h"
 
@@ -67,9 +69,6 @@ protected:
   virtual void CreateQtPartControl(QWidget *parent) override;
   virtual void SetFocus() override;
 
-  // void ResetMouseCursor();
-  // void SetMouseCursor(const us::ModuleResource&, int hotspotX, int hotspotY);
-
   void NodeRemoved(const mitk::DataNode *node) override;
 
   void NodeAdded(const mitk::DataNode *node) override;
@@ -82,8 +81,6 @@ protected:
 
   void DeleteAllSpheres();
 
-  void FillComboBoxAblationZones();
-
   void CalculateAblationStatistics();
 
 protected slots:
@@ -93,14 +90,6 @@ protected slots:
   void OnCalculateSafetyMargin();
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
-  void OnAblationRadiusChanged(double radius);
-  void OnTissueShrinkingFactorChanged(int tissueShrinking);
-  void OnConfirmNewPositionClicked();
-  void OnDeleteChosenAblationZoneClicked();
-  void OnAddNewAblationZoneClicked();
-  void OnCalculationModelChanged(bool);
-  void OnNumberOfRepetitionsChanged();
-  void OnPercentageNonAblatedVolumeChanged();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;
@@ -122,38 +111,36 @@ private:
   itk::Index<3> m_TempAblationStartingPositionIndexCoordinates;
 
   bool m_ManualAblationStartingPositionSet;
-  double m_AblationRadius; // Maximal ablation radius
+  double m_MaxAblationRadius; // Maximal ablation radius
+  double m_AblationRadius; // Desired ablation radius
   double m_MinAblationRadius; // Minimal ablation radius
   mitk::Image::Pointer m_SegmentationImage;
-
+  mitk::AblationPlan::Pointer m_AblationPlan;
   /*!
   * \brief Final vector storing the index coordinates of all circle centers of the ablation zones
     after the calculation of the best ablation zone distribution.
   */
-  std::vector<itk::Index<3>> m_AblationZoneCenters;
+  std::vector<AblationUtils::AblationZone> m_AblationZones;
 
   /*!
    * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
    * when calculating the best ablation zone distribution.
    */
-  std::vector<itk::Index<3>> m_TempAblationZoneCenters;
+  std::vector<AblationUtils::AblationZone> m_TempAblationZones;
 
   /*!
    * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
    * which are finally processed after the calculation of the best ablation zone distribution.
    * This means: All 12 direct neighbour ablation zones are checked for remaining non-ablated tumor issue.
    */
-  std::vector<itk::Index<3>> m_AblationZoneCentersProcessed;
-
-  /*! Radi of all ablation centers after optimization */
-  std::vector<double> m_AblationZoneCentersProcessedRadi;
+  std::vector<AblationUtils::AblationZone> m_AblationZonesProcessed;
 
   /*!
    * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones,
    * which are finally processed. This means: All 12 direct neighbour ablation zones are checked
    * for remaining non-ablated tumor issue.
    */
-  std::vector<itk::Index<3>> m_TempAblationZoneCentersProcessed;
+  std::vector<AblationUtils::AblationZone> m_TempAblationZonesProcessed;
 
   /*!
    * \brief Vector storing the index coordinates of all pixels, which are tumor tissue or
