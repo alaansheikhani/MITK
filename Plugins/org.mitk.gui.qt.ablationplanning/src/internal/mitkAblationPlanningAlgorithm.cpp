@@ -21,15 +21,27 @@ mitk::AblationPlanningAlgorithm::AblationPlanningAlgorithm(){}
 mitk::AblationPlanningAlgorithm::~AblationPlanningAlgorithm() {}
 
 void mitk::AblationPlanningAlgorithm::SetAdjustableParameters(int iterations,double maxAblationRadius, double ablationRadius, double minAblationRadius, double toleranceNonAblatedTumorSafetyMarginVolume){
+  m_Iterations = iterations;
+  m_MaxAblationRadius = maxAblationRadius;
+  m_AblationRadius = ablationRadius;
+  m_MinAblationRadius = minAblationRadius;
+  m_ToleranceNonAblatedTumorSafetyMarginVolume = toleranceNonAblatedTumorSafetyMarginVolume;
 }
 
 void mitk::AblationPlanningAlgorithm::SetSegmentationData(mitk::Image::Pointer segmentationImage, mitk::Vector3D imageDimension, mitk::Vector3D imageSpacing){
+  m_SegmentationImage = segmentationImage;
+  m_ImageDimension = imageDimension;
+  m_ImageSpacing = imageSpacing;
 }
 
 void mitk::AblationPlanningAlgorithm::SetStartingPoint(mitk::Point3D startingPositionInWorldCoordinates, itk::Index<3> startingPositionIndexCoordinates){
+  m_TempAblationStartingPositionInWorldCoordinates = startingPositionInWorldCoordinates;
+  m_TempAblationStartingPositionIndexCoordinates = startingPositionIndexCoordinates;
+  m_ManualAblationStartingPositionSet = true;
 }
 
 void mitk::AblationPlanningAlgorithm::SetSafetyMargin(std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices){
+  m_TumorTissueSafetyMarginIndices = tumorTissueSafetyMarginIndices;
 }
 
 void mitk::AblationPlanningAlgorithm::ComputePlanning(){
