@@ -55,7 +55,8 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
     m_ManualAblationStartingPositionSet(false),
     m_AblationRadius(15.0),
     m_AblationCalculationMade(false),
-    m_AblationCentersNode(mitk::DataNode::New())
+    m_AblationCentersNode(mitk::DataNode::New()),
+    m_PlanningAlgo(mitk::AblationPlanningAlgorithm::New())
 {
   this->UnsetSegmentationImageGeometry();
 

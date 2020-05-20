@@ -26,6 +26,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkImage.h>
 #include "mitkAblationPlan.h"
+#include "mitkAblationPlanningAlgorithm.h"
 #include "mitkAblationUtils.h"
 
 #include "ui_QmitkAblationPlanningViewControls.h"
@@ -105,17 +106,18 @@ private:
   bool m_MouseCursorSet;
   bool m_DataSelectionChanged;
 
-  mitk::Point3D m_AblationStartingPositionInWorldCoordinates;
-  itk::Index<3> m_AblationStartingPositionIndexCoordinates;
-  mitk::Point3D m_TempAblationStartingPositionInWorldCoordinates;
-  itk::Index<3> m_TempAblationStartingPositionIndexCoordinates;
+  mitk::Point3D m_AblationStartingPositionInWorldCoordinates; //entf
+  itk::Index<3> m_AblationStartingPositionIndexCoordinates; //entf
+  mitk::Point3D m_TempAblationStartingPositionInWorldCoordinates; //entf
+  itk::Index<3> m_TempAblationStartingPositionIndexCoordinates; //entf
 
-  bool m_ManualAblationStartingPositionSet;
-  double m_MaxAblationRadius; // Maximal ablation radius
-  double m_AblationRadius; // Desired ablation radius
-  double m_MinAblationRadius; // Minimal ablation radius
+  bool m_ManualAblationStartingPositionSet; //entf
+  double m_MaxAblationRadius; // Maximal ablation radius //entf
+  double m_AblationRadius; // Desired ablation radius //entf
+  double m_MinAblationRadius; // Minimal ablation radius //entf
   mitk::Image::Pointer m_SegmentationImage;
   mitk::AblationPlan::Pointer m_AblationPlan;
+  mitk::AblationPlanningAlgorithm::Pointer m_PlanningAlgo;
   /*!
   * \brief Final vector storing the index coordinates of all circle centers of the ablation zones
     after the calculation of the best ablation zone distribution.
@@ -126,7 +128,7 @@ private:
    * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
    * when calculating the best ablation zone distribution.
    */
-  std::vector<AblationUtils::AblationZone> m_TempAblationZones;
+  std::vector<AblationUtils::AblationZone> m_TempAblationZones; //entf?
 
   /*!
    * \brief Vector storing the index coordinates of all circle centers of the ablation zones,
