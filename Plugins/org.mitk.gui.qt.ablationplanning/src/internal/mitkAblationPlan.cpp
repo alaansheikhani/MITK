@@ -52,6 +52,11 @@ bool mitk::AblationPlan::RemoveAblationZone(AblationUtils::AblationZone &zone)
   return false;
 }
 
+bool mitk::AblationPlan::RemoveAblationZone(int id){
+  m_AblationZones.erase(m_AblationZones.begin() + id);
+  return true;
+}
+
 void mitk::AblationPlan::DetectAndRemoveNotNeededVolumes()
 {
   std::vector<AblationUtils::AblationZone> newZones;

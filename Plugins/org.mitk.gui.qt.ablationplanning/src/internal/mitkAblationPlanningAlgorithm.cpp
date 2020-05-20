@@ -188,52 +188,49 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     }
   }
 
-  /* TODO: Adapt
   // Check, if ablation zones have a too short distance between each other, if yes they can be removed
-  for (int index = 0; index < m_AblationZonesProcessed.size(); ++index)
+  for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
   {
     std::vector<int> indexToRemove;
-    itk::Index<3> actualIndex = m_AblationZonesProcessed.at(index).indexCenter;
-    for (int counter = 0; counter < m_AblationZonesProcessed.size(); ++counter)
+    itk::Index<3> actualIndex = finalProposal->GetAblationZone(index)->indexCenter;
+    for (int counter = 0; counter < finalProposal->GetNumberOfZones(); ++counter)
     {
       if (counter == index)
       {
         continue;
       }
-      itk::Index<3> indexToProof = m_AblationZonesProcessed.at(counter).indexCenter;
+      itk::Index<3> indexToProof = finalProposal->GetAblationZone(counter)->indexCenter;
       double distance = AblationUtils::CalculateScalarDistance(actualIndex, indexToProof, m_ImageSpacing);
-      if (distance <= 0.5 * m_AblationZonesProcessed.at(counter).radius)
+      if (distance <= 0.5 * finalProposal->GetAblationZone(counter)->radius)
       {
         indexToRemove.push_back(counter);
       }
     }
     for (int position = indexToRemove.size() - 1; position >= 0; --position)
     {
-      std::vector<AblationUtils::AblationZone>::iterator it = m_AblationZonesProcessed.begin();
-      m_AblationZonesProcessed.erase(it + indexToRemove.at(position));
-      std::vector<AblationUtils::AblationZone>::iterator it2 = m_AblationZones.begin();
-      m_AblationZones.erase(it2 + indexToRemove.at(position));
+      finalProposal->RemoveAblationZone(indexToRemove.at(position));
       MITK_DEBUG << "Removed Ablation zone at index position: " << indexToRemove.at(position);
       index = -1;
     }
   }
-  */
 
-  /* Todo: adapt
-  for (int index = 0; index < m_AblationZonesProcessed.size(); ++index)
+
+
+  for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
   {
-    AblationUtils::CalculateAblationVolume(m_AblationZonesProcessed.at(index).indexCenter,
+    AblationUtils::CalculateAblationVolume(finalProposal->GetAblationZone(index)->indexCenter,
                                            m_SegmentationImage,
-                                           m_AblationZonesProcessed.at(index).radius,
+                                           finalProposal->GetAblationZone(index)->radius,
                                            m_ImageSpacing,
                                            m_ImageDimension,
                                            m_TempAblationZones);
   }
 
+  /*TODO: Adapt method...
   AblationUtils::DetectNotNeededAblationVolume(
-    m_AblationZonesProcessed, m_AblationZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
+    m_AblationZonesProcessed, m_AblationZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);*/
 
-  */
+
 
   //============
   /* Todo: Adapt!
