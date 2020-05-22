@@ -594,7 +594,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   mitk::RenderingManager::GetInstance()->Modified();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 
-  double notAblated = AblationUtils::CheckImageForNonAblatedTissue(finalProposal->GetSegmentationImage(), finalProposal->GetImageDimension());
+  double notAblated = AblationUtils::CheckImageForNonAblatedTissueInPercentage(finalProposal->GetSegmentationImage(), finalProposal->GetImageDimension());
   if (notAblated > 0)
   {
     MITK_WARN << "There is still non ablated tumor tissue (" << notAblated << " percent).";

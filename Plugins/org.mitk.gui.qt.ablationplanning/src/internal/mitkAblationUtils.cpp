@@ -411,7 +411,9 @@ bool AblationUtils::CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafet
         {
           if (radius >= CalculateScalarDistance(centerOfVolume, actualIndex, imageSpacing))
           {
-            if (imagePixelWriter.GetPixelByIndex(actualIndex) == NO_TUMOR_ISSUE)
+            // if (imagePixelWriter.GetPixelByIndex(actualIndex) == NO_TUMOR_ISSUE) other variant
+            if( imagePixelWriter.GetPixelByIndex(actualIndex) != TUMOR_NOT_YET_ABLATED &&
+                imagePixelWriter.GetPixelByIndex(actualIndex) != SAFETY_MARGIN)
             {
               return false;
             }
@@ -498,20 +500,23 @@ double AblationUtils::CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::In
                                                                          double maxRadius)
 {
   double radius = startRadius;
-  /*
   while (CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(
            radius, point, image, imageSpacing, imageDimension) &&
-         radius <= maxRadius)
-         */
+         radius <= maxRadius){
+    radius += 1;
+  }
+
+  /* Other variant: check percentage > 50 instead of whole zone inside
   while (GetPercentageOfVolumeInsideTumor(radius, point, image, imageSpacing, imageDimension) > 50 && radius <= maxRadius)
   {
     radius += 1;
   }
+  */
   //MITK_INFO << "Calculated max radius for given point " << point << " : " << radius;
   return radius;
 }
 
-double AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension)
+double AblationUtils::CheckImageForNonAblatedTissueInPercentage(mitk::Image::Pointer image, mitk::Vector3D &imageDimension)
 {
   int numberOfNonAblatedPixels = 0;
   int numberOfTumorPixels = 0;
@@ -540,6 +545,30 @@ double AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, 
     }
   }
   return ((double)numberOfNonAblatedPixels / numberOfTumorPixels) * 100;
+}
+
+bool AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension)
+{
+  if(image.IsNotNull())
+  {
+    mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
+    itk::Index<3> actualIndex;
+    for (actualIndex[2] = 0; actualIndex[2] < imageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < imageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < imageDimension[0]; actualIndex[0] += 1)
+        {
+          if( imagePixelWriter.GetPixelByIndex(actualIndex) == TUMOR_NOT_YET_ABLATED ||
+              imagePixelWriter.GetPixelByIndex(actualIndex) == SAFETY_MARGIN)
+          {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
 
 bool AblationUtils::CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices,
@@ -780,6 +809,7 @@ void AblationUtils::DetectNotNeededAblationVolume(mitk::AblationPlan::Pointer pl
   }
   for (int index = indicesRemoved.size() - 1; index >= 0; --index)
   {
+    MITK_INFO << "Radius ablation Zone not needed: " << plan->GetAblationZone(indicesRemoved.at(index))->radius;
     plan->RemoveAblationZone(indicesRemoved.at(index));
     MITK_INFO << "Removed Ablation zone at index position: " << indicesRemoved.at(index);
   }
@@ -1049,7 +1079,8 @@ mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Inde
       positions.push_back(position4);
       positions.push_back(position5);
 
-      double radius1 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(position1, image, imageSpacing, imageDimension, radius, maxRadius);
+      double radius1 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+        position1, image, imageSpacing, imageDimension, radius, maxRadius);
       double radius2 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
         position2, image, imageSpacing, imageDimension, radius, maxRadius);
       double radius3 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(

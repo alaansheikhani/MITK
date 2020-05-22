@@ -114,7 +114,9 @@ public:
                                                                    double maxRadius);
 
   /** @returns Returns the percentage of non ablated tumor tissue (based on voxels) */
-  static double CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
+  static double CheckImageForNonAblatedTissueInPercentage(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
+
+  static bool AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
   static bool CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices,
                                                                mitk::Image::Pointer image,

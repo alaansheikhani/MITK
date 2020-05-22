@@ -61,34 +61,34 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     currentPlan->SetImageDimension(m_ImageDimension);
     currentPlan->SetImageSpacing(m_ImageSpacing);
 
-    double startingZoneRadius = 0;
-    MITK_INFO << "Iteration: " << iteration;
-    if (!m_ManualAblationStartingPositionSet || iteration > 1)
-    {
+    //if no manual starting point is set: find new starting point
+    if (!m_ManualAblationStartingPositionSet){
       QString position = AblationUtils::FindAblationStartingPosition(currentPlan->GetSegmentationImage(),
                                                                      m_TumorTissueSafetyMarginIndices,
                                                                      m_AblationRadius,
                                                                      m_MaxAblationRadius,
                                                                      m_TempAblationStartingPositionIndexCoordinates,
                                                                      m_TempAblationStartingPositionInWorldCoordinates,
-                                                                     startingZoneRadius,
+                                                                     m_AblationRadius,
                                                                      m_ImageDimension,
                                                                      m_ImageSpacing);
       //m_Controls.ablationStartingPointLabel->setText(position);
-      MITK_INFO << "Found starting point: " << position.toLatin1().toStdString();
+      //MITK_INFO << "Found starting point: " << position.toLatin1().toStdString();
     }
-    else
-    {
-      startingZoneRadius = this->m_AblationRadius;
-    }
+
+
+    MITK_INFO << " ####### Iteration: " << iteration;
+
 
     //------------ Random distribution model calculations: ---------------
     {
       double size = m_TumorTissueSafetyMarginIndices.size();
       std::vector<itk::Index<3>> indices = m_TumorTissueSafetyMarginIndices;
+
+      // Add starting zone
       AblationUtils::CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates,
                                              currentPlan->GetSegmentationImage(),
-                                             startingZoneRadius,
+                                             m_AblationRadius,
                                              m_ImageSpacing,
                                              m_ImageDimension,
                                              m_TempAblationZones);
@@ -99,13 +99,14 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                                         m_ImageDimension,
                                                         m_ImageSpacing);
       currentPlan->AddAblationZone(m_TempAblationZones.at(0));
+      // end add starting zone
 
       while (indices.size() > 0 &&
              (double)(indices.size() / size) >
                (m_ToleranceNonAblatedTumorSafetyMarginVolume / 100))
       {
         mitk::AblationZone newAblationCenter =
-          AblationUtils::SearchNextAblationCenter(indices,
+        AblationUtils::SearchNextAblationCenter(indices,
                                                   currentPlan->GetSegmentationImage(),
                                                   m_AblationRadius,
                                                   m_MaxAblationRadius,
@@ -128,7 +129,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     }
     //------------ End calculation models -------------------------------
 
-    // Check if the radius of some ablation zones can be reduced
+    /* Another try to improve algorithm: Check if the radius of some ablation zones can be reduced
     for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
     {
       mitk::AblationZone *zone = currentPlan->GetAblationZone(i);
@@ -140,12 +141,14 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                                                       m_ImageSpacing);
       // MITK_INFO << "Found minimal radius: " << currentRadius;
       (*zone).radius = currentRadius;
-    }
+    } */
 
-    // Check if some zones can be removed (TODO: fix!)
-    //currentPlan->DetectAndRemoveNotNeededVolumes();
+    MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
 
-    MITK_INFO << "Total number of ablation zones: " << currentPlan->GetNumberOfZones();
+    // Check if some zones can be removed
+    AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
+
+    MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
     AllFoundPlans.push_back(currentPlan);
     //AllFoundPlans[iteration] = currentPlan;
   } // End of for loop
@@ -230,8 +233,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
 
 
   //============
-  /* Todo: Adapt!
-  if (m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value() == 0)
+
+  if (m_ToleranceNonAblatedTumorSafetyMarginVolume == 0)
   {
     std::vector<itk::Index<3>> onlyTumorIndices =
       AblationUtils::FillVectorContainingIndicesOfTumorTissueOnly(m_SegmentationImage, m_ImageDimension);
@@ -250,13 +253,11 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                                         newAblationCenter.radius,
                                                         m_ImageDimension,
                                                         m_ImageSpacing);
-      m_AblationZonesProcessed.push_back(newAblationCenter);
-      m_AblationZones.push_back(newAblationCenter);
+      finalProposal->AddAblationZone(newAblationCenter);
     }
     AblationUtils::DetectNotNeededAblationVolume(
-      m_AblationZonesProcessed, m_AblationZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
+     finalProposal, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
   }
   //============
-  */
   m_AblationPlan = finalProposal;
 }
