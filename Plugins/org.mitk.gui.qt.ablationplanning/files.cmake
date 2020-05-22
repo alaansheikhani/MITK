@@ -10,6 +10,10 @@ set(INTERNAL_CPP_FILES
   mitkAblationPlanningAlgorithm.cpp
 )
 
+set(H_FILES
+  src/internal/mitkAblationZone.h
+)
+
 set(UI_FILES
   src/internal/QmitkAblationPlanningViewControls.ui
 )

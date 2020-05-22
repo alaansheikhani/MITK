@@ -104,7 +104,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
              (double)(indices.size() / size) >
                (m_ToleranceNonAblatedTumorSafetyMarginVolume / 100))
       {
-        AblationUtils::AblationZone newAblationCenter =
+        mitk::AblationZone newAblationCenter =
           AblationUtils::SearchNextAblationCenter(indices,
                                                   currentPlan->GetSegmentationImage(),
                                                   m_AblationRadius,
@@ -131,7 +131,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     // Check if the radius of some ablation zones can be reduced
     for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
     {
-      AblationUtils::AblationZone *zone = currentPlan->GetAblationZone(i);
+      mitk::AblationZone *zone = currentPlan->GetAblationZone(i);
       double currentRadius = AblationUtils::FindMinimalAblationRadius(zone->indexCenter,
                                                                       currentPlan->GetSegmentationImage(),
                                                                       zone->radius,
@@ -215,7 +215,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
   }
 
 
-
+  //Detect and deleta zones that are not needed any more
   for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
   {
     AblationUtils::CalculateAblationVolume(finalProposal->GetAblationZone(index)->indexCenter,
@@ -241,7 +241,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
 
     while (onlyTumorIndices.size() > 0)
     {
-      AblationUtils::AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(
+      mitk::AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(
         onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::MoveCenterOfAblationZone(
         newAblationCenter.indexCenter, m_SegmentationImage, newAblationCenter.radius, m_ImageDimension, m_ImageSpacing);

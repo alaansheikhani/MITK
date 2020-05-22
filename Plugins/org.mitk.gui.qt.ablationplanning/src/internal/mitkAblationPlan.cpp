@@ -17,13 +17,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkAblationPlan.h"
 
 mitk::AblationPlan::AblationPlan()
-  : m_SegmentationImage(NULL), m_AblationZones(std::vector<AblationUtils::AblationZone>())
+  : m_SegmentationImage(NULL), m_AblationZones(std::vector<mitk::AblationZone>())
 {
 }
 
 mitk::AblationPlan::~AblationPlan() {}
 
-bool mitk::AblationPlan::AddAblationZone(AblationUtils::AblationZone newZone)
+bool mitk::AblationPlan::AddAblationZone(mitk::AblationZone newZone)
 {
   m_AblationZones.push_back(newZone);
   return true;
@@ -34,12 +34,12 @@ int mitk::AblationPlan::GetNumberOfZones()
   return m_AblationZones.size();
 }
 
-AblationUtils::AblationZone *mitk::AblationPlan::GetAblationZone(int id)
+mitk::AblationZone *mitk::AblationPlan::GetAblationZone(int id)
 {
   return &m_AblationZones.at(id);
 }
 
-bool mitk::AblationPlan::RemoveAblationZone(AblationUtils::AblationZone &zone)
+bool mitk::AblationPlan::RemoveAblationZone(mitk::AblationZone &zone)
 {
   for (int i = 0; i < GetNumberOfZones(); i++)
   {
@@ -56,14 +56,14 @@ bool mitk::AblationPlan::RemoveAblationZone(int id){
   m_AblationZones.erase(m_AblationZones.begin() + id);
   return true;
 }
-
+/*
 void mitk::AblationPlan::DetectAndRemoveNotNeededVolumes()
 {
-  std::vector<AblationUtils::AblationZone> newZones;
+  std::vector<mitk::AblationZone> newZones;
   AblationUtils::DetectNotNeededAblationVolume(
     m_AblationZones, newZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
   m_AblationZones = newZones;
-}
+}*/
 
 int mitk::AblationPlan::CompareTo(mitk::AblationPlan::Pointer b)
 {

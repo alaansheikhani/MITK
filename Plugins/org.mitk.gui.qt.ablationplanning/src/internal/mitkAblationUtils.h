@@ -25,6 +25,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateOr.h>
 
 #include <mitkImage.h>
+#include "mitkAblationZone.h"
+#include "mitkAblationPlan.h"
 
 /**
   \brief AblationUtils static class for doing ablation calculations
@@ -33,21 +35,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 
   \ingroup ${plugin_target}_internal
 */
+
 class AblationUtils
 {
 public:
-  struct AblationZone
-  {
-    itk::Index<3> indexCenter;
-    double radius;
-    bool IsEqual(AblationZone a) {
-      if ((radius == a.radius) && indexCenter[0] == a.indexCenter[0] && indexCenter[1] == a.indexCenter[1] &&
-          indexCenter[2] == a.indexCenter[2])
-        {return true;}
-      else
-        {return false;}
-    }
-  };
 
   static void FillVectorContainingIndicesOfTumorTissueSafetyMargin(
     mitk::Image::Pointer image,
@@ -86,7 +77,7 @@ public:
                                       double &radius,
                                       mitk::Vector3D &imageSpacing,
                                       mitk::Vector3D &imageDimension,
-                                      std::vector<AblationZone> &tempAblationZones);
+                                      std::vector<mitk::AblationZone> &tempAblationZones);
 
   static void CalculateAblationVolume(itk::Index<3> &center,
                                       mitk::Image::Pointer image,
@@ -152,8 +143,7 @@ public:
                                                             mitk::Vector3D &imageDimension,
                                                             mitk::Vector3D &imageSpacing);
 
-  static void DetectNotNeededAblationVolume(std::vector<AblationZone> &tempAblationZonesProcessed,
-                                            std::vector<AblationZone> &tempAblations,
+  static void DetectNotNeededAblationVolume(mitk::AblationPlan::Pointer plan,
                                             mitk::Image::Pointer image,
                                             mitk::Vector3D &imageDimension,
                                             mitk::Vector3D &imageSpacing);
@@ -184,7 +174,7 @@ public:
                                                  mitk::Vector3D &imageDimension,
                                                  mitk::Vector3D &imageSpacing);
 
-  static AblationZone SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
+  static mitk::AblationZone SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                mitk::Image::Pointer image,
                                                double &radius,
                                                double &maxRadius,

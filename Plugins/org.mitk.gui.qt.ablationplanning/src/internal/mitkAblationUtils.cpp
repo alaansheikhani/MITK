@@ -33,6 +33,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateDataType.h>
 #include <mitkNodePredicateNot.h>
 #include <mitkNodePredicateProperty.h>
+#include "mitkAblationPlan.h"
 
 #include <mitkSurface.h>
 #include <vtkAppendPolyData.h>
@@ -214,7 +215,7 @@ void AblationUtils::CalculateAblationVolume(itk::Index<3> &center,
                                             double &radius,
                                             mitk::Vector3D &imageSpacing,
                                             mitk::Vector3D &imageDimension,
-                                            std::vector<AblationZone> &tempAblationZones)
+                                            std::vector<mitk::AblationZone> &tempAblationZones)
 {
   MITK_DEBUG << "Calculate ablation volume for index: " << center;
   if (image.IsNotNull())
@@ -754,14 +755,14 @@ void AblationUtils::CalculateDistancesOfTumorBoundariesFromCenter(double &distan
   }
 }
 
-void AblationUtils::DetectNotNeededAblationVolume(std::vector<AblationZone> &tempAblationZonesProcessed,
-                                                  std::vector<AblationZone> &tempAblationZones,
+void AblationUtils::DetectNotNeededAblationVolume(mitk::AblationPlan::Pointer plan,
                                                   mitk::Image::Pointer image,
                                                   mitk::Vector3D &imageDimension,
                                                   mitk::Vector3D &imageSpacing)
 {
+  /*
   std::vector<int> indicesRemoved;
-  for (int index = 0; index < tempAblationZonesProcessed.size(); ++index)
+  for (int index = 0; index < .size(); ++index)
   {
     if (!CheckIfAblationVolumeIsNeeded(tempAblationZonesProcessed.at(index).indexCenter,
                                        image,
@@ -785,6 +786,7 @@ void AblationUtils::DetectNotNeededAblationVolume(std::vector<AblationZone> &tem
     tempAblationZones.erase(it2 + indicesRemoved.at(index));
     MITK_INFO << "Removed Ablation zone at index position: " << indicesRemoved.at(index);
   }
+  */
 }
 
 bool AblationUtils::CheckIfAblationVolumeIsNeeded(itk::Index<3> &center,
@@ -1016,7 +1018,7 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center,
   }
 }
 
-AblationUtils::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
+mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                       mitk::Image::Pointer image,
                                                       double &radius,
                                                       double &maxRadius,

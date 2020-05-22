@@ -78,7 +78,7 @@ namespace mitk
      * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
      * when calculating the best ablation zone distribution.
      */
-    std::vector<AblationUtils::AblationZone> m_TempAblationZones;
+    std::vector<mitk::AblationZone> m_TempAblationZones;
   };
 } // namespace mitk
 #endif /* MITKABLATIONPLANNINGALGORITHM_H_HEADER_INCLUDED_ */
