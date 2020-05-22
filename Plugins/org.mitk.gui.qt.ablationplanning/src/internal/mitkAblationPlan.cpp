@@ -56,14 +56,6 @@ bool mitk::AblationPlan::RemoveAblationZone(int id){
   m_AblationZones.erase(m_AblationZones.begin() + id);
   return true;
 }
-/*
-void mitk::AblationPlan::DetectAndRemoveNotNeededVolumes()
-{
-  std::vector<mitk::AblationZone> newZones;
-  AblationUtils::DetectNotNeededAblationVolume(
-    m_AblationZones, newZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
-  m_AblationZones = newZones;
-}*/
 
 int mitk::AblationPlan::CompareTo(mitk::AblationPlan::Pointer b)
 {

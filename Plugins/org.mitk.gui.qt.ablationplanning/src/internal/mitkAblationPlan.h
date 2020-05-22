@@ -42,7 +42,6 @@ namespace mitk
     mitk::AblationZone* GetAblationZone(int id);
     bool RemoveAblationZone(mitk::AblationZone &zone);
     bool RemoveAblationZone(int id);
-    //void DetectAndRemoveNotNeededVolumes();
     /** @return Returns 1 if plan b is better this, 0 if it is equal and -1 if it is worse*/
     int CompareTo(AblationPlan::Pointer b);
 

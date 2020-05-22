@@ -215,7 +215,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
   }
 
 
-  //Detect and deleta zones that are not needed any more
+  //Detect and delet zones that are not needed any more after the others where moved
   for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
   {
     AblationUtils::CalculateAblationVolume(finalProposal->GetAblationZone(index)->indexCenter,
@@ -225,10 +225,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                            m_ImageDimension,
                                            m_TempAblationZones);
   }
-
-  /*TODO: Adapt method...
-  AblationUtils::DetectNotNeededAblationVolume(
-    m_AblationZonesProcessed, m_AblationZones, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);*/
+  AblationUtils::DetectNotNeededAblationVolume(finalProposal, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
 
 
 

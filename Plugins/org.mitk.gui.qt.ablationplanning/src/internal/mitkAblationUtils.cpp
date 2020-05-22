@@ -760,19 +760,19 @@ void AblationUtils::DetectNotNeededAblationVolume(mitk::AblationPlan::Pointer pl
                                                   mitk::Vector3D &imageDimension,
                                                   mitk::Vector3D &imageSpacing)
 {
-  /*
+
   std::vector<int> indicesRemoved;
-  for (int index = 0; index < .size(); ++index)
+  for (int index = 0; index < plan->GetNumberOfZones(); ++index)
   {
-    if (!CheckIfAblationVolumeIsNeeded(tempAblationZonesProcessed.at(index).indexCenter,
+    if (!CheckIfAblationVolumeIsNeeded(plan->GetAblationZone(index)->indexCenter,
                                        image,
-                                       tempAblationZonesProcessed.at(index).radius,
+                                       plan->GetAblationZone(index)->radius,
                                        imageDimension,
                                        imageSpacing))
     {
-      RemoveAblationVolume(tempAblationZonesProcessed.at(index).indexCenter,
+      RemoveAblationVolume(plan->GetAblationZone(index)->indexCenter,
                            image,
-                           tempAblationZonesProcessed.at(index).radius,
+                           plan->GetAblationZone(index)->radius,
                            imageDimension,
                            imageSpacing);
       indicesRemoved.push_back(index);
@@ -780,13 +780,10 @@ void AblationUtils::DetectNotNeededAblationVolume(mitk::AblationPlan::Pointer pl
   }
   for (int index = indicesRemoved.size() - 1; index >= 0; --index)
   {
-    std::vector<AblationZone> ::iterator it = tempAblationZonesProcessed.begin();
-    tempAblationZonesProcessed.erase(it + indicesRemoved.at(index));
-    std::vector<AblationZone>::iterator it2 = tempAblationZones.begin();
-    tempAblationZones.erase(it2 + indicesRemoved.at(index));
+    plan->RemoveAblationZone(indicesRemoved.at(index));
     MITK_INFO << "Removed Ablation zone at index position: " << indicesRemoved.at(index);
   }
-  */
+
 }
 
 bool AblationUtils::CheckIfAblationVolumeIsNeeded(itk::Index<3> &center,
