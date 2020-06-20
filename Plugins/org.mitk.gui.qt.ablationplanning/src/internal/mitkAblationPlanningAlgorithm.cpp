@@ -74,10 +74,15 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     mitk::AblationPlan::Pointer currentPlan = planTemplates[iteration-1];
     std::vector<mitk::AblationZone> tempAblationZones;
 
+    std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices;
+    for(itk::Index<3> i : m_TumorTissueSafetyMarginIndices){
+      tumorTissueSafetyMarginIndices.push_back(i);
+    }
+
     //if no manual starting point is set: find new starting point
     //if (!m_ManualAblationStartingPositionSet){
       QString position = AblationUtils::FindAblationStartingPosition(currentPlan->GetSegmentationImage(),
-                                                                     m_TumorTissueSafetyMarginIndices,
+                                                                     tumorTissueSafetyMarginIndices,
                                                                      m_AblationRadius,
                                                                      m_MaxAblationRadius,
                                                                      m_TempAblationStartingPositionIndexCoordinates,
@@ -95,8 +100,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
 
     //------------ Random distribution model calculations: ---------------
     {
-      double size = m_TumorTissueSafetyMarginIndices.size();
-      std::vector<itk::Index<3>> indices = m_TumorTissueSafetyMarginIndices;
+      double size = tumorTissueSafetyMarginIndices.size();
+      std::vector<itk::Index<3>> indices = tumorTissueSafetyMarginIndices;
 
       // Add starting zone
       AblationUtils::CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates,
