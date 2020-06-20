@@ -38,7 +38,7 @@ void mitk::AblationPlanOptimizer::Optimize(mitk::AblationPlan::Pointer plan, std
       plan->GetAblationZone(index)->radius,
       plan->GetImageDimension(),
       plan->GetImageSpacing());
-    MITK_WARN << "RATIO: " << ratio;
+    //MITK_WARN << "RATIO: " << ratio;
     if (ratio > 0.3)
     {
       AblationUtils::MoveCenterOfAblationZone(plan->GetAblationZone(index)->indexCenter,

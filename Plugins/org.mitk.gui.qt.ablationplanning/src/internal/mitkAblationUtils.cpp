@@ -1397,8 +1397,8 @@ void AblationUtils::MoveCenterOfAblationZone(itk::Index<3> &center,
                                                 imageDimension,
                                                 imageSpacing);
 
-  MITK_WARN << "Distances lowerX " << distanceLowerX << " upperX " << distanceUpperX << " lowerY " << distanceLowerY
-            << " upperY " << distanceUpperY << " lowerZ " << distanceLowerZ << " upperZ " << distanceUpperZ;
+  //MITK_WARN << "Distances lowerX " << distanceLowerX << " upperX " << distanceUpperX << " lowerY " << distanceLowerY
+  //          << " upperY " << distanceUpperY << " lowerZ " << distanceLowerZ << " upperZ " << distanceUpperZ;
   if (distanceLowerX < radiusFactor)
   {
     distanceMoveUpX = radiusFactor - distanceLowerX;
@@ -1463,11 +1463,11 @@ void AblationUtils::MoveCenterOfAblationZone(itk::Index<3> &center,
   resultMovingY = floor((distanceMoveUpY - distanceMoveDownY) / imageSpacing[1]);
   resultMovingZ = floor((distanceMoveUpZ - distanceMoveDownZ) / imageSpacing[2]);
 
-  MITK_INFO << "Moving ablation zone from: " << center[0] << "|" << center[1] << "|" << center[2];
+  //MITK_INFO << "Moving ablation zone from: " << center[0] << "|" << center[1] << "|" << center[2];
   center[0] += resultMovingX;
   center[1] += resultMovingY;
   center[2] += resultMovingZ;
-  MITK_INFO << "... to center: " << center[0] << "|" << center[1] << "|" << center[2];
+  //MITK_INFO << "... to center: " << center[0] << "|" << center[1] << "|" << center[2];
 }
 
 int AblationUtils::CalculateTumorVolume(mitk::Image::Pointer image,

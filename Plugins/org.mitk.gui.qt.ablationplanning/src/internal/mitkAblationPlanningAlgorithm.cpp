@@ -147,7 +147,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
 
     // Check if some zones can be removed
-    AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
+    mitk::AblationPlanOptimizer::Optimize(currentPlan,m_TempAblationZones);
+    //AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
 
     MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
     AllFoundPlans.push_back(currentPlan);
