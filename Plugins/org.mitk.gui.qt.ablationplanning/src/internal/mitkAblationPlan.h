@@ -31,8 +31,8 @@ namespace mitk
   public:
     mitkClassMacroItkParent(AblationPlan, itk::DataObject);
     itkFactorylessNewMacro(Self);
-    itkSetMacro(SegmentationImage, mitk::Image::Pointer);
-    itkGetConstMacro(SegmentationImage, mitk::Image::Pointer);
+    void SetSegmentationImage(mitk::Image::Pointer s);
+    mitk::Image::Pointer GetSegmentationImage();
     itkSetMacro(ImageDimension, mitk::Vector3D);
     itkGetConstMacro(ImageDimension, mitk::Vector3D);
     itkSetMacro(ImageSpacing, mitk::Vector3D);

@@ -30,7 +30,7 @@ namespace mitk
     public:
 
       static void RemoveNotNeededVolumes(mitk::AblationPlan::Pointer plan);
-        static void Optimize(mitk::AblationPlan::Pointer plan, std::vector<mitk::AblationZone> tempAblationZones);
+      static void Optimize(mitk::AblationPlan::Pointer plan, std::vector<mitk::AblationZone> &tempAblationZones);
 
     private:
       AblationPlanOptimizer();

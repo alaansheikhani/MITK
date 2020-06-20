@@ -73,3 +73,11 @@ int mitk::AblationPlan::CompareTo(mitk::AblationPlan::Pointer b)
     return 0;
   }
 }
+
+void mitk::AblationPlan::SetSegmentationImage(mitk::Image::Pointer s){
+  this->m_SegmentationImage = s;
+}
+
+mitk::Image::Pointer mitk::AblationPlan::GetSegmentationImage(){
+  return m_SegmentationImage;
+}

@@ -15,6 +15,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 ===================================================================*/
 
 #include "mitkAblationPlanningAlgorithm.h"
+#include "mitkAblationPlanOptimizer.h"
 
 mitk::AblationPlanningAlgorithm::AblationPlanningAlgorithm(){}
 
@@ -107,7 +108,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
       {
         mitk::AblationZone newAblationCenter =
         AblationUtils::SearchNextAblationCenter(indices,
-                                                  currentPlan->GetSegmentationImage(),
+                                                 currentPlan->GetSegmentationImage(),
                                                   m_AblationRadius,
                                                   m_MaxAblationRadius,
                                                   m_ImageDimension,
@@ -170,83 +171,22 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
   }
 
   //==================== Optimization of final proposal ==================================================
-
-  // Check if ablation zones are too far outside the tumor, if yes move them towards the center
-  for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
-  {
-    double ratio = AblationUtils::CalculateRatioAblatedTissueOutsideTumorToAblatedTissueInsideTumor(
-      finalProposal->GetAblationZone(index)->indexCenter,
-      finalProposal->GetSegmentationImage(),
-      finalProposal->GetAblationZone(index)->radius,
-      finalProposal->GetImageDimension(),
-      finalProposal->GetImageSpacing());
-    MITK_WARN << "RATIO: " << ratio;
-    if (ratio > 0.3)
-    {
-      AblationUtils::MoveCenterOfAblationZone(finalProposal->GetAblationZone(index)->indexCenter,
-                                              finalProposal->GetSegmentationImage(),
-                                              finalProposal->GetAblationZone(index)->radius,
-                                              finalProposal->GetImageDimension(),
-                                              finalProposal->GetImageSpacing());
-    }
-  }
-
-  // Check, if ablation zones have a too short distance between each other, if yes they can be removed
-  for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
-  {
-    std::vector<int> indexToRemove;
-    itk::Index<3> actualIndex = finalProposal->GetAblationZone(index)->indexCenter;
-    for (int counter = 0; counter < finalProposal->GetNumberOfZones(); ++counter)
-    {
-      if (counter == index)
-      {
-        continue;
-      }
-      itk::Index<3> indexToProof = finalProposal->GetAblationZone(counter)->indexCenter;
-      double distance = AblationUtils::CalculateScalarDistance(actualIndex, indexToProof, m_ImageSpacing);
-      if (distance <= 0.5 * finalProposal->GetAblationZone(counter)->radius)
-      {
-        indexToRemove.push_back(counter);
-      }
-    }
-    for (int position = indexToRemove.size() - 1; position >= 0; --position)
-    {
-      finalProposal->RemoveAblationZone(indexToRemove.at(position));
-      MITK_DEBUG << "Removed Ablation zone at index position: " << indexToRemove.at(position);
-      index = -1;
-    }
-  }
-
-
-  //Detect and delet zones that are not needed any more after the others where moved
-  for (int index = 0; index < finalProposal->GetNumberOfZones(); ++index)
-  {
-    AblationUtils::CalculateAblationVolume(finalProposal->GetAblationZone(index)->indexCenter,
-                                           m_SegmentationImage,
-                                           finalProposal->GetAblationZone(index)->radius,
-                                           m_ImageSpacing,
-                                           m_ImageDimension,
-                                           m_TempAblationZones);
-  }
-  AblationUtils::DetectNotNeededAblationVolume(finalProposal, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
-
-
-
+  mitk::AblationPlanOptimizer::Optimize(finalProposal,m_TempAblationZones);
   //============
 
   if (m_ToleranceNonAblatedTumorSafetyMarginVolume == 0)
   {
     std::vector<itk::Index<3>> onlyTumorIndices =
-      AblationUtils::FillVectorContainingIndicesOfTumorTissueOnly(m_SegmentationImage, m_ImageDimension);
+      AblationUtils::FillVectorContainingIndicesOfTumorTissueOnly(finalProposal->GetSegmentationImage(), m_ImageDimension);
 
     while (onlyTumorIndices.size() > 0)
     {
       mitk::AblationZone newAblationCenter = AblationUtils::SearchNextAblationCenter(
-        onlyTumorIndices, m_SegmentationImage, m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
+        onlyTumorIndices, finalProposal->GetSegmentationImage(), m_AblationRadius, m_MaxAblationRadius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::MoveCenterOfAblationZone(
-        newAblationCenter.indexCenter, m_SegmentationImage, newAblationCenter.radius, m_ImageDimension, m_ImageSpacing);
+        newAblationCenter.indexCenter, finalProposal->GetSegmentationImage(), newAblationCenter.radius, m_ImageDimension, m_ImageSpacing);
       AblationUtils::CalculateAblationVolume(
-        newAblationCenter.indexCenter, m_SegmentationImage, newAblationCenter.radius, m_ImageSpacing, m_ImageDimension);
+        newAblationCenter.indexCenter, finalProposal->GetSegmentationImage(), newAblationCenter.radius, m_ImageSpacing, m_ImageDimension);
       AblationUtils::RemoveAblatedPixelsFromGivenVector(newAblationCenter.indexCenter,
                                                         onlyTumorIndices,
                                                         m_SegmentationImage,
@@ -256,7 +196,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
       finalProposal->AddAblationZone(newAblationCenter);
     }
     AblationUtils::DetectNotNeededAblationVolume(
-     finalProposal, m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
+     finalProposal, finalProposal->GetSegmentationImage(), m_ImageDimension, m_ImageSpacing);
   }
   //============
   m_AblationPlan = finalProposal;

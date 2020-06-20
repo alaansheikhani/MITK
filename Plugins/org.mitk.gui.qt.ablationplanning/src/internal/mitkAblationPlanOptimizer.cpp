@@ -25,8 +25,9 @@ void mitk::AblationPlanOptimizer::RemoveNotNeededVolumes(mitk::AblationPlan::Poi
   AblationUtils::DetectNotNeededAblationVolume(plan,plan->GetSegmentationImage(),plan->GetImageDimension(),plan->GetImageSpacing());
 }
 
-void mitk::AblationPlanOptimizer::Optimize(mitk::AblationPlan::Pointer plan, std::vector<mitk::AblationZone> tempAblationZones){
+void mitk::AblationPlanOptimizer::Optimize(mitk::AblationPlan::Pointer plan, std::vector<mitk::AblationZone> &tempAblationZones){
   //==================== Optimization of final proposal ==================================================
+  AblationUtils::ResetSegmentationImage(plan->GetSegmentationImage(), plan->GetImageDimension());
 
   // Check if ablation zones are too far outside the tumor, if yes move them towards the center
   for (int index = 0; index < plan->GetNumberOfZones(); ++index)
@@ -47,6 +48,7 @@ void mitk::AblationPlanOptimizer::Optimize(mitk::AblationPlan::Pointer plan, std
                                               plan->GetImageSpacing());
     }
   }
+
 
   // Check, if ablation zones have a too short distance between each other, if yes they can be removed
   for (int index = 0; index < plan->GetNumberOfZones(); ++index)
@@ -86,6 +88,8 @@ void mitk::AblationPlanOptimizer::Optimize(mitk::AblationPlan::Pointer plan, std
   }
 
   RemoveNotNeededVolumes(plan);
+
+
 
 
 
