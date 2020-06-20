@@ -52,18 +52,30 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
 
   std::vector<mitk::AblationPlan::Pointer> AllFoundPlans = std::vector<mitk::AblationPlan::Pointer>();
-  //AllFoundPlans.resize(m_Controls.repititionsCalculatingAblationZonesSpinBox->value());
+  AllFoundPlans.resize(m_Iterations);
 
   // Start of for-loop (main iterative loop, each iteration = one proposal):
-  for (int iteration = 1; iteration <= m_Iterations; ++iteration)
-  {
+  MITK_INFO << " Creating " << m_Iterations << " proposal templates ...";
+  std::vector<mitk::AblationPlan::Pointer> planTemplates;
+  for(int i=0; i<m_Iterations; i++){
     mitk::AblationPlan::Pointer currentPlan = mitk::AblationPlan::New();
     currentPlan->SetSegmentationImage(m_SegmentationImage->Clone());
     currentPlan->SetImageDimension(m_ImageDimension);
     currentPlan->SetImageSpacing(m_ImageSpacing);
+    planTemplates.push_back(currentPlan);
+    if (i%25 == 0) {
+      MITK_INFO << "..." << i;
+    }
+  }
+  MITK_INFO << " Computing " << m_Iterations << " proposal in prallel (CPU) ...";
+  #pragma omp parallel for
+  for (int iteration = 1; iteration <= m_Iterations; ++iteration)
+  {
+    mitk::AblationPlan::Pointer currentPlan = planTemplates[iteration-1];
+    std::vector<mitk::AblationZone> tempAblationZones;
 
     //if no manual starting point is set: find new starting point
-    if (!m_ManualAblationStartingPositionSet){
+    //if (!m_ManualAblationStartingPositionSet){
       QString position = AblationUtils::FindAblationStartingPosition(currentPlan->GetSegmentationImage(),
                                                                      m_TumorTissueSafetyMarginIndices,
                                                                      m_AblationRadius,
@@ -75,10 +87,10 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                                                      m_ImageSpacing);
       //m_Controls.ablationStartingPointLabel->setText(position);
       //MITK_INFO << "Found starting point: " << position.toLatin1().toStdString();
-    }
+    //}
 
 
-    MITK_INFO << " ####### Iteration: " << iteration;
+    MITK_INFO << "... new iteration";
 
 
     //------------ Random distribution model calculations: ---------------
@@ -92,14 +104,14 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                              m_AblationRadius,
                                              m_ImageSpacing,
                                              m_ImageDimension,
-                                             m_TempAblationZones);
-      AblationUtils::RemoveAblatedPixelsFromGivenVector(m_TempAblationZones.at(0).indexCenter,
+                                             tempAblationZones);
+      AblationUtils::RemoveAblatedPixelsFromGivenVector(tempAblationZones.at(0).indexCenter,
                                                         indices,
                                                         currentPlan->GetSegmentationImage(),
-                                                        m_TempAblationZones.at(0).radius,
+                                                        tempAblationZones.at(0).radius,
                                                         m_ImageDimension,
                                                         m_ImageSpacing);
-      currentPlan->AddAblationZone(m_TempAblationZones.at(0));
+      currentPlan->AddAblationZone(tempAblationZones.at(0));
       // end add starting zone
 
       while (indices.size() > 0 &&
@@ -118,7 +130,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
                                                newAblationCenter.radius,
                                                m_ImageSpacing,
                                                m_ImageDimension,
-                                               m_TempAblationZones);
+                                               tempAblationZones);
         AblationUtils::RemoveAblatedPixelsFromGivenVector(newAblationCenter.indexCenter,
                                                           indices,
                                                           currentPlan->GetSegmentationImage(),
@@ -144,15 +156,16 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
       (*zone).radius = currentRadius;
     } */
 
-    MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
+    //MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
+
+    //Optimize this proposal
+    mitk::AblationPlanOptimizer::Optimize(currentPlan,tempAblationZones);
 
     // Check if some zones can be removed
-    mitk::AblationPlanOptimizer::Optimize(currentPlan,m_TempAblationZones);
     //AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
 
-    MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
-    AllFoundPlans.push_back(currentPlan);
-    //AllFoundPlans[iteration] = currentPlan;
+    //MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
+    AllFoundPlans[iteration-1] = currentPlan;
   } // End of for loop
 
   // TODO
@@ -172,7 +185,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
   }
 
   //==================== Optimization of final proposal ==================================================
-  mitk::AblationPlanOptimizer::Optimize(finalProposal,m_TempAblationZones);
+  /*
+  mitk::AblationPlanOptimizer::Optimize(finalProposal,tempAblationZones);
   //============
 
   if (m_ToleranceNonAblatedTumorSafetyMarginVolume == 0)
@@ -198,7 +212,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     }
     AblationUtils::DetectNotNeededAblationVolume(
      finalProposal, finalProposal->GetSegmentationImage(), m_ImageDimension, m_ImageSpacing);
-  }
+  }*/
   //============
   m_AblationPlan = finalProposal;
 }
