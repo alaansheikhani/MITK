@@ -45,6 +45,8 @@ public:
     mitk::Vector3D &imageDimension,
     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices);
 
+  static void ComputeStatistics(mitk::AblationPlan::Pointer plan, std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices);
+
   static std::vector<itk::Index<3>> FillVectorContainingIndicesOfTumorTissueOnly(mitk::Image::Pointer image,
                                                                                  mitk::Vector3D &imageDimension);
 

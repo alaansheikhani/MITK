@@ -1572,3 +1572,22 @@ int AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Po
   volume = (int)(volume * volumeFactor) / 1000;
   return volume;
 }
+
+void AblationUtils::ComputeStatistics(mitk::AblationPlan::Pointer plan, std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices){
+  mitk::AblationPlan::AblationPlanStatistics s;
+  s.tumorVolume = AblationUtils::CalculateTumorVolume(
+    plan->GetSegmentationImage(), plan->GetImageSpacing(), tumorTissueSafetyMarginIndices);
+  s.safetyMarginVolume = AblationUtils::CalculateSafetyMarginVolume(
+    plan->GetSegmentationImage(), plan->GetImageSpacing(), tumorTissueSafetyMarginIndices);
+  s.tumorAndSafetyMarginVolume = s.tumorVolume + s.safetyMarginVolume;
+  s.totalAblationVolume = AblationUtils::CalculateTotalAblationVolume(
+    plan->GetSegmentationImage(), plan->GetImageSpacing(), plan->GetImageDimension());
+  s.ablationVolumeAblatedMoreThanOneTime = AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(
+    plan->GetSegmentationImage(), plan->GetImageSpacing(), plan->GetImageDimension());
+
+  s.factorOverlappingAblationZones = ((double)s.ablationVolumeAblatedMoreThanOneTime / s.totalAblationVolume) * 100;
+
+  s.factorAblatedVolumeOutsideSafetyMargin =
+    ((s.totalAblationVolume - s.tumorAndSafetyMarginVolume) / (double)s.totalAblationVolume) * 100;
+  plan->SetStatistics(s);
+}

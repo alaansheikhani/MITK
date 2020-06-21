@@ -17,11 +17,20 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkAblationPlan.h"
 
 mitk::AblationPlan::AblationPlan()
-  : m_SegmentationImage(NULL), m_AblationZones(std::vector<mitk::AblationZone>())
+  : m_SegmentationImage(NULL), m_AblationZones(std::vector<mitk::AblationZone>()), m_StatsSet(false), m_Stats(mitk::AblationPlan::AblationPlanStatistics())
 {
 }
 
 mitk::AblationPlan::~AblationPlan() {}
+
+mitk::AblationPlan::AblationPlanStatistics mitk::AblationPlan::GetStatistics(){
+  return m_Stats;
+}
+
+void mitk::AblationPlan::SetStatistics(mitk::AblationPlan::AblationPlanStatistics s){
+  m_StatsSet = true;
+  m_Stats = s;
+}
 
 bool mitk::AblationPlan::AddAblationZone(mitk::AblationZone newZone)
 {

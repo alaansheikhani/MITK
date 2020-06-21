@@ -29,6 +29,18 @@ namespace mitk
   class AblationPlan : public itk::DataObject
   {
   public:
+    struct AblationPlanStatistics{
+      int tumorVolume;
+      int safetyMarginVolume;
+      int tumorAndSafetyMarginVolume;
+      int totalAblationVolume;
+      int ablationVolumeAblatedMoreThanOneTime;
+      double factorOverlappingAblationZones;
+      double factorAblatedVolumeOutsideSafetyMargin;
+    };
+    AblationPlanStatistics GetStatistics();
+    void SetStatistics(AblationPlanStatistics s);
+    itkGetConstMacro(StatsSet, bool);
     mitkClassMacroItkParent(AblationPlan, itk::DataObject);
     itkFactorylessNewMacro(Self);
     void SetSegmentationImage(mitk::Image::Pointer s);
@@ -55,6 +67,8 @@ namespace mitk
     mitk::Vector3D m_ImageDimension;
     mitk::Vector3D m_ImageSpacing;
     std::vector<mitk::AblationZone> m_AblationZones;
+    bool m_StatsSet;
+    AblationPlanStatistics m_Stats;
   };
 } // namespace mitk
 #endif /* MITKABLATIONPLAN_H_HEADER_INCLUDED_ */

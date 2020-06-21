@@ -67,7 +67,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
       MITK_INFO << "..." << i;
     }
   }
-  MITK_INFO << " Computing " << m_Iterations << " proposal in prallel (CPU) ...";
+  MITK_INFO << " Computing " << m_Iterations << " proposal in parallel (CPU) ...";
   #pragma omp parallel for
   for (int iteration = 1; iteration <= m_Iterations; ++iteration)
   {
@@ -170,6 +170,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
     //AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
 
     //MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
+    AblationUtils::ComputeStatistics(currentPlan,m_TumorTissueSafetyMarginIndices);
     AllFoundPlans[iteration-1] = currentPlan;
   } // End of for loop
 
