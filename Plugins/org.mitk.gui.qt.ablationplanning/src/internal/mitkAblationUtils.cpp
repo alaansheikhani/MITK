@@ -1589,5 +1589,6 @@ void AblationUtils::ComputeStatistics(mitk::AblationPlan::Pointer plan, std::vec
 
   s.factorAblatedVolumeOutsideSafetyMargin =
     ((s.totalAblationVolume - s.tumorAndSafetyMarginVolume) / (double)s.totalAblationVolume) * 100;
+  s.factorNonAblatedVolume = AblationUtils::CheckImageForNonAblatedTissueInPercentage(plan->GetSegmentationImage(), plan->GetImageDimension());
   plan->SetStatistics(s);
 }

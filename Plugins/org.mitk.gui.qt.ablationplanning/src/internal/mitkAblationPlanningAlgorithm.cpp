@@ -181,12 +181,14 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning(){
   MITK_INFO << "Found " << AllFoundPlans.size() << " proposals";
   // Search for best final proposal:
   mitk::AblationPlan::Pointer finalProposal = AllFoundPlans.at(0);
+  //MITK_INFO << "Proposal 0: zones: " << AllFoundPlans.at(0)->GetNumberOfZones() <<"; overlap: " << AllFoundPlans.at(0)->GetStatistics().factorOverlappingAblationZones;
   for (int i = 1; i < AllFoundPlans.size(); i++)
   {
-    if (finalProposal->CompareTo(AllFoundPlans.at(i)) == 1)
+    //MITK_INFO << "Proposal " << i << ": zones: " << AllFoundPlans.at(i)->GetNumberOfZones() <<"; overlap: " << AllFoundPlans.at(i)->GetStatistics().factorOverlappingAblationZones;
+    if (AllFoundPlans.at(i)->CompareTo(finalProposal) == -1)
     {
       finalProposal = AllFoundPlans.at(i);
-      MITK_INFO << "Best proposal: " << i;
+      MITK_INFO << "Best proposal: " << i << " ("<<finalProposal->GetNumberOfZones()<<";"<<finalProposal->GetStatistics().factorNonAblatedVolume<<")";
     }
   }
 

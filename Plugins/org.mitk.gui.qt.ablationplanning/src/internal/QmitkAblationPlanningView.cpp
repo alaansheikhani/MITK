@@ -360,29 +360,14 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
 
 void QmitkAblationPlanningView::CalculateAblationStatistics()
 {
-  int tumorVolume = AblationUtils::CalculateTumorVolume(
-    m_AblationPlan->GetSegmentationImage(), m_AblationPlan->GetImageSpacing(), m_TumorTissueSafetyMarginIndices);
-  int safetyMarginVolume = AblationUtils::CalculateSafetyMarginVolume(
-    m_AblationPlan->GetSegmentationImage(), m_AblationPlan->GetImageSpacing(), m_TumorTissueSafetyMarginIndices);
-  int tumorAndSafetyMarginVolume = tumorVolume + safetyMarginVolume;
-  int totalAblationVolume = AblationUtils::CalculateTotalAblationVolume(
-    m_AblationPlan->GetSegmentationImage(), m_AblationPlan->GetImageSpacing(), m_AblationPlan->GetImageDimension());
-  int ablationVolumeAblatedMoreThanOneTime = AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(
-    m_AblationPlan->GetSegmentationImage(), m_AblationPlan->GetImageSpacing(), m_AblationPlan->GetImageDimension());
-
-  double factorOverlappingAblationZones = ((double)ablationVolumeAblatedMoreThanOneTime / totalAblationVolume) * 100;
-
-  double factorAblatedVolumeOutsideSafetyMargin =
-    ((totalAblationVolume - tumorAndSafetyMarginVolume) / (double)totalAblationVolume) * 100;
-
   m_Controls.numberAblationVoluminaLabel->setText(QString("%1").arg(m_AblationPlan->GetNumberOfZones()));
-  m_Controls.numberTumorVolumeLabel->setText(QString("%1").arg(tumorVolume));
-  m_Controls.numberTumorAndMarginVolumeLabel->setText(QString("%1").arg(tumorAndSafetyMarginVolume));
-  m_Controls.numberAblationVolumeLabel->setText(QString("%1").arg(totalAblationVolume));
-  m_Controls.numberVolumeAblatedTwoAndMoreLabel->setText(QString("%1").arg(ablationVolumeAblatedMoreThanOneTime));
-  m_Controls.numberOverlappingAblationZonesLabel->setText(QString("%1").arg(factorOverlappingAblationZones));
+  m_Controls.numberTumorVolumeLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().tumorVolume));
+  m_Controls.numberTumorAndMarginVolumeLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().tumorAndSafetyMarginVolume));
+  m_Controls.numberAblationVolumeLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().totalAblationVolume));
+  m_Controls.numberVolumeAblatedTwoAndMoreLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().ablationVolumeAblatedMoreThanOneTime));
+  m_Controls.numberOverlappingAblationZonesLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().factorOverlappingAblationZones));
   m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel->setText(
-    QString("%1").arg(factorAblatedVolumeOutsideSafetyMargin));
+    QString("%1").arg(m_AblationPlan->GetStatistics().factorAblatedVolumeOutsideSafetyMargin));
 }
 
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode *node)

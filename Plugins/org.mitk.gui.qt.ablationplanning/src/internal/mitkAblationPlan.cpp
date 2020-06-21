@@ -74,11 +74,23 @@ int mitk::AblationPlan::CompareTo(mitk::AblationPlan::Pointer b)
   }
   else if (this->GetNumberOfZones() < b->GetNumberOfZones())
   {
+    MITK_INFO << b->GetNumberOfZones() << " zones improved to " << this->GetNumberOfZones();
     return -1;
   }
   else
   {
-    //todo: other criteria!
+    MITK_INFO << "Same number of " << this->GetNumberOfZones() << " zones";
+    if (m_StatsSet){
+      if (this->GetStatistics().factorNonAblatedVolume < b->GetStatistics().factorNonAblatedVolume) {
+        MITK_INFO << this->GetNumberOfZones() << " Zones, improved non abl from " << b->GetStatistics().factorNonAblatedVolume << " to " << this->GetStatistics().factorNonAblatedVolume;
+        return -1;
+      }
+      else{
+        MITK_INFO << this->GetNumberOfZones() << " Zones, non abl worse: " << b->GetStatistics().factorNonAblatedVolume << " vs. " << this->GetStatistics().factorNonAblatedVolume;
+
+        return 1;
+      }
+    }
     return 0;
   }
 }

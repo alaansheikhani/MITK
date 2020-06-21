@@ -37,6 +37,7 @@ namespace mitk
       int ablationVolumeAblatedMoreThanOneTime;
       double factorOverlappingAblationZones;
       double factorAblatedVolumeOutsideSafetyMargin;
+      double factorNonAblatedVolume;
     };
     AblationPlanStatistics GetStatistics();
     void SetStatistics(AblationPlanStatistics s);
