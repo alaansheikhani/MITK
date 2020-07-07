@@ -70,15 +70,15 @@ void QmitkXDofTo6DofExample::AddLandmark()
   // m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource()
   int inputID = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID();
 
-  double source1 = m_Controls.source1->value;
-  double source2 = m_Controls.source2->value;
-  double source3 = m_Controls.source3->value;
+  double source1 = m_Controls.source1->value();
+  double source2 = m_Controls.source2->value();
+  double source3 = m_Controls.source3->value();
 
-  double target1 = m_Controls.target1->value;
-  double target2 = m_Controls.target2->value;
-  double target3 = m_Controls.target3->value;
+  double target1 = m_Controls.target1->value();
+  double target2 = m_Controls.target2->value();
+  double target3 = m_Controls.target3->value();
 
-  int outputID = m_Controls.outputID->value;
+  int outputID = m_Controls.outputID->value();
 
 
 
