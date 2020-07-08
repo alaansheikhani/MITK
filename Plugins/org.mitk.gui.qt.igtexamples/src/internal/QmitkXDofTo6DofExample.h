@@ -64,6 +64,7 @@ protected:
   mitk::NavigationDataXDofTo6DofFilter::Pointer m_XDofTo6DofFilter;
   mitk::NavigationDataObjectVisualizationFilter::Pointer m_VisFilter;
   mitk::NavigationDataSource::Pointer m_Source;
+  std::vector<mitk::DataNode::Pointer> m_RepresentationObjects;
   QTimer* m_Timer;
 };
 

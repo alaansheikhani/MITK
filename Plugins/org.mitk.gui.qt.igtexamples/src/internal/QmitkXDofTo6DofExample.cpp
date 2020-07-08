@@ -78,8 +78,11 @@ void QmitkXDofTo6DofExample::AddLandmark()
 }
 
 void QmitkXDofTo6DofExample::StartUpdating() {
+
+
+  if(!m_Timer->isActive()){
     m_Source = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedNavigationDataSource();
-    if(m_Source.IsNull()){
+    if (m_Source.IsNull()) {
       MITK_WARN << "Cannot start updating, no source selected!";
       return;
     }
@@ -89,6 +92,7 @@ void QmitkXDofTo6DofExample::StartUpdating() {
 
     m_VisFilter = mitk::NavigationDataObjectVisualizationFilter::New();
     m_VisFilter->ConnectTo(m_XDofTo6DofFilter);
+    m_RepresentationObjects = std::vector<mitk::DataNode::Pointer>();
     for(int id=0;id<m_VisFilter->GetNumberOfInputs();id++){
        MITK_INFO << "Add representation object for input " << id;
        mitk::Cone::Pointer cone = mitk::Cone::New();
@@ -96,10 +100,19 @@ void QmitkXDofTo6DofExample::StartUpdating() {
        representationObject->SetData(cone);
        representationObject->SetName("X Dof to 6 Dof Example Object");
        this->GetDataStorage()->Add(representationObject);
+       m_RepresentationObjects.push_back(representationObject);
        m_VisFilter->SetRepresentationObject(id, representationObject->GetData());
     }
 
     //start updating pipeline
     m_Timer->start(200);
     MITK_INFO << "Started updating X DoF to 6 DoF example IGT pipeline!";
+    m_Controls.butStartUpdating->setText("Stop Updating");
+  }
+  else{
+    m_Timer->stop();
+    MITK_INFO << "Stopped updating X DoF to 6 DoF example IGT pipeline!";
+    for(mitk::DataNode::Pointer d : m_RepresentationObjects){this->GetDataStorage()->Remove(d);}
+    m_Controls.butStartUpdating->setText("Start Updating");
+  }
 }
