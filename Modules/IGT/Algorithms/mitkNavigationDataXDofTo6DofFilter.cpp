@@ -31,7 +31,6 @@ mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
 
 void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
 {
-  MITK_INFO << "Generate Data";
   //update list of all 6 DoF outputs
   UpdateListOfAllOutputs();
 
@@ -155,9 +154,7 @@ void mitk::NavigationDataXDofTo6DofFilter::AddLandmarkFor6DoF(mitk::Point3D sour
   landmark.source_pt = source_pt;
   landmark.target_pt_sensor_coordinates = target_pt_sensor_coordinates;
 
-  // inserts the new landmark instance at front
-  landmarks.insert(landmarks.begin(), landmark);
-
+  landmarks.push_back(landmark);
 
 }
 

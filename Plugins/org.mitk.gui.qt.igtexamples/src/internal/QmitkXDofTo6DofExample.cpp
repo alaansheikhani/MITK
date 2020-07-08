@@ -43,6 +43,9 @@ void QmitkXDofTo6DofExample::CreateQtPartControl(QWidget *parent)
   connect(m_Controls.butStart, SIGNAL(clicked()), this, SLOT(AddLandmark()));
   connect(m_Timer, SIGNAL(timeout()), this, SLOT(Update()));
   connect(m_Controls.butStartUpdating, SIGNAL(clicked()), this, SLOT(StartUpdating()));
+
+  //Initialize filter
+  m_XDofTo6DofFilter = mitk::NavigationDataXDofTo6DofFilter::New();
 }
 
 void QmitkXDofTo6DofExample::Update()
@@ -52,7 +55,7 @@ void QmitkXDofTo6DofExample::Update()
 
 void QmitkXDofTo6DofExample::AddLandmark()
 {
-  MITK_INFO << "Add Landmark";
+  MITK_INFO << "Start adding Landmark";
   unsigned int inputID = m_Controls.NavigationDataSourceSelectionWidget->GetSelectedToolID();
 
   double source1 = m_Controls.source1->value();
@@ -68,8 +71,10 @@ void QmitkXDofTo6DofExample::AddLandmark()
   mitk::FillVector3D(target,target1,target2,target3);
 
   unsigned int outputID = m_Controls.outputID->value();
+  MITK_INFO << "Created Landmark";
 
   m_XDofTo6DofFilter->AddLandmarkFor6DoF(source,target,inputID,outputID);
+  MITK_INFO << "Added Landmark";
 }
 
 void QmitkXDofTo6DofExample::StartUpdating() {
@@ -80,7 +85,6 @@ void QmitkXDofTo6DofExample::StartUpdating() {
     }
 
     //Connect / build up pipeline
-    m_XDofTo6DofFilter = mitk::NavigationDataXDofTo6DofFilter::New();
     m_XDofTo6DofFilter->ConnectTo(m_Source);
 
     m_VisFilter = mitk::NavigationDataObjectVisualizationFilter::New();
