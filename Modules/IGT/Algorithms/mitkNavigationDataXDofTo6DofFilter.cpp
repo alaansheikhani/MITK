@@ -22,7 +22,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkAppendPolyData.h>
 #include <vtkPoints.h>
 
-mitk::NavigationDataXDofTo6DofFilter::NavigationDataXDofTo6DofFilter() {
+mitk::NavigationDataXDofTo6DofFilter::NavigationDataXDofTo6DofFilter() : m_OutputList(std::vector<int>()){
 }
 
 mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
@@ -31,18 +31,16 @@ mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
 
 void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
 {
-  //m_LastValuesList = std::map<int, std::map<int, mitk::Point3D>>();
-  // get each input and transfer the data
+  //update list of all 6 DoF outputs
+  UpdateListOfAllOutputs();
 
-  for (int i = 0; i < landmarks.size(); i++)
+  //now compute all 6 DoF outputs
+  for (int output_id : m_OutputList)
   {
-    LANDMARK landmark = landmarks.at(i);
-    int output_id = landmark.outputID;
-
-    //umbennen
-    if (this->GetNumberOfSourcePointsForOutput(output_id) < 6)
+    if (this->GetNumberOfSourcePointsForOutput(output_id) < 3)
     {
-      itkExceptionMacro("SourcePointSet must contain at least 3 points");
+      MITK_WARN << "Cannot compute 6 DoF for output id " << output_id << ": SourcePointSet must contain at least 3 points";
+      break;
     }
     else
     {
@@ -79,15 +77,21 @@ void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
       mitkTransform->SetOffset(translationDouble);
 
       //############### object is transformed ##########################
-      // Save transform
-      mitk::NavigationData::Pointer transformedND = mitk::NavigationData::New(mitkTransform); // this is stored in a member because it is needed for permanent registration later on
-      transformedND->SetName("Test6D");
+      // Save transform result
+      mitk::NavigationData::Pointer transformedND = mitk::NavigationData::New(mitkTransform);
+      transformedND->SetName("Computed 6DoF Output");
+      mitk::NavigationData *output = this->GetOutput(output_id);
+      output->Graft(transformedND); // copy all information from result to output
     }
   }
 
-
+  //finally: pass through all other inputs
+  for (unsigned int id=0; id<this->GetNumberOfInputs(); id++){
+    if (!IsOutputInList(id)){
+      PassThrough(id, id);
+    }
+  }
 }
-
 
 int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsigned int outputID)
 {
@@ -95,7 +99,7 @@ int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsig
   for (int i = 0; i < landmarks.size(); i++)
   {
 
-    LANDMARK landmark = landmarks.at(i);
+    Landmark landmark = landmarks.at(i);
     if (landmark.outputID == outputID)
     {
       count++;
@@ -105,7 +109,6 @@ int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsig
   return count;
 }
 
-
 void mitk::NavigationDataXDofTo6DofFilter::SetLandmarksForOutput(unsigned int outputID)
 {
   for (int i = 0; i < landmarks.size(); i++)
@@ -113,7 +116,7 @@ void mitk::NavigationDataXDofTo6DofFilter::SetLandmarksForOutput(unsigned int ou
     vtkSmartPointer<vtkPoints> sourcePoints = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkPoints> targetPoints = vtkSmartPointer<vtkPoints>::New();
 
-    LANDMARK landmark = landmarks.at(i);
+    Landmark landmark = landmarks.at(i);
     if (landmark.outputID == outputID)
     {
       mitk::Point3D srcPt = landmark.source_pt;
@@ -145,7 +148,7 @@ void mitk::NavigationDataXDofTo6DofFilter::AddLandmarkFor6DoF(mitk::Point3D sour
   vtkSmartPointer<vtkPoints> sourcePoints = vtkSmartPointer<vtkPoints>::New();
   vtkSmartPointer<vtkPoints> targetPoints = vtkSmartPointer<vtkPoints>::New();
 
-  LANDMARK landmark;
+  Landmark landmark;
   landmark.inputID = inputID;
   landmark.outputID = outputID;
   landmark.source_pt = source_pt;
@@ -166,9 +169,8 @@ void mitk::NavigationDataXDofTo6DofFilter::PassThrough(unsigned int inputID, uns
 
   if (!nd || !output)
   {
-      MITK_ERROR("NavigationDataToNavigationDataFilter")
-      ("NavigationDataPassThroughFilter") << "Input and output must not be null.";
-      mitkThrow() << "Input and output must not be null.";
+      MITK_ERROR("NavigationDataXDofTo6DofFilter") << "Input and output must not be null.";
+      return;
   }
 
   output->Graft(nd); // copy all information from input to output
@@ -176,6 +178,15 @@ void mitk::NavigationDataXDofTo6DofFilter::PassThrough(unsigned int inputID, uns
 
 }
 
-//2 Methoden (1. Berechnung, 2. Daten durch)
-//Listen mit Input, Landmarken und outputs
-//Vector (stdVector) 1d Liste
+void mitk::NavigationDataXDofTo6DofFilter::UpdateListOfAllOutputs(){
+  for (Landmark l : landmarks){
+    if(!IsOutputInList(l.outputID)){m_OutputList.push_back(l.outputID);}
+  }
+}
+
+bool mitk::NavigationDataXDofTo6DofFilter::IsOutputInList(int outputID){
+  for(int id : m_OutputList){
+    if(id==outputID){return true;}
+  }
+  return false;
+}
