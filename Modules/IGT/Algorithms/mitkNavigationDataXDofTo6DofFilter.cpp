@@ -22,7 +22,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkAppendPolyData.h>
 #include <vtkPoints.h>
 
-mitk::NavigationDataXDofTo6DofFilter::NavigationDataXDofTo6DofFilter() : m_OutputList(std::vector<int>()){
+mitk::NavigationDataXDofTo6DofFilter::NavigationDataXDofTo6DofFilter() : m_OutputList(std::vector<int>()), landmarks(std::vector<Landmark>()){
 }
 
 mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
@@ -31,6 +31,7 @@ mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
 
 void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
 {
+  MITK_INFO << "Generate Data";
   //update list of all 6 DoF outputs
   UpdateListOfAllOutputs();
 

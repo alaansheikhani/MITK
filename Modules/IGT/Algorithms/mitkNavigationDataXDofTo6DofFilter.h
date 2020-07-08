@@ -49,12 +49,8 @@ namespace mitk
       unsigned int outputID;
     };
 
-    mitkClassMacro(NavigationDataXDofTo6DofFilter, NavigationDataToNavigationDataFilter) itkNewMacro(Self)
-
-      protected : NavigationDataXDofTo6DofFilter();
-    ~NavigationDataXDofTo6DofFilter() override;
-
-    void GenerateData() override;
+    mitkClassMacro(NavigationDataXDofTo6DofFilter, NavigationDataToNavigationDataFilter);
+    itkNewMacro(Self);
 
     // void InitializeTransform(int inputID, int outputID, mitk::Point3D originPoint);
     void AddLandmarkFor6DoF(mitk::Point3D source_pt,
@@ -62,7 +58,10 @@ namespace mitk
                     unsigned int inputID,
                     unsigned int outputID); // just one sourcePoint for one Input (origin -> (0,0,0))
 
-
+  protected:
+    NavigationDataXDofTo6DofFilter();
+    ~NavigationDataXDofTo6DofFilter() override;
+    void GenerateData() override;
     int GetNumberOfSourcePointsForOutput(unsigned int outputID);
     void PassThrough(unsigned int inputID, unsigned int outputID);
     void SetLandmarksForOutput(unsigned int outputID);
