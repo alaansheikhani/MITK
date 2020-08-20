@@ -51,6 +51,7 @@ void QmitkXDofTo6DofExample::CreateQtPartControl(QWidget *parent)
 void QmitkXDofTo6DofExample::Update()
 {
   m_VisFilter->Update();
+  MITK_INFO << "Tool 0: " << m_VisFilter->GetOutput(0)->GetPosition() << "/[" << m_VisFilter->GetOutput(0)->GetOrientation() << "]" ;
 }
 
 void QmitkXDofTo6DofExample::AddLandmark()

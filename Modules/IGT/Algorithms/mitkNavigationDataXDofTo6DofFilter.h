@@ -66,7 +66,7 @@ namespace mitk
     void PassThrough(unsigned int inputID, unsigned int outputID);
     void SetLandmarksForOutput(unsigned int outputID);
 
-    std::vector<Landmark> landmarks;
+    std::vector<Landmark> m_Landmarks;
     vtkSmartPointer<vtkPoints> m_SourcePoints;
     vtkSmartPointer<vtkPoints> m_TargetPoints;
 

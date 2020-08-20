@@ -22,7 +22,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkAppendPolyData.h>
 #include <vtkPoints.h>
 
-mitk::NavigationDataXDofTo6DofFilter::NavigationDataXDofTo6DofFilter() : m_OutputList(std::vector<int>()), landmarks(std::vector<Landmark>()){
+mitk::NavigationDataXDofTo6DofFilter::NavigationDataXDofTo6DofFilter() : m_OutputList(std::vector<int>()), m_Landmarks(std::vector<Landmark>()){
 }
 
 mitk::NavigationDataXDofTo6DofFilter::~NavigationDataXDofTo6DofFilter() {
@@ -55,23 +55,19 @@ void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
       transform->Update();
 
       // Convert from vtk to itk data types
-      itk::Matrix<float, 3, 3> rotationFloat = itk::Matrix<float, 3, 3>();
-      itk::Vector<float, 3> translationFloat = itk::Vector<float, 3>();
       itk::Matrix<double, 3, 3> rotationDouble = itk::Matrix<double, 3, 3>();
       itk::Vector<double, 3> translationDouble = itk::Vector<double, 3>();
       vtkSmartPointer<vtkMatrix4x4> m = transform->GetMatrix();
       for (int k = 0; k < 3; k++)
         for (int l = 0; l < 3; l++)
         {
-          rotationFloat[k][l] = m->GetElement(k, l);
           rotationDouble[k][l] = m->GetElement(k, l);
         }
       for (int k = 0; k < 3; k++)
       {
-        translationFloat[k] = m->GetElement(k, 3);
         translationDouble[k] = m->GetElement(k, 3);
       }
-      // Create affine transform 3D surface
+      // Create affine transform
       mitk::AffineTransform3D::Pointer mitkTransform = mitk::AffineTransform3D::New();
       mitkTransform->SetMatrix(rotationDouble);
       mitkTransform->SetOffset(translationDouble);
@@ -80,8 +76,8 @@ void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
       // Save transform result
       mitk::NavigationData::Pointer transformedND = mitk::NavigationData::New(mitkTransform);
       transformedND->SetName("Computed 6DoF Output");
-      mitk::NavigationData *output = this->GetOutput(output_id);
-      output->Graft(transformedND); // copy all information from result to output
+      transformedND->SetDataValid(true);
+      this->GetOutput(output_id)->Graft(transformedND); // copy all information from result to output
     }
   }
 
@@ -96,10 +92,10 @@ void mitk::NavigationDataXDofTo6DofFilter::GenerateData()
 int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsigned int outputID)
 {
   int count = 0;
-  for (int i = 0; i < landmarks.size(); i++)
+  for (int i = 0; i < m_Landmarks.size(); i++)
   {
 
-    Landmark landmark = landmarks.at(i);
+    Landmark landmark = m_Landmarks.at(i);
     if (landmark.outputID == outputID)
     {
       count++;
@@ -111,12 +107,12 @@ int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsig
 
 void mitk::NavigationDataXDofTo6DofFilter::SetLandmarksForOutput(unsigned int outputID)
 {
-  for (int i = 0; i < landmarks.size(); i++)
+  for (int i = 0; i < m_Landmarks.size(); i++)
   {
     vtkSmartPointer<vtkPoints> sourcePoints = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkPoints> targetPoints = vtkSmartPointer<vtkPoints>::New();
 
-    Landmark landmark = landmarks.at(i);
+    Landmark landmark = m_Landmarks.at(i);
     if (landmark.outputID == outputID)
     {
       mitk::Point3D srcPt = landmark.source_pt;
@@ -154,7 +150,7 @@ void mitk::NavigationDataXDofTo6DofFilter::AddLandmarkFor6DoF(mitk::Point3D sour
   landmark.source_pt = source_pt;
   landmark.target_pt_sensor_coordinates = target_pt_sensor_coordinates;
 
-  landmarks.push_back(landmark);
+  m_Landmarks.push_back(landmark);
 
 }
 
@@ -177,7 +173,7 @@ void mitk::NavigationDataXDofTo6DofFilter::PassThrough(unsigned int inputID, uns
 }
 
 void mitk::NavigationDataXDofTo6DofFilter::UpdateListOfAllOutputs(){
-  for (Landmark l : landmarks){
+  for (Landmark l : m_Landmarks){
     if(!IsOutputInList(l.outputID)){m_OutputList.push_back(l.outputID);}
   }
 }
