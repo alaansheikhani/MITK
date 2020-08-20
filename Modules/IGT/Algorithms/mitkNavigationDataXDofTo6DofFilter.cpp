@@ -107,11 +107,10 @@ int mitk::NavigationDataXDofTo6DofFilter::GetNumberOfSourcePointsForOutput(unsig
 
 void mitk::NavigationDataXDofTo6DofFilter::SetLandmarksForOutput(unsigned int outputID)
 {
+  vtkSmartPointer<vtkPoints> sourcePoints = vtkSmartPointer<vtkPoints>::New();
+  vtkSmartPointer<vtkPoints> targetPoints = vtkSmartPointer<vtkPoints>::New();
   for (int i = 0; i < m_Landmarks.size(); i++)
   {
-    vtkSmartPointer<vtkPoints> sourcePoints = vtkSmartPointer<vtkPoints>::New();
-    vtkSmartPointer<vtkPoints> targetPoints = vtkSmartPointer<vtkPoints>::New();
-
     Landmark landmark = m_Landmarks.at(i);
     if (landmark.outputID == outputID)
     {
@@ -130,10 +129,9 @@ void mitk::NavigationDataXDofTo6DofFilter::SetLandmarksForOutput(unsigned int ou
       targetPoints->InsertNextPoint(trgPt[0], trgPt[1], trgPt[2]);
 
     }
-    m_SourcePoints = sourcePoints;
-    m_TargetPoints = targetPoints;
-
   }
+  m_SourcePoints = sourcePoints;
+  m_TargetPoints = targetPoints;
 }
 
 void mitk::NavigationDataXDofTo6DofFilter::AddLandmarkFor6DoF(mitk::Point3D source_pt,
