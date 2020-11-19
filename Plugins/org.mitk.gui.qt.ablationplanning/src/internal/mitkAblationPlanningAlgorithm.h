@@ -74,6 +74,7 @@ namespace mitk
     /* Output / result */
     mitk::AblationPlan::Pointer m_AblationPlan;
 
+
     /*!
      * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones
      * when calculating the best ablation zone distribution.

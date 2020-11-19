@@ -53,7 +53,7 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
     m_AblationStartingPositionInWorldCoordinates(),
     m_AblationStartingPositionIndexCoordinates(),
     m_ManualAblationStartingPositionSet(false),
-    m_AblationRadius(15.0),
+    m_AblationRadius(10.0),
     m_AblationCalculationMade(false),
     m_AblationCentersNode(mitk::DataNode::New()),
     m_PlanningAlgo(mitk::AblationPlanningAlgorithm::New())

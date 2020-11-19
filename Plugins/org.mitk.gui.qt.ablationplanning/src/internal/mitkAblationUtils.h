@@ -17,16 +17,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef ABLATIONUTILS_H
 #define ABLATIONUTILS_H
 
-#include <berryISelectionListener.h>
-
+#include "mitkAblationPlan.h"
+#include "mitkAblationZone.h"
 #include <QmitkAbstractView.h>
-
+#include <berryISelectionListener.h>
+#include <mitkImage.h>
 #include <mitkNodePredicateAnd.h>
 #include <mitkNodePredicateOr.h>
-
-#include <mitkImage.h>
-#include "mitkAblationZone.h"
-#include "mitkAblationPlan.h"
 
 /**
   \brief AblationUtils static class for doing ablation calculations
@@ -39,13 +36,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 class AblationUtils
 {
 public:
-
   static void FillVectorContainingIndicesOfTumorTissueSafetyMargin(
     mitk::Image::Pointer image,
     mitk::Vector3D &imageDimension,
     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices);
 
-  static void ComputeStatistics(mitk::AblationPlan::Pointer plan, std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices);
+  static void ComputeStatistics(mitk::AblationPlan::Pointer plan,
+                                std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices);
 
   static std::vector<itk::Index<3>> FillVectorContainingIndicesOfTumorTissueOnly(mitk::Image::Pointer image,
                                                                                  mitk::Vector3D &imageDimension);
@@ -124,6 +121,10 @@ public:
                                                                mitk::Image::Pointer image,
                                                                mitk::Vector3D &imageDimension);
 
+  static bool CheckForNonAblatedTumorTissueWithSafetyMargin(std::vector<itk::Index<3>> &indices,
+                                                            mitk::Image::Pointer image,
+                                                            mitk::Vector3D &imageDimension);
+
   static void CalculateUpperLowerXYZ(unsigned int &upperX,
                                      unsigned int &lowerX,
                                      unsigned int &upperY,
@@ -179,11 +180,11 @@ public:
                                                  mitk::Vector3D &imageSpacing);
 
   static mitk::AblationZone SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
-                                               mitk::Image::Pointer image,
-                                               double &radius,
-                                               double &maxRadius,
-                                               mitk::Vector3D &imageDimension,
-                                               mitk::Vector3D &imageSpacing);
+                                                     mitk::Image::Pointer image,
+                                                     double &radius,
+                                                     double &maxRadius,
+                                                     mitk::Vector3D &imageDimension,
+                                                     mitk::Vector3D &imageSpacing);
 
   static void ResetSegmentationImage(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
@@ -222,10 +223,14 @@ public:
   static int CalculateTotalAblationVolume(mitk::Image::Pointer image,
                                           mitk::Vector3D &imageSpacing,
                                           mitk::Vector3D &imageDimension);
-
+ 
   static int CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Pointer image,
                                                            mitk::Vector3D &imageSpacing,
                                                            mitk::Vector3D &imageDimension);
+  //change to ...MoreThanOneTime(...) when finished
+  static std::vector<int> CalculateAblationVolumeAblatedMoreThanOnce(mitk::Image::Pointer image,
+                                                                     mitk::Vector3D &imageSpacing,
+                                                                     mitk::Vector3D &imageDimension);
 
 private:
   AblationUtils();
