@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkCommon.h>
 #include <mitkImage.h>
 #include "mitkAblationZone.h"
-#include <vector>
 
 namespace mitk
 {
@@ -39,7 +38,7 @@ namespace mitk
       double factorOverlappingAblationZones;
       double factorAblatedVolumeOutsideSafetyMargin;
       double factorNonAblatedVolume;
-    };  
+    };
     AblationPlanStatistics GetStatistics();
     void SetStatistics(AblationPlanStatistics s);
     itkGetConstMacro(StatsSet, bool);
@@ -58,18 +57,6 @@ namespace mitk
     bool RemoveAblationZone(int id);
     /** @return Returns 1 if plan b is better this, 0 if it is equal and -1 if it is worse*/
     int CompareTo(AblationPlan::Pointer b);
-    void CalculcateSolutionValue();
-    double CalculateSolutionValueOfZoneNumbers();
-    //@returns Returns between 1 (lowest number of Ablation Zones) and 0 (higest number of Ablation Zones)
-    double CalculateSolutionValueOfOverlappingZones();
-    double CalculateSolutionValueOfZoneDifference();
-    double CalculateSolutionValueOfSafetyzoneAblation();
-    void SetSolutionValue(double add);
-    double GetSolutionValue();
-    void SetMaxAblationZoneNumber(int n);
-    void SetMinAblationZoneNumber(int n);
-    int GetMinAblationZoneNumber();
-    int GetMaxAblationZoneNumber();
 
   protected:
     AblationPlan();
@@ -83,9 +70,6 @@ namespace mitk
     std::vector<mitk::AblationZone> m_AblationZones;
     bool m_StatsSet;
     AblationPlanStatistics m_Stats;
-    double m_SolutionValue;
-    int m_MaxAblationZoneNumber;
-    int m_MinAblationZoneNumber;
   };
 } // namespace mitk
 #endif /* MITKABLATIONPLAN_H_HEADER_INCLUDED_ */
