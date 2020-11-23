@@ -1566,7 +1566,7 @@ int AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Po
                                                                  mitk::Vector3D &imageSpacing,
                                                                  mitk::Vector3D &imageDimension)
 {
-  std::vector<int> volume;
+  int volume{0};
   if (image.IsNotNull())
   {
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
@@ -1581,16 +1581,9 @@ int AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Po
           pixelValue &= BIT_OPERATION_ELIMINATE_TUMOR_SAFETY_MARGIN;
           if (pixelValue != 0)
           {
-            for (int i = 1; i <= 10; i++)
+            if ((pixelValue - ABLATION_VALUE) > 0)
             {
-              if ((pixelValue - i * ABLATION_VALUE) > 0)
-              {
-                if (volume.size() < i)
-                {
-                  volume.push_back(0);
-                }
-                ++volume[i - 1];
-              }
+              ++volume;
             }
           }
         }
@@ -1598,15 +1591,8 @@ int AblationUtils::CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Po
     }
   }
   double volumeFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
-  for (int i = 0; i < volume.size(); i++)
-  {
-    volume[i] = (int)(volume[i] * volumeFactor) / 1000;
-  }
-  for (int i = 1; i < volume.size(); i++)
-  {
-    volume[0] += volume[i];
-  }
-  return volume[0];
+  volume = (int)(volume * volumeFactor) / 1000;
+  return volume;
 }
 
 void AblationUtils::ComputeStatistics(mitk::AblationPlan::Pointer plan,
