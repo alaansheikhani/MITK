@@ -153,6 +153,11 @@ public:
                                             mitk::Vector3D &imageDimension,
                                             mitk::Vector3D &imageSpacing);
 
+  static void RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer plan,
+                                           mitk::Image::Pointer image,
+                                           mitk::Vector3D &imageDimension,
+                                           mitk::Vector3D &imageSpacing);
+
   static double FindMinimalAblationRadius(itk::Index<3> &center,
                                           mitk::Image::Pointer image,
                                           double &maxRadius,
@@ -223,11 +228,11 @@ public:
   static int CalculateTotalAblationVolume(mitk::Image::Pointer image,
                                           mitk::Vector3D &imageSpacing,
                                           mitk::Vector3D &imageDimension);
- 
+
   static int CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Pointer image,
                                                            mitk::Vector3D &imageSpacing,
                                                            mitk::Vector3D &imageDimension);
-  //change to ...MoreThanOneTime(...) when finished
+  // change to ...MoreThanOneTime(...) when finished
   static std::vector<int> CalculateAblationVolumeAblatedMoreThanOnce(mitk::Image::Pointer image,
                                                                      mitk::Vector3D &imageSpacing,
                                                                      mitk::Vector3D &imageDimension);

@@ -177,10 +177,17 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     // MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
 
     // Optimize this proposal
-    mitk::AblationPlanOptimizer::Optimize(currentPlan, tempAblationZones);
+    //mitk::AblationPlanOptimizer::Optimize(currentPlan, tempAblationZones);
 
     // Check if some zones can be removed
     // AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
+    AblationUtils::ComputeStatistics(currentPlan, m_TumorTissueSafetyMarginIndices);
+
+    // Check if some zones can be removed
+    AblationUtils::RemoveNotNeededAblationZones(currentPlan,
+                                                 currentPlan->GetSegmentationImage(),
+                                                 currentPlan->GetImageDimension(),
+                                                 currentPlan->GetImageSpacing());
 
     MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
     AblationUtils::ComputeStatistics(currentPlan, m_TumorTissueSafetyMarginIndices);
@@ -226,11 +233,6 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
 
   for (int i = 1; i < AllFoundPlans.size(); i++)
   {
-    MITK_INFO << "Proposal " << i << ": Ablationzones: " << AllFoundPlans.at(i)->GetNumberOfZones()
-              << "; SolutionValue: " << AllFoundPlans.at(i)->GetSolutionValue()
-              << "; SV Number: " << AllFoundPlans.at(i)->CalculateSolutionValueOfZoneNumbers()
-              << "; SV Overlap: " << AllFoundPlans.at(i)->CalculateSolutionValueOfOverlappingZones()
-              << "; Non-ablated tumor tissue: " << AllFoundPlans.at(i)->GetStatistics().factorNonAblatedVolume;
     // MITK_INFO << "Proposal " << i << ": zones: " << AllFoundPlans.at(i)->GetNumberOfZones() <<"; overlap: " <<
     // AllFoundPlans.at(i)->GetStatistics().factorOverlappingAblationZones;
     if (AllFoundPlans.at(i)->CompareTo(finalProposal) == -1)
@@ -247,7 +249,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     file.close();*/
     // Alle Pläne in das .csv schreiben
     file.open("C:/users/kannb/Desktop/Studium/Bachelorarbeit/9_sonstiges/daten.csv");
-    file << "Nr,Zonenanzahl,Faktor Non-Ablated Volume,Faktor OverlappingZones,Faktor Ablated Volume außerhalb Safety Margin,Total Ablation Volume,Radien Zonen \n";
+    file << "Nr,Zonenanzahl,Faktor Non-Ablated Volume,Faktor OverlappingZones,Faktor Ablated Volume außerhalb Safety "
+            "Margin,Total Ablation Volume,Radien Zonen \n";
     for (size_t i = 0; i < AllFoundPlans.size(); i++)
     {
       file << i << "," << AllFoundPlans.at(i)->GetNumberOfZones() << ","
@@ -260,7 +263,6 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
         file << AllFoundPlans.at(i)->GetAblationZone(j)->radius << " ";
       }
       file << "\n";
-           
     }
     file.close();
   }

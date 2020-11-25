@@ -838,6 +838,98 @@ void AblationUtils::DetectNotNeededAblationVolume(mitk::AblationPlan::Pointer pl
   }
 }
 
+void AblationUtils::RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer plan,
+                                                 mitk::Image::Pointer image,
+                                                 mitk::Vector3D &imageDimension,
+                                                 mitk::Vector3D &imageSpacing)
+{
+  if (image.IsNotNull())
+  {
+    while (true)
+    {
+      std::vector<double> volume;
+      double factorNonAblatedVolume = AblationUtils::CheckImageForNonAblatedTissueInPercentage(
+        plan->GetSegmentationImage(), plan->GetImageDimension());
+      {
+        mitk::ImagePixelReadAccessor<unsigned short, 3> imagePixelReader(image);
+        for (int i = 0; i < plan->GetNumberOfZones(); i++)
+        {
+          volume.push_back(0);
+          itk::Index<3> zoneCenter = plan->GetAblationZone(i)->indexCenter;
+          for (int index0 = plan->GetAblationZone(i)->indexCenter[0] - plan->GetAblationZone(i)->radius;
+               index0 < plan->GetAblationZone(i)->indexCenter[0] + plan->GetAblationZone(i)->radius;
+               index0++)
+          {
+            for (int index1 = plan->GetAblationZone(i)->indexCenter[1] - plan->GetAblationZone(i)->radius;
+                 index1 < plan->GetAblationZone(i)->indexCenter[1] + plan->GetAblationZone(i)->radius;
+                 index1++)
+            {
+              for (int index2 = plan->GetAblationZone(i)->indexCenter[2] - plan->GetAblationZone(i)->radius;
+                   index2 < plan->GetAblationZone(i)->indexCenter[2] + plan->GetAblationZone(i)->radius;
+                   index2++)
+              {
+                itk::Index<3> actualIndex = {index0, index1, index2};
+                if (AblationUtils::CalculateScalarDistance(
+                      plan->GetAblationZone(i)->indexCenter, actualIndex, imageSpacing))
+                { // now we got the circle
+                  unsigned short pixelValue = imagePixelReader.GetPixelByIndex(actualIndex);
+                  unsigned short a = pixelValue;
+                  a &= BIT_OPERATION_ELIMINATE_TUMOR_SAFETY_MARGIN;
+                  if (a != 0)
+                  {
+                    if ((a - ABLATION_VALUE < ABLATION_VALUE)/* && (a % 2 == 1)*/)
+                    {
+                      volume[i]++;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      int zoneToDelete{0};
+      for (int i = 1; i < volume.size(); i++) // find and delete smallest factor
+      {
+        if (volume[i] < volume[zoneToDelete])
+        {
+          zoneToDelete = i;
+        }
+      }
+      double pi = 3.14159;
+      double volumeFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
+      volume[zoneToDelete] = (double)(volume[zoneToDelete] * volumeFactor) / 1000; // volume in ml
+      MITK_INFO << "Volume in ml: " << volume[zoneToDelete];
+      double volumeZone =
+        double(plan->GetAblationZone(zoneToDelete)->radius * plan->GetAblationZone(zoneToDelete)->radius *
+               plan->GetAblationZone(zoneToDelete)->radius) *
+        (4.0 / 3.0) * pi;
+      MITK_INFO << "Volume Zone in ml: " << volumeZone;
+      volume[zoneToDelete] = (volumeZone - volume[zoneToDelete]) /( volumeZone * 100); // volume in percent
+      MITK_INFO << "Volume in percent: " << volume[zoneToDelete];
+      MITK_INFO << "Factor Non-Ablated Volume: " << factorNonAblatedVolume;
+      if (volume[zoneToDelete] + factorNonAblatedVolume > 0.03)
+      {
+        MITK_INFO << "Final number of Zones: " << plan->GetNumberOfZones()
+                  << ". Final Number Of Non-Ablated Volume: " << factorNonAblatedVolume;
+        return;
+      }
+      else
+      {
+        RemoveAblationVolume(plan->GetAblationZone(zoneToDelete)->indexCenter,
+                             image,
+                             plan->GetAblationZone(zoneToDelete)->radius,
+                             imageDimension,
+                             imageSpacing);
+        plan->RemoveAblationZone(zoneToDelete);
+        MITK_INFO << "FactorNonAblatedVolume: " << factorNonAblatedVolume;
+        factorNonAblatedVolume += volume[zoneToDelete];
+        MITK_INFO << "Deleted Zone Number: " << zoneToDelete;
+      }
+    }
+  }
+}
+
 bool AblationUtils::CheckIfAblationVolumeIsNeeded(itk::Index<3> &center,
                                                   mitk::Image::Pointer image,
                                                   double &radius,
@@ -984,7 +1076,6 @@ void AblationUtils::RemoveAblationVolume(itk::Index<3> &center,
                            pixelDirectionZ,
                            center,
                            imageDimension);
-
     mitk::ImagePixelWriteAccessor<unsigned short, 3> imagePixelWriter(image);
     itk::Index<3> actualIndex;
     for (actualIndex[2] = lowerZ; actualIndex[2] <= upperZ; actualIndex[2] += 1)
@@ -1002,7 +1093,9 @@ void AblationUtils::RemoveAblationVolume(itk::Index<3> &center,
         }
       }
     }
+    return;
   }
+  return;
 }
 
 void AblationUtils::RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center,
