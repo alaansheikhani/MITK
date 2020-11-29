@@ -39,6 +39,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkAppendPolyData.h>
 #include <vtkSphereSource.h>
 
+// rng
+#include <random>
+#include <thread>
+
+
 const static short ABLATION_VALUE = 2;
 const static short TUMOR_NOT_YET_ABLATED = 1;
 const static short NO_TUMOR_ISSUE = 0;
@@ -102,6 +107,14 @@ std::vector<itk::Index<3>> AblationUtils::FillVectorContainingIndicesOfTumorTiss
   return onlyTumorIndices;
 }
 
+float randFloat(float low, float high)
+{
+  thread_local static std::random_device rd;
+  thread_local static std::mt19937 rng(rd());
+  thread_local std::uniform_real_distribution<float> urd;
+  return urd(rng, decltype(urd)::param_type{low, high});
+}
+
 QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
                                                     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
                                                     double &ablationRadius,
@@ -118,14 +131,21 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
 
     bool positionFound = false;
     int iteration = 1;
+    srand(time(NULL));
 
     while (!positionFound && iteration < 20)
     {
-      int randomIndex1 = rand() % tumorTissueSafetyMarginIndices.size();
-      int randomIndex2 = rand() % tumorTissueSafetyMarginIndices.size();
-      int randomIndex3 = rand() % tumorTissueSafetyMarginIndices.size();
-      int randomIndex4 = rand() % tumorTissueSafetyMarginIndices.size();
-      int randomIndex5 = rand() % tumorTissueSafetyMarginIndices.size();
+      int randomIndex1 = randFloat(0, tumorTissueSafetyMarginIndices.size());
+      int randomIndex2 = randFloat(0, tumorTissueSafetyMarginIndices.size());
+      int randomIndex3 = randFloat(0, tumorTissueSafetyMarginIndices.size());
+      int randomIndex4 = randFloat(0, tumorTissueSafetyMarginIndices.size());
+      int randomIndex5 = randFloat(0, tumorTissueSafetyMarginIndices.size());
+
+      //int randomIndex1 = rand() % tumorTissueSafetyMarginIndices.size();
+      //int randomIndex2 = rand() % tumorTissueSafetyMarginIndices.size();
+      //int randomIndex3 = rand() % tumorTissueSafetyMarginIndices.size();
+      //int randomIndex4 = rand() % tumorTissueSafetyMarginIndices.size();
+      //int randomIndex5 = rand() % tumorTissueSafetyMarginIndices.size();
 
       itk::Index<3> startingPosition1 = tumorTissueSafetyMarginIndices.at(randomIndex1);
       itk::Index<3> startingPosition2 = tumorTissueSafetyMarginIndices.at(randomIndex2);
@@ -898,7 +918,7 @@ void AblationUtils::RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer pla
                   {
                     pixelValue -= 255;
                   }
-                  if (pixelValue - ABLATION_VALUE < 2 && pixelValue % 2 == TUMOR_NOT_YET_ABLATED)
+                  if (pixelValue - ABLATION_VALUE < 2 /*&& pixelValue % 2 == TUMOR_NOT_YET_ABLATED*/)
                   {
                     overlappingVolume[i]++;
                   }
@@ -919,8 +939,11 @@ void AblationUtils::RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer pla
       double imageSpacingFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
       overlappingVolume[zoneToDelete] = overlappingVolume[zoneToDelete] * imageSpacingFactor / 1000.0;
       double overlappingFactor = (overlappingVolume[zoneToDelete] / volumeTumor) * 100;
+      MITK_INFO << "overlappingFactor: " << overlappingFactor;
+      MITK_INFO << "factorNonAblatedVolume: " << factorNonAblatedVolume;
       if (overlappingFactor + factorNonAblatedVolume < 3)
       {
+        MITK_INFO << "Inside if: " << overlappingFactor + factorNonAblatedVolume;
         RemoveAblationVolume(plan->GetAblationZone(zoneToDelete)->indexCenter,
                              image,
                              plan->GetAblationZone(zoneToDelete)->radius,
@@ -932,6 +955,7 @@ void AblationUtils::RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer pla
       }
       else
       {
+        MITK_INFO << "End: factorNonAblatedVolume: " << factorNonAblatedVolume;
         return;
       }
     }
