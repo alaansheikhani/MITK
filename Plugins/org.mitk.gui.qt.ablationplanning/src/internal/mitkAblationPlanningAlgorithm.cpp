@@ -100,6 +100,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     QString position = AblationUtils::FindAblationStartingPosition(currentPlan->GetSegmentationImage(),
                                                                    tumorTissueSafetyMarginIndices,
                                                                    m_AblationRadius,
+                                                                   m_MinAblationRadius,
                                                                    m_MaxAblationRadius,
                                                                    m_TempAblationStartingPositionIndexCoordinates,
                                                                    m_TempAblationStartingPositionInWorldCoordinates,
@@ -140,9 +141,20 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
           AblationUtils::SearchNextAblationCenter(indices,
                                                   currentPlan->GetSegmentationImage(),
                                                   m_AblationRadius,
+                                                  m_MinAblationRadius,
                                                   m_MaxAblationRadius,
                                                   m_ImageDimension,
                                                   m_ImageSpacing);
+        // if (!AblationUtils::CheckIfVolumeMostlyInsideTumorAndSafetymarginTissue(newAblationCenter.indexCenter,
+        //                                                                        indices,
+        //                                                                        currentPlan->GetSegmentationImage(),
+        //                                                                        newAblationCenter.radius,
+        //                                                                        m_ImageDimension,
+        //                                                                        m_ImageSpacing))
+        //{
+        //  MITK_INFO << "------------Removed Zone with new Function";
+        //  continue;
+        //}
         AblationUtils::CalculateAblationVolume(newAblationCenter.indexCenter,
                                                currentPlan->GetSegmentationImage(),
                                                newAblationCenter.radius,
@@ -155,12 +167,13 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
                                                           newAblationCenter.radius,
                                                           m_ImageDimension,
                                                           m_ImageSpacing);
+
         currentPlan->AddAblationZone(newAblationCenter);
       }
     }
     //------------ End calculation models -------------------------------
 
-    /* Another try to improve algorithm: Check if the radius of some ablation zones can be reduced
+     //Another try to improve algorithm: Check if the radius of some ablation zones can be reduced
     for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
     {
       mitk::AblationZone *zone = currentPlan->GetAblationZone(i);
@@ -172,7 +185,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
                                                                       m_ImageSpacing);
       // MITK_INFO << "Found minimal radius: " << currentRadius;
       (*zone).radius = currentRadius;
-    } */
+    } 
 
     // MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
 
@@ -196,6 +209,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
 
     // set reference values for max and min ablationZone Number
   } // End of for loop
+
+  // replace with SetStatisticsForSolutionValue
   for (int i = 0; i < AllFoundPlans.size(); i++)
   {
     if (AllFoundPlans.at(i).GetPointer()->GetNumberOfZones() >

@@ -62,6 +62,7 @@ public:
   static QString FindAblationStartingPosition(mitk::Image::Pointer image,
                                               std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
                                               double &ablationRadius,
+                                              double &minRadius,
                                               double &maxRadius,
                                               itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
                                               mitk::Point3D &tempAblationStartingPositionInWorldCoordinates,
@@ -110,6 +111,7 @@ public:
                                                                    mitk::Vector3D &imageSpacing,
                                                                    mitk::Vector3D &imageDimension,
                                                                    double startRadius,
+      double minRadius,
                                                                    double maxRadius);
 
   /** @returns Returns the percentage of non ablated tumor tissue (based on voxels) */
@@ -188,6 +190,7 @@ public:
   static mitk::AblationZone SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                      mitk::Image::Pointer image,
                                                      double &radius,
+                                                     double &minRadius,
                                                      double &maxRadius,
                                                      mitk::Vector3D &imageDimension,
                                                      mitk::Vector3D &imageSpacing);
@@ -233,6 +236,15 @@ public:
   static int CalculateAblationVolumeAblatedMoreThanOneTime(mitk::Image::Pointer image,
                                                            mitk::Vector3D &imageSpacing,
                                                            mitk::Vector3D &imageDimension);
+
+  static bool CheckIfVolumeMostlyInsideTumorAndSafetymarginTissue(itk::Index<3> &indexCenter,
+                                                                  std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
+                                                                  mitk::Image::Pointer &image,
+                                                                  double &radius,
+                                                                  mitk::Vector3D &ImageDimension,
+                                                                  mitk::Vector3D &ImageSpacing);
+
+  static int intRand(const int &min, const int &max);
 
 private:
   AblationUtils();

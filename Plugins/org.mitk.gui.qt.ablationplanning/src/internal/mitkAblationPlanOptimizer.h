@@ -17,6 +17,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef ABLATIONPLANOPTIMIZER_H
 #define ABLATIONPLANOPTIMIZER_H
 #include "mitkAblationPlan.h"
+#include "mitkImagePixelReadAccessor.h"
+#include "mitkImagePixelWriteAccessor.h"
 
 /**
   \brief TODO
@@ -27,15 +29,23 @@ namespace mitk
 {
   class AblationPlanOptimizer
   {
-    public:
+  public:
+    static void RemoveNotNeededVolumes(mitk::AblationPlan::Pointer plan);
+    //static void ShrinkAndMoveZones(mitk::AblationPlan::Pointer plan);
+    static void Optimize(mitk::AblationPlan::Pointer plan, std::vector<mitk::AblationZone> &tempAblationZones);
+    static void MoveZonesTowardsCenter(mitk::AblationPlan::Pointer plan,
+                                       std::vector<mitk::AblationZone> &tempAblationZones);
+    static void CheckIfDistanceBeetweenZonesTooSmall(mitk::AblationPlan::Pointer plan,
+                                                     std::vector<mitk::AblationZone> &tempAblationZones);
+    //static bool CheckNewCenterForNonAblatedVolume(mitk::AblationPlan::Pointer plan,
+    //                                              int zoneNumber,
+    //                                              itk::Index<3> newCenter);
+    //static void SetNewAblationVolume(mitk::AblationPlan::Pointer plan, int zoneNumber, itk::Index<3> newCenter);
 
-      static void RemoveNotNeededVolumes(mitk::AblationPlan::Pointer plan);
-      static void Optimize(mitk::AblationPlan::Pointer plan, std::vector<mitk::AblationZone> &tempAblationZones);
-
-    private:
-      AblationPlanOptimizer();
-      virtual ~AblationPlanOptimizer();
-};
-}
+  private:
+    AblationPlanOptimizer();
+    virtual ~AblationPlanOptimizer();
+  };
+} // namespace mitk
 
 #endif // ABLATIONPLANOPTIMIZER_H

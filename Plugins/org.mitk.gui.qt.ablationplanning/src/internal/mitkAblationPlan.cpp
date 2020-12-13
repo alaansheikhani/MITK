@@ -147,7 +147,7 @@ void mitk::AblationPlan::CalculcateSolutionValue()
 {
   double valueNumberOfZones{0};
   valueNumberOfZones =
-    (this->CalculateSolutionValueOfZoneNumbers() * 0 + this->CalculateSolutionValueOfOverlappingZones() * 100) / 100;
+    (this->CalculateSolutionValueOfZoneNumbers() * 100 + this->CalculateSolutionValueOfOverlappingZones() * 0) / 100;
   this->SetSolutionValue(this->CalculateSolutionValueOfZoneNumbers());
   if (this->GetStatistics().factorNonAblatedVolume >
       3) // --------> hier ist noch ein absoluter Wert eingetragen -> noch korrigieren
