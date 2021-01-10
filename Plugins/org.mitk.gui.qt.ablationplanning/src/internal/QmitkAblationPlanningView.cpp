@@ -558,7 +558,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_PlanningAlgo->SetAdjustableParameters(m_Controls.repititionsCalculatingAblationZonesSpinBox->value(),
                                           maxAblationRadius,
                                           ablationRadius,
-                                          maxAblationRadius,
+                                          minAblationRadius,
                                           toleranceNonAblatedVolume);
 
   //Set segmentation image for algorithm

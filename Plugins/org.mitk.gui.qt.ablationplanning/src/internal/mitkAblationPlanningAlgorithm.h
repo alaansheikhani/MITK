@@ -50,7 +50,7 @@ namespace mitk
     double m_MaxAblationRadius; // Maximal ablation radius
     double m_AblationRadius; // Desired ablation radius
     double m_MinAblationRadius; // Minimal ablation radius
-    double m_ToleranceNonAblatedTumorSafetyMarginVolume;
+    double m_ToleranceNonAblatedTumorSafetyMarginVolume; // Tolerance Non-Ablated Volume
 
     /* Segmentation data */
     mitk::Image::Pointer m_SegmentationImage;

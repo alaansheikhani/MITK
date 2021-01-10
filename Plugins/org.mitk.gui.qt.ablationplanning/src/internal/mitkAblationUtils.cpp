@@ -126,7 +126,7 @@ int AblationUtils::intRand(const int &min, const int &max)
 QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
                                                     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
                                                     double &ablationRadius,
-    double &minRadius,
+                                                    double &minRadius,
                                                     double &maxRadius,
                                                     itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
                                                     mitk::Point3D &tempAblationStartingPositionInWorldCoordinates,
@@ -169,15 +169,15 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
       startingPositions.push_back(startingPosition4);
       startingPositions.push_back(startingPosition5);
 
-      double radius1 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius1 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         startingPosition1, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
-      double radius2 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius2 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         startingPosition2, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
-      double radius3 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius3 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         startingPosition3, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
-      double radius4 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius4 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         startingPosition4, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
-      double radius5 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius5 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         startingPosition5, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
       std::vector<double> radiusVector;
       std::vector<double>::iterator result;
@@ -516,43 +516,33 @@ double AblationUtils::GetPercentageOfVolumeInsideTumor(double &radius,
   return (double)numberOfPixelsInsideTumor / (numberOfPixelsInsideTumor + numberOfPixelsOutsideTumor) * 100;
 }
 
-double AblationUtils::CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point,
-                                                                         mitk::Image::Pointer image,
-                                                                         mitk::Vector3D &imageSpacing,
-                                                                         mitk::Vector3D &imageDimension,
-                                                                         double startRadius,
-                                                                         double minRadius,
-                                                                         double maxRadius)
+double AblationUtils::CalculateRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point,
+                                                                      mitk::Image::Pointer image,
+                                                                      mitk::Vector3D &imageSpacing,
+                                                                      mitk::Vector3D &imageDimension,
+                                                                      double startRadius,
+                                                                      double minRadius,
+                                                                      double maxRadius)
 {
-  double radius = startRadius;
-  //while (CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(
+  return maxRadius;
+  // while (CheckIfVolumeOfGivenRadiusIsTotallyInsideTumorTissueAndSafetyMargin(
   //         radius, point, image, imageSpacing, imageDimension) &&
   //       radius <= maxRadius && radius >= minRadius)
   //{
   //  radius += 1;
   //}
-
-
   // Other variant: check percentage > 80 instead of whole zone inside
-  if (GetPercentageOfVolumeInsideTumor(radius, point, image, imageSpacing, imageDimension) > 90)
-  {
-    MITK_INFO << "letting zone grow";
-    radius++;
-    while (GetPercentageOfVolumeInsideTumor(radius, point, image, imageSpacing, imageDimension) && radius <= maxRadius)
-    {
-      radius++;
-    }
-    return radius;
-  }
-  MITK_INFO << "letting zone shrink";
-  while (GetPercentageOfVolumeInsideTumor(radius, point, image, imageSpacing, imageDimension) < 90 && radius <=
-  minRadius)
-  {
-    radius--;
-  }
 
-  // MITK_INFO << "Calculated max radius for given point " << point << " : " << radius;
-  return radius;
+  // while (GetPercentageOfVolumeInsideTumor(radius, point, image, imageSpacing, imageDimension) &&
+  //       radius + 1.0 <= maxRadius)
+  //{
+  //  radius += 1.0;
+  //}
+  // while (GetPercentageOfVolumeInsideTumor(radius, point, image, imageSpacing, imageDimension) < 90 &&
+  //       radius - 1.0 <= minRadius)
+  //{
+  //  radius -= 1.0;
+  //}
 }
 
 double AblationUtils::CheckImageForNonAblatedTissueInPercentage(mitk::Image::Pointer image,
@@ -884,7 +874,8 @@ void AblationUtils::RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer pla
                                                  mitk::Image::Pointer image,
                                                  mitk::Vector3D &imageDimension,
                                                  mitk::Vector3D &imageSpacing,
-                                                 std::vector<itk::Index<3>> &m_TumorTissueSafetyMarginIndices)
+                                                 std::vector<itk::Index<3>> &m_TumorTissueSafetyMarginIndices,
+                                                 double m_ToleranceNonAblatedTumorSafetyMarginVolume)
 {
   if (image.IsNotNull())
   {
@@ -961,7 +952,7 @@ void AblationUtils::RemoveNotNeededAblationZones(mitk::AblationPlan::Pointer pla
       double imageSpacingFactor = imageSpacing[0] * imageSpacing[1] * imageSpacing[2];
       overlappingVolume[zoneToDelete] = overlappingVolume[zoneToDelete] * imageSpacingFactor / 1000.0;
       double overlappingFactor = (overlappingVolume[zoneToDelete] / volumeTumor) * 100;
-      if (overlappingFactor + factorNonAblatedVolume < 3)
+      if (overlappingFactor + factorNonAblatedVolume < m_ToleranceNonAblatedTumorSafetyMarginVolume * 100)
       {
         RemoveAblationVolume(plan->GetAblationZone(zoneToDelete)->indexCenter,
                              image,
@@ -1245,15 +1236,17 @@ mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Inde
       positions.push_back(position4);
       positions.push_back(position5);
 
-      double radius1 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
-        position1, image, imageSpacing, imageDimension, radius,minRadius, maxRadius);
-      double radius2 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      AblationUtils::intRand(0, 3);
+
+      double radius1 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
+        position1, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+      double radius2 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         position2, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
-      double radius3 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius3 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         position3, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
-      double radius4 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius4 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         position4, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
-      double radius5 = CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(
+      double radius5 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
         position5, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
       std::vector<double> radiusVector;
       std::vector<double>::iterator result;
@@ -1831,4 +1824,115 @@ bool AblationUtils::CheckIfVolumeMostlyInsideTumorAndSafetymarginTissue(
     }
   }
   return false;
+}
+
+std::vector<std::vector<itk::Index<3>>> AblationUtils::FindAgglomerations(mitk::Image::Pointer image,
+                                                                          mitk::Vector3D &imageSpacing,
+                                                                          mitk::Vector3D &imageDimension)
+{
+  MITK_INFO << "Entered FindAgglomerations()";
+  itk::Index<3> actualIndex;
+  unsigned short PixelValue;
+  short listNr{0};
+  std::vector<std::vector<itk::Index<3>>> agglomerationList;
+  if (image.IsNotNull())
+  {
+    for (actualIndex[2] = 0; actualIndex[2] < imageDimension[2]; actualIndex[2] += 1)
+    {
+      for (actualIndex[1] = 0; actualIndex[1] < imageDimension[1]; actualIndex[1] += 1)
+      {
+        for (actualIndex[0] = 0; actualIndex[0] < imageDimension[0]; actualIndex[0] += 1)
+        {
+          {
+            mitk::ImagePixelReadAccessor<unsigned short, 3> imagePixelReader(image);
+            PixelValue = imagePixelReader.GetPixelByIndex(actualIndex);
+          }
+          if ((PixelValue == TUMOR_NOT_YET_ABLATED || PixelValue == SAFETY_MARGIN) &&
+              !CheckIfPixelIsElementOfAgglomerationList(agglomerationList, actualIndex))
+          {
+            std::vector<itk::Index<3>> agglomerationPixels;
+            agglomerationPixels.push_back(actualIndex);
+            for (int k = 0; k < agglomerationPixels.size(); k++)
+            {
+              AddBorderingNonAblatedPixelsToAgglomerationList(image, actualIndex, agglomerationList, listNr);
+            }
+          }
+        }
+        listNr++;
+      }
+    }
+  }
+  MITK_INFO << "Number of Agglomerations found:" << agglomerationList.size();
+  return agglomerationList;
+}
+
+bool AblationUtils::CheckIfPixelIsElementOfAgglomerationList(std::vector<std::vector<itk::Index<3>>> vector,
+                                                             itk::Index<3> pixel)
+{
+  for (int i = 0; i < vector.size(); i++)
+  {
+    for (int j = 0; j < vector[i].size(); j++)
+    {
+      if (vector[i][j] == pixel)
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void AblationUtils::AddBorderingNonAblatedPixelsToAgglomerationList(
+  mitk::Image::Pointer image,
+  itk::Index<3> startingIndex,
+  std::vector<std::vector<itk::Index<3>>> &agglomerationList,
+  int listNr)
+{
+  unsigned short PixelValue;
+  mitk::ImagePixelReadAccessor<unsigned short, 3> imagePixelReader(image);
+  PixelValue = imagePixelReader.GetPixelByIndex(startingIndex);
+  itk::Index<3> actualIndex;
+  for (actualIndex[2] -= 1; actualIndex[2] <= startingIndex[2] + 1; actualIndex[2]++)
+  {
+    for (actualIndex[1] -= 1; actualIndex[1] <= startingIndex[1] + 1; actualIndex[1]++)
+    {
+      for (actualIndex[0] -= 1; actualIndex[0] <= startingIndex[0] + 1; actualIndex[1]++)
+      {
+        if (actualIndex[2] != 0 && actualIndex[1] != 0 && actualIndex[0] != 0)
+        {
+          if (CheckIfPixelIsElementOfAgglomerationList(agglomerationList, actualIndex))
+          {
+            agglomerationList.at(listNr).push_back(startingIndex);
+          }
+        }
+      }
+    }
+  }
+  return;
+}
+
+void AblationUtils::SetSolutionValueStatistics(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans)
+{
+  for (int i = 0; i < AllFoundPlans.size(); i++)
+  {
+    if (AllFoundPlans.at(i).GetPointer()->GetNumberOfZones() >
+        AllFoundPlans.at(i).GetPointer()->GetMaxAblationZoneNumber())
+    { // set max number of Zones
+      for (int j = 0; j < AllFoundPlans.size(); j++)
+      {
+        AllFoundPlans.at(j).GetPointer()->SetMaxAblationZoneNumber(
+          AllFoundPlans.at(i).GetPointer()->GetNumberOfZones());
+      }
+    } // set min number of Zones
+    if (AllFoundPlans.at(i).GetPointer()->GetNumberOfZones() <
+        AllFoundPlans.at(i).GetPointer()->GetMinAblationZoneNumber())
+    {
+      for (int j = 0; j < AllFoundPlans.size(); j++)
+      {
+        AllFoundPlans.at(j).GetPointer()->SetMinAblationZoneNumber(
+          AllFoundPlans.at(i).GetPointer()->GetNumberOfZones());
+      }
+    }
+  }
+  return;
 }

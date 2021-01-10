@@ -106,13 +106,13 @@ public:
                                                                                   mitk::Vector3D &imageSpacing,
                                                                                   mitk::Vector3D &imageDimension);
 
-  static double CalculateMaxRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point,
-                                                                   mitk::Image::Pointer image,
-                                                                   mitk::Vector3D &imageSpacing,
-                                                                   mitk::Vector3D &imageDimension,
-                                                                   double startRadius,
-      double minRadius,
-                                                                   double maxRadius);
+  static double CalculateRadiusOfVolumeInsideTumorForGivenPoint(itk::Index<3> &point,
+                                                                mitk::Image::Pointer image,
+                                                                mitk::Vector3D &imageSpacing,
+                                                                mitk::Vector3D &imageDimension,
+                                                                double startRadius,
+                                                                double minRadius,
+                                                                double maxRadius);
 
   /** @returns Returns the percentage of non ablated tumor tissue (based on voxels) */
   static double CheckImageForNonAblatedTissueInPercentage(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
@@ -159,7 +159,8 @@ public:
                                            mitk::Image::Pointer image,
                                            mitk::Vector3D &imageDimension,
                                            mitk::Vector3D &imageSpacing,
-                                           std::vector<itk::Index<3>> &m_TumorTissueSafetyMarginIndices);
+                                           std::vector<itk::Index<3>> &m_TumorTissueSafetyMarginIndices,
+                                           double m_ToleranceNonAblatedTumorSafetyMarginVolume);
 
   static double FindMinimalAblationRadius(itk::Index<3> &center,
                                           mitk::Image::Pointer image,
@@ -243,6 +244,20 @@ public:
                                                                   double &radius,
                                                                   mitk::Vector3D &ImageDimension,
                                                                   mitk::Vector3D &ImageSpacing);
+
+  static std::vector<std::vector<itk::Index<3>>> FindAgglomerations(mitk::Image::Pointer image,
+                                                       mitk::Vector3D &imageSpacing,
+                                                       mitk::Vector3D &imageDimension);
+
+  static void AddBorderingNonAblatedPixelsToAgglomerationList(
+    mitk::Image::Pointer image,
+    itk::Index<3> startingIndex,
+    std::vector<std::vector<itk::Index<3>>> &agglomerationList,
+    int listNr);
+
+  static bool CheckIfPixelIsElementOfAgglomerationList(std::vector<std::vector<itk::Index<3>>> vector, itk::Index<3> pixel);
+
+  static void SetSolutionValueStatistics(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
 
   static int intRand(const int &min, const int &max);
 

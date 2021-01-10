@@ -207,10 +207,10 @@ void mitk::AblationPlanOptimizer::Optimize(mitk::AblationPlan::Pointer plan,
   AblationUtils::ResetSegmentationImage(plan->GetSegmentationImage(), plan->GetImageDimension());
 
   // Check if ablation zones are too far outside the tumor, if yes move them towards the center
-  MoveZonesTowardsCenter(plan, tempAblationZones);
+  //MoveZonesTowardsCenter(plan, tempAblationZones);
 
   // Check, if ablation zones have a too short distance between each other, if yes they can be removed
-  // CheckIfDistanceBeetweenZonesTooSmall(plan, tempAblationZones);
+  //CheckIfDistanceBeetweenZonesTooSmall(plan, tempAblationZones);
 
   // Detect and delet zones that are not needed any more after the others where moved
   for (int index = 0; index < plan->GetNumberOfZones(); ++index)

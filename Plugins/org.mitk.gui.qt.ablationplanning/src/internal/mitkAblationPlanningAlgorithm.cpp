@@ -61,6 +61,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
 {
   //==================== Find ablation proposal by iteratively create and test random propsals
   //==========================================
+  srand(time(NULL));
   AblationUtils::FillVectorContainingIndicesOfTumorTissueSafetyMargin(
     m_SegmentationImage, m_ImageDimension, m_TumorTissueSafetyMarginIndices);
 
@@ -173,7 +174,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     }
     //------------ End calculation models -------------------------------
 
-     //Another try to improve algorithm: Check if the radius of some ablation zones can be reduced
+    // Another try to improve algorithm: Check if the radius of some ablation zones can be reduced
     for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
     {
       mitk::AblationZone *zone = currentPlan->GetAblationZone(i);
@@ -185,7 +186,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
                                                                       m_ImageSpacing);
       // MITK_INFO << "Found minimal radius: " << currentRadius;
       (*zone).radius = currentRadius;
-    } 
+    }
 
     // MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
 
@@ -201,9 +202,14 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
                                                 currentPlan->GetSegmentationImage(),
                                                 currentPlan->GetImageDimension(),
                                                 currentPlan->GetImageSpacing(),
-                                                m_TumorTissueSafetyMarginIndices);
+                                                m_TumorTissueSafetyMarginIndices,
+                                                m_ToleranceNonAblatedTumorSafetyMarginVolume);
 
     MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
+
+    AblationUtils::FindAgglomerations(
+      currentPlan->GetSegmentationImage(), currentPlan->GetImageSpacing(), currentPlan->GetImageDimension());
+
     AblationUtils::ComputeStatistics(currentPlan, m_TumorTissueSafetyMarginIndices);
     AllFoundPlans[iteration - 1] = currentPlan;
 
@@ -211,27 +217,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
   } // End of for loop
 
   // replace with SetStatisticsForSolutionValue
-  for (int i = 0; i < AllFoundPlans.size(); i++)
-  {
-    if (AllFoundPlans.at(i).GetPointer()->GetNumberOfZones() >
-        AllFoundPlans.at(i).GetPointer()->GetMaxAblationZoneNumber())
-    { // set max number of Zones
-      for (int j = 0; j < AllFoundPlans.size(); j++)
-      {
-        AllFoundPlans.at(j).GetPointer()->SetMaxAblationZoneNumber(
-          AllFoundPlans.at(i).GetPointer()->GetNumberOfZones());
-      }
-    } // set min number of Zones
-    if (AllFoundPlans.at(i).GetPointer()->GetNumberOfZones() <
-        AllFoundPlans.at(i).GetPointer()->GetMinAblationZoneNumber())
-    {
-      for (int j = 0; j < AllFoundPlans.size(); j++)
-      {
-        AllFoundPlans.at(j).GetPointer()->SetMinAblationZoneNumber(
-          AllFoundPlans.at(i).GetPointer()->GetNumberOfZones());
-      }
-    }
-  }
+  AblationUtils::SetSolutionValueStatistics(AllFoundPlans);
 
   // TODO
   // Remove vectors that are not needed any more
