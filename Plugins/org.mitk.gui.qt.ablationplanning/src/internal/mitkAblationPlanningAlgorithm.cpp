@@ -135,8 +135,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
       currentPlan->AddAblationZone(tempAblationZones.at(0));
       // end add starting zone
 
-      while (indices.size() > 0 &&
-             (double)(indices.size() / size) > (m_ToleranceNonAblatedTumorSafetyMarginVolume / 100))
+      while ((double)(indices.size() / size) > (m_ToleranceNonAblatedTumorSafetyMarginVolume / 100))
       {
         mitk::AblationZone newAblationCenter =
           AblationUtils::SearchNextAblationCenter(indices,
@@ -175,18 +174,18 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     //------------ End calculation models -------------------------------
 
     // Another try to improve algorithm: Check if the radius of some ablation zones can be reduced
-    for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
-    {
-      mitk::AblationZone *zone = currentPlan->GetAblationZone(i);
-      double currentRadius = AblationUtils::FindMinimalAblationRadius(zone->indexCenter,
-                                                                      currentPlan->GetSegmentationImage(),
-                                                                      zone->radius,
-                                                                      m_MinAblationRadius,
-                                                                      m_ImageDimension,
-                                                                      m_ImageSpacing);
-      // MITK_INFO << "Found minimal radius: " << currentRadius;
-      (*zone).radius = currentRadius;
-    }
+    //for (int i = 0; i < currentPlan->GetNumberOfZones(); i++)
+    //{
+    //  mitk::AblationZone *zone = currentPlan->GetAblationZone(i);
+    //  double currentRadius = AblationUtils::FindMinimalAblationRadius(zone->indexCenter,
+    //                                                                  currentPlan->GetSegmentationImage(),
+    //                                                                  zone->radius,
+    //                                                                  m_MinAblationRadius,
+    //                                                                  m_ImageDimension,
+    //                                                                  m_ImageSpacing);
+    //  // MITK_INFO << "Found minimal radius: " << currentRadius;
+    //  (*zone).radius = currentRadius;
+    //}
 
     // MITK_INFO << "Number of ablation zones before reduction: " << currentPlan->GetNumberOfZones();
 
@@ -207,9 +206,6 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
 
     MITK_INFO << "Final number of ablation zones: " << currentPlan->GetNumberOfZones();
 
-    AblationUtils::FindAgglomerations(
-      currentPlan->GetSegmentationImage(), currentPlan->GetImageSpacing(), currentPlan->GetImageDimension());
-
     AblationUtils::ComputeStatistics(currentPlan, m_TumorTissueSafetyMarginIndices);
     AllFoundPlans[iteration - 1] = currentPlan;
 
@@ -228,11 +224,11 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
   mitk::AblationPlan::Pointer finalProposal = AllFoundPlans.at(0);
   // MITK_INFO << "Proposal 0: zones: " << AllFoundPlans.at(0)->GetNumberOfZones() <<"; overlap: " <<
   // AllFoundPlans.at(0)->GetStatistics().factorOverlappingAblationZones;
-  for (int i = 0; i < AllFoundPlans.size(); i++)
-  { // Evaluate all proposals
-    AllFoundPlans.at(i)->CalculcateSolutionValue();
-  }
-
+  //for (int i = 0; i < AllFoundPlans.size(); i++)
+  //{ // Evaluate all proposals
+  //  AllFoundPlans.at(i)->CalculcateSolutionValue();
+  //}
+  MITK_INFO << "Finished Calculating solution Values";
   for (int i = 1; i < AllFoundPlans.size(); i++)
   {
     // MITK_INFO << "Proposal " << i << ": zones: " << AllFoundPlans.at(i)->GetNumberOfZones() <<"; overlap: " <<

@@ -39,6 +39,7 @@ namespace mitk
       double factorOverlappingAblationZones;
       double factorAblatedVolumeOutsideSafetyMargin;
       double factorNonAblatedVolume;
+      std::vector<double> agglomerations;
     };  
     AblationPlanStatistics GetStatistics();
     void SetStatistics(AblationPlanStatistics s);

@@ -216,6 +216,12 @@ public:
                                                                                   mitk::Vector3D &imageDimension,
                                                                                   mitk::Vector3D &imageSpacing);
 
+  static void MoveCenterTowardsCenter(itk::Index<3> &center,
+                                      mitk::Image::Pointer image,
+                                      mitk::Vector3D &imageDimension,
+                                      mitk::Vector3D &imageSpacing,
+                                      double startRadius);
+
   static void MoveCenterOfAblationZone(itk::Index<3> &center,
                                        mitk::Image::Pointer image,
                                        double &radius,
@@ -245,9 +251,15 @@ public:
                                                                   mitk::Vector3D &ImageDimension,
                                                                   mitk::Vector3D &ImageSpacing);
 
+  static double GetPercentageOfTumorvolumeInsideZone(itk::Index<3> &centerOfVolume,
+                                                     mitk::Image::Pointer image,
+                                                     mitk::Vector3D &imageSpacing,
+                                                     mitk::Vector3D &imageDimension,
+                                                     double radius);
+
   static std::vector<std::vector<itk::Index<3>>> FindAgglomerations(mitk::Image::Pointer image,
-                                                       mitk::Vector3D &imageSpacing,
-                                                       mitk::Vector3D &imageDimension);
+                                                                    mitk::Vector3D &imageSpacing,
+                                                                    mitk::Vector3D &imageDimension);
 
   static void AddBorderingNonAblatedPixelsToAgglomerationList(
     mitk::Image::Pointer image,
@@ -255,7 +267,8 @@ public:
     std::vector<std::vector<itk::Index<3>>> &agglomerationList,
     int listNr);
 
-  static bool CheckIfPixelIsElementOfAgglomerationList(std::vector<std::vector<itk::Index<3>>> vector, itk::Index<3> pixel);
+  static bool CheckIfPixelIsElementOfAgglomerationList(std::vector<std::vector<itk::Index<3>>> vector,
+                                                       itk::Index<3> pixel);
 
   static void SetSolutionValueStatistics(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
 
