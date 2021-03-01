@@ -119,42 +119,47 @@ double mitk::AblationPlan::CalculateSolutionValueOfZoneDifference()
   std::sort(zoneRadius.begin(), zoneRadius.end(), std::greater<>());
   for (int i = 1; i < zoneRadius.size(); i++)
   {
-    if (zoneRadius.at(i - 1) < zoneRadius.at(i))
+    if (zoneRadius.at(i - 1) != zoneRadius.at(i))
     {
       counter++;
     }
   }
-  return double(counter / (zoneRadius.size() - 1));
+  return double(counter) / double(zoneRadius.size() - 1);
 }
 
 double mitk::AblationPlan::CalculateSolutionValueOfOverlappingZones()
 {
-  if (this->GetStatistics().ablationVolumeAblatedMoreThanOneTime > this->GetStatistics().totalAblationVolume)
-  {
-    return 0;
-  }
-  return double((this->GetStatistics().totalAblationVolume -
-         this->GetStatistics().ablationVolumeAblatedMoreThanOneTime) /
-         this->GetStatistics().totalAblationVolume);
+  return (this->GetMaxOverlappingZonesFactor() - this->GetStatistics().factorOverlappingAblationZones) /
+         (this->GetMaxOverlappingZonesFactor() - this->GetMinOverlappingZonesFactor());
 }
 
-double mitk::AblationPlan::CalculateSolutionValueOfSafetyzoneAblation()
+double mitk::AblationPlan::CalculateSolutionValueOfVolumeOutsideFactor()
 {
-  return 0;
+  return (this->GetMaxVolumeOutsideFactor() - this->GetStatistics().factorAblatedVolumeOutsideSafetyMargin) /
+         (this->GetMaxOverlappingZonesFactor() - this->GetMinOverlappingZonesFactor());
+}
+
+double mitk::AblationPlan::CalculateSolutionValueOfNonAblated()
+{
+  return ((m_Stats.factorMaxNonAblatedVolume * 100) - this->GetStatistics().factorNonAblatedVolume) /
+         (m_Stats.factorMaxNonAblatedVolume * 100);
 }
 
 void mitk::AblationPlan::CalculcateSolutionValue()
 {
-  double valueNumberOfZones{0};
-  valueNumberOfZones =
-    (this->CalculateSolutionValueOfZoneNumbers() * 100 + this->CalculateSolutionValueOfOverlappingZones() * 0) / 100;
-  this->SetSolutionValue(this->CalculateSolutionValueOfZoneNumbers());
-  if (this->GetStatistics().factorNonAblatedVolume >
-      3) // --------> hier ist noch ein absoluter Wert eingetragen -> noch korrigieren
+  double valueNumberOfZones = this->CalculateSolutionValueOfZoneNumbers();
+  double valueNonAblated = this->CalculateSolutionValueOfNonAblated();
+  double valueRadius = this->CalculateSolutionValueOfZoneDifference();
+  double valueOverlap = this->CalculateSolutionValueOfOverlappingZones();
+  double valueHealthy = this->CalculateSolutionValueOfVolumeOutsideFactor();
+
+  double solutionValue = (valueNumberOfZones * 50 + valueHealthy * 50) / 100;
+  if (this->GetStatistics().factorNonAblatedVolume > this->m_Stats.factorMaxNonAblatedVolume * 100)
   {
-    valueNumberOfZones -= double(1000);
+    solutionValue -= 1000.0;
   }
-  SetSolutionValue(valueNumberOfZones);
+
+  SetSolutionValue(solutionValue);
 }
 
 void mitk::AblationPlan::SetMaxAblationZoneNumber(int n)
@@ -177,6 +182,25 @@ int mitk::AblationPlan::GetMinAblationZoneNumber()
   return this->m_MinAblationZoneNumber;
 }
 
+void mitk::AblationPlan::SetMaxOverlappingZonesFactor(double overlapFactor)
+{
+  this->m_MaxOverlappingZonesFactor = overlapFactor;
+}
+void mitk::AblationPlan::SetMinOverlappingZonesFactor(double overlapFactor)
+{
+  this->m_MinOverlappingZonesFactor = overlapFactor;
+}
+
+double mitk::AblationPlan::GetMaxOverlappingZonesFactor()
+{
+  return this->m_MaxOverlappingZonesFactor;
+}
+
+double mitk::AblationPlan::GetMinOverlappingZonesFactor()
+{
+  return this->m_MinOverlappingZonesFactor;
+}
+
 void mitk::AblationPlan::SetSegmentationImage(mitk::Image::Pointer s)
 {
   this->m_SegmentationImage = s;
@@ -185,4 +209,21 @@ void mitk::AblationPlan::SetSegmentationImage(mitk::Image::Pointer s)
 mitk::Image::Pointer mitk::AblationPlan::GetSegmentationImage()
 {
   return m_SegmentationImage;
+}
+
+void mitk::AblationPlan::SetMaxVolumeOutsideFactor(double factorOutside)
+{
+  this->m_MaxVolumeOutsideFactor = factorOutside;
+}
+void mitk::AblationPlan::SetMinVolumeOutsideFactor(double factorOutside)
+{
+  this->m_MinVolumeOutsideFactor = factorOutside;
+}
+double mitk::AblationPlan::GetMaxVolumeOutsideFactor()
+{
+  return this->m_MaxVolumeOutsideFactor;
+}
+double mitk::AblationPlan::GetMinVolumeOutsideFactor()
+{
+  return this->m_MinVolumeOutsideFactor;
 }

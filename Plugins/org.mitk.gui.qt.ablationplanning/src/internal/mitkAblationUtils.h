@@ -42,7 +42,8 @@ public:
     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices);
 
   static void ComputeStatistics(mitk::AblationPlan::Pointer plan,
-                                std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices);
+                                std::vector<itk::Index<3>> tumorTissueSafetyMarginIndices,
+                                double factorMaxNonAblatedTumor);
 
   static std::vector<itk::Index<3>> FillVectorContainingIndicesOfTumorTissueOnly(mitk::Image::Pointer image,
                                                                                  mitk::Vector3D &imageDimension);
@@ -61,9 +62,9 @@ public:
    */
   static QString FindAblationStartingPosition(mitk::Image::Pointer image,
                                               std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
-                                              double &ablationRadius,
-                                              double &minRadius,
-                                              double &maxRadius,
+                                              double ablationRadius,
+                                              double minRadius,
+                                              double maxRadius,
                                               itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
                                               mitk::Point3D &tempAblationStartingPositionInWorldCoordinates,
                                               double &tempAblationStartingRadius,
@@ -74,14 +75,14 @@ public:
 
   static void CalculateAblationVolume(itk::Index<3> &center,
                                       mitk::Image::Pointer image,
-                                      double &radius,
+                                      double radius,
                                       mitk::Vector3D &imageSpacing,
                                       mitk::Vector3D &imageDimension,
                                       std::vector<mitk::AblationZone> &tempAblationZones);
 
   static void CalculateAblationVolume(itk::Index<3> &center,
                                       mitk::Image::Pointer image,
-                                      double &radius,
+                                      double radius,
                                       mitk::Vector3D &imageSpacing,
                                       mitk::Vector3D &imageDimension);
 
@@ -117,7 +118,7 @@ public:
   /** @returns Returns the percentage of non ablated tumor tissue (based on voxels) */
   static double CheckImageForNonAblatedTissueInPercentage(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
-  static bool AblationUtils::CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
+  static bool CheckImageForNonAblatedTissue(mitk::Image::Pointer image, mitk::Vector3D &imageDimension);
 
   static bool CheckForNonAblatedTumorTissueWithoutSafetyMargin(std::vector<itk::Index<3>> &indices,
                                                                mitk::Image::Pointer image,
@@ -189,6 +190,7 @@ public:
                                                  mitk::Vector3D &imageSpacing);
 
   static mitk::AblationZone SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
+                                                     std::vector<itk::Index<3>> &unchangedTumorSafetyMarginPixels,
                                                      mitk::Image::Pointer image,
                                                      double &radius,
                                                      double &minRadius,
@@ -257,20 +259,38 @@ public:
                                                      mitk::Vector3D &imageDimension,
                                                      double radius);
 
+  static double GetPercentageOfNonAblatedTumorvolumeInsideZone(itk::Index<3> &centerOfVolume,
+                                                               mitk::Image::Pointer image,
+                                                               mitk::Vector3D &imageSpacing,
+                                                               mitk::Vector3D &imageDimension,
+                                                               double radius);
+
+  static int GetNumberOfAblatedPoints(itk::Index<3> &centerOfVolume,
+                                      mitk::Image::Pointer image,
+                                      mitk::Vector3D &imageSpacing,
+                                      mitk::Vector3D &imageDimension,
+                                      double radius);
+
   static std::vector<std::vector<itk::Index<3>>> FindAgglomerations(mitk::Image::Pointer image,
                                                                     mitk::Vector3D &imageSpacing,
                                                                     mitk::Vector3D &imageDimension);
 
-  static void AddBorderingNonAblatedPixelsToAgglomerationList(
-    mitk::Image::Pointer image,
-    itk::Index<3> startingIndex,
-    std::vector<std::vector<itk::Index<3>>> &agglomerationList,
-    int listNr);
+  static std::vector<itk::Index<3>> FindFullAgglomeration(mitk::Image::Pointer image, itk::Index<3> &startingIndex);
 
-  static bool CheckIfPixelIsElementOfAgglomerationList(std::vector<std::vector<itk::Index<3>>> vector,
+  static bool CheckIfPixelIsElementOfAgglomeration(std::vector<itk::Index<3>> &agglomeration, itk::Index<3> index);
+
+  static bool CheckIfPixelIsElementOfAgglomerationList(std::vector<std::vector<itk::Index<3>>> &agglomerationList,
                                                        itk::Index<3> pixel);
 
   static void SetSolutionValueStatistics(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
+
+  static void SetMinMaxAblationZoneNumber(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
+
+  static void SetMinMaxOverlapVolume(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
+
+  static void SetMinMaxVolumeOutsideFactor(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
+
+  // static void SetMinMaxAgglomerations(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
 
   static int intRand(const int &min, const int &max);
 

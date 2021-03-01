@@ -39,7 +39,8 @@ namespace mitk
       double factorOverlappingAblationZones;
       double factorAblatedVolumeOutsideSafetyMargin;
       double factorNonAblatedVolume;
-      std::vector<double> agglomerations;
+      double factorMaxNonAblatedVolume;
+      std::vector<std::vector<itk::Index<3>>> agglomerations;
     };  
     AblationPlanStatistics GetStatistics();
     void SetStatistics(AblationPlanStatistics s);
@@ -64,13 +65,22 @@ namespace mitk
     //@returns Returns between 1 (lowest number of Ablation Zones) and 0 (higest number of Ablation Zones)
     double CalculateSolutionValueOfOverlappingZones();
     double CalculateSolutionValueOfZoneDifference();
-    double CalculateSolutionValueOfSafetyzoneAblation();
+    double CalculateSolutionValueOfVolumeOutsideFactor();
+    double CalculateSolutionValueOfNonAblated();
     void SetSolutionValue(double add);
     double GetSolutionValue();
     void SetMaxAblationZoneNumber(int n);
     void SetMinAblationZoneNumber(int n);
     int GetMinAblationZoneNumber();
     int GetMaxAblationZoneNumber();
+    void SetMaxOverlappingZonesFactor(double overlapFactor);
+    void SetMinOverlappingZonesFactor(double overlapFactor);
+    double GetMaxOverlappingZonesFactor();
+    double GetMinOverlappingZonesFactor();
+    void SetMaxVolumeOutsideFactor(double factorOutside);
+    void SetMinVolumeOutsideFactor(double factorOutside);
+    double GetMaxVolumeOutsideFactor();
+    double GetMinVolumeOutsideFactor();
 
   protected:
     AblationPlan();
@@ -87,6 +97,10 @@ namespace mitk
     double m_SolutionValue;
     int m_MaxAblationZoneNumber;
     int m_MinAblationZoneNumber;
+    double m_MaxOverlappingZonesFactor;
+    double m_MinOverlappingZonesFactor;
+    double m_MaxVolumeOutsideFactor;
+    double m_MinVolumeOutsideFactor;
   };
 } // namespace mitk
 #endif /* MITKABLATIONPLAN_H_HEADER_INCLUDED_ */

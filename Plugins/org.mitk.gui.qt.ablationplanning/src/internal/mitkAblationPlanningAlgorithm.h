@@ -21,6 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImage.h>
 #include "mitkAblationUtils.h"
 #include "mitkAblationPlan.h"
+#include <omp.h>
 
 namespace mitk
 {
