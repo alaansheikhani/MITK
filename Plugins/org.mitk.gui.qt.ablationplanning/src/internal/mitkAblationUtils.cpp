@@ -116,13 +116,16 @@ std::vector<itk::Index<3>> AblationUtils::FillVectorContainingIndicesOfTumorTiss
 
 int AblationUtils::intRand(const int &min, const int &max)
 {
+  int i;
+  std::vector<int> v;
+
   static thread_local std::mt19937 *generator = nullptr;
   if (!generator)
     generator = new std::mt19937(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
   std::uniform_int_distribution<int> distribution(min, max);
   return distribution(*generator);
 }
-// HIER STECKT DER HUND DRIN
+
 QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
                                                     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
                                                     double ablationRadius,

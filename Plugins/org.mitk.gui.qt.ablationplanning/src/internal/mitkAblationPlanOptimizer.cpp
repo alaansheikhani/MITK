@@ -28,62 +28,6 @@ mitk::AblationPlanOptimizer::AblationPlanOptimizer() {}
 
 mitk::AblationPlanOptimizer::~AblationPlanOptimizer() {}
 
-//void mitk::AblationPlanOptimizer::ShrinkAndMoveZones(mitk::AblationPlan::Pointer plan)
-//{
-//  plan->GetSegmentationImage();
-//  for (int zoneNumber = 0; zoneNumber < plan->GetNumberOfZones(); zoneNumber++)
-//  {
-//    /*1. Jede einzelne Zone wird angefahren
-//     * 2. Die Zone wird in die 3 Achsenrichtungen richtung tumorcenter bewegt, die wo die Zone am weitesten bewegt werden kann bleibt
-//     * 3. Auf dieser Achse wird die Zone für jeden Schritt geschrumpft, bis sie den kleinsten Radius erreicht hat
-//     */
-//    itk::Index<3> oldCenter = plan->GetAblationZone(zoneNumber)->indexCenter;
-//    itk::Index<3> newCenter = oldCenter;
-//    
-//    for (int i = 0; i < 2; i++)
-//    {
-//      newCenter[0]++;
-//      while (mitk::AblationPlanOptimizer::CheckNewCenterForNonAblatedVolume(plan, zoneNumber, newCenter))
-//      {
-//        mitk::AblationPlanOptimizer::SetNewAblationVolume(plan, zoneNumber, newCenter);
-//        newCenter[0]++;
-//      }
-//      newCenter[1]++;
-//      while (mitk::AblationPlanOptimizer::CheckNewCenterForNonAblatedVolume(plan, zoneNumber, newCenter))
-//      {
-//        mitk::AblationPlanOptimizer::SetNewAblationVolume(plan, zoneNumber, newCenter);
-//        newCenter[1]++;
-//      }
-//      newCenter[2]++;
-//      while (mitk::AblationPlanOptimizer::CheckNewCenterForNonAblatedVolume(plan, zoneNumber, newCenter))
-//      {
-//        mitk::AblationPlanOptimizer::SetNewAblationVolume(plan, zoneNumber, newCenter);
-//        newCenter[2]++;
-//      }
-//    }
-//    for (int i = 0; i < 2; i++)
-//    {
-//      newCenter[0]--;
-//      while (mitk::AblationPlanOptimizer::CheckNewCenterForNonAblatedVolume(plan, zoneNumber, newCenter))
-//      {
-//        mitk::AblationPlanOptimizer::SetNewAblationVolume(plan, zoneNumber, newCenter);
-//        newCenter[0]--;
-//      }
-//      newCenter[1]--;
-//      while (mitk::AblationPlanOptimizer::CheckNewCenterForNonAblatedVolume(plan, zoneNumber, newCenter))
-//      {
-//        mitk::AblationPlanOptimizer::SetNewAblationVolume(plan, zoneNumber, newCenter);
-//        newCenter[1]--;
-//      }
-//      newCenter[2]--;
-//      while (mitk::AblationPlanOptimizer::CheckNewCenterForNonAblatedVolume(plan, zoneNumber, newCenter))
-//      {
-//        mitk::AblationPlanOptimizer::SetNewAblationVolume(plan, zoneNumber, newCenter);
-//        newCenter[2]--;
-//      }
-//    }
-//  }
-//}
 
 //void mitk::AblationPlanOptimizer::SetNewAblationVolume(mitk::AblationPlan::Pointer plan,
 //                                                       int zoneNumber,
