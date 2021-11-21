@@ -6,6 +6,7 @@ $(license)
 #include <berryISelectionListener.h>
 
 #include <QmitkAbstractView.h>
+#include <mitkIRenderWindowPartListener.h>
 
 #include "ui_$(view-file-name)Controls.h"
 
@@ -17,7 +18,7 @@ $(license)
   \sa QmitkAbstractView
   \ingroup ${plugin_target}_internal
 */
-class $(view-class-name) : public QmitkAbstractView
+class $(view-class-name) : public QmitkAbstractView : public mitk::IRenderWindowPartListener
 {
   // this is needed for all Qt objects that should have a Qt meta-object
   // (everything that derives from QObject and wants to have signal/slots)
