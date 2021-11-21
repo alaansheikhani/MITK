@@ -18,6 +18,7 @@ found in the LICENSE file.
 #include "mitkIGTTimeStamp.h"
 #include "mitkIGTException.h"
 #include "mitkIGTHardwareException.h"
+#include "mitkRealTimeClock.h"
 
 mitk::TrackingDeviceSource::TrackingDeviceSource()
   : mitk::NavigationDataSource(), m_TrackingDevice(nullptr)
@@ -68,6 +69,7 @@ void mitk::TrackingDeviceSource::GenerateData()
     assert(nd);
     mitk::TrackingTool* t = m_TrackingDevice->GetTool(i);
     assert(t);
+    mitk::RealTimeClock::Pointer rtc = mitk::RealTimeClock::New();
 
     if ((t->IsEnabled() == false) || (t->IsDataValid() == false))
     {
@@ -84,7 +86,7 @@ void mitk::TrackingDeviceSource::GenerateData()
     nd->SetOrientation(o);
     nd->SetOrientationAccuracy(t->GetTrackingError());
     nd->SetPositionAccuracy(t->GetTrackingError());
-    nd->SetIGTTimeStamp(t->GetIGTTimeStamp());
+    nd->SetIGTTimeStamp(rtc->GetCurrentStamp());
 
     //for backward compatibility: check if the timestamp was set, if not create a default timestamp
     if (nd->GetIGTTimeStamp()==0) nd->SetIGTTimeStamp(mitk::IGTTimeStamp::GetInstance()->GetElapsed());
