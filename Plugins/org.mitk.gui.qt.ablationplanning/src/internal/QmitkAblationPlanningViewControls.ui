@@ -436,6 +436,36 @@
      </property>
     </spacer>
    </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Result logging</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Filename:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="m_LoggingFileName"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="m_ChooseFile">
+          <property name="text">
+           <string>Choose File</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

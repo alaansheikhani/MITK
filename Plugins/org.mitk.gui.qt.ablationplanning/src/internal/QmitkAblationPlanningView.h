@@ -92,6 +92,9 @@ protected slots:
   void OnCalculateSafetyMargin();
   void OnAblationStartingPointPushButtonClicked();
   void OnCalculateAblationZonesPushButtonClicked();
+  /** @brief This slot is called if the user want's to choose a file name for logging. A new windows to navigate through the file system and choose
+               a file opens.*/
+  void OnChooseFileClicked();
 
 private:
   Ui::QmitkAblationPlanningViewControls m_Controls;

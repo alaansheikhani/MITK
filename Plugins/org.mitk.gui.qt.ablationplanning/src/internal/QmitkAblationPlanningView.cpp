@@ -23,6 +23,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qt
 #include <QMessageBox>
+#include <qfiledialog.h>
 
 // mitk
 #include "mitkProperties.h"
@@ -560,6 +561,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
                                           ablationRadius,
                                           minAblationRadius,
                                           toleranceNonAblatedVolume);
+  m_PlanningAlgo->SetFileName(m_Controls.m_LoggingFileName->text().toStdString());
 
   //Set segmentation image for algorithm
   m_PlanningAlgo->SetSegmentationData(m_SegmentationImage,m_ImageDimension,m_ImageSpacing);
@@ -613,7 +615,9 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
   connect(
     m_Controls.tissueShrinkingSpinBox, SIGNAL(valueChanged(int)), this, SLOT(OnTissueShrinkingFactorChanged(int)));
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()), this, SLOT(OnCalculateSafetyMargin()));
+  connect(m_Controls.m_ChooseFile, SIGNAL(clicked()), this, SLOT(OnChooseFileClicked()));
 
+  m_Controls.m_LoggingFileName->setText(QDir::toNativeSeparators(((QDir)QDir::homePath()).absolutePath()) + QDir::separator() + "output.csv");
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages =
     GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())
@@ -638,4 +642,20 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
     m_BinaryPropertyObserverTags.insert(std::pair<mitk::DataNode *, unsigned long>(
       node, node->GetProperty("binary")->AddObserver(itk::ModifiedEvent(), command2)));
   }
+}
+
+void QmitkAblationPlanningView::OnChooseFileClicked()
+{
+  QDir currentPath = QFileInfo(m_Controls.m_LoggingFileName->text()).dir();
+
+  // if no path was selected (QDir would select current working dir then) or the
+  // selected path does not exist -> use home directory
+  if (currentPath == QDir() || !currentPath.exists())
+  {
+    currentPath = QDir(QDir::homePath());
+  }
+
+  QString filename = QFileDialog::getSaveFileName(nullptr, tr("Choose Logging File"), currentPath.absolutePath(), "*.csv");
+  if (filename == "") return;
+  m_Controls.m_LoggingFileName->setText(filename);
 }

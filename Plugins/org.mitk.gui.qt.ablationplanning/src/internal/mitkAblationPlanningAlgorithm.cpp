@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkAblationPlanOptimizer.h"
 
-mitk::AblationPlanningAlgorithm::AblationPlanningAlgorithm() {}
+mitk::AblationPlanningAlgorithm::AblationPlanningAlgorithm() : m_FileName("C:/test.csv") {}
 
 mitk::AblationPlanningAlgorithm::~AblationPlanningAlgorithm() {}
 
@@ -245,7 +245,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     }
     // In das .csv schreiben
     std::ofstream file;
-    file.open("C:/prog/MITK-01-bin/MITK-build/bin/daten.csv");
+    file.open(m_FileName.c_str());
     file << "Tumor Nr,Tumor Volume,Tumor + Safetymargin Volume,Plan Nr,NumberOfZones,Factor Non-Ablated Volume,Factor "
             "Overlapping Zones,Factor Ablated Volume Outside Of Tumor + Safetymargin Volume,Total Ablation "
             "Volume,SolutionValue,Radius "
