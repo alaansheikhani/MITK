@@ -116,7 +116,6 @@ std::vector<itk::Index<3>> AblationUtils::FillVectorContainingIndicesOfTumorTiss
 
 int AblationUtils::intRand(const int &min, const int &max)
 {
-  int i;
   std::vector<int> v;
 
   static thread_local std::mt19937 *generator = nullptr;
