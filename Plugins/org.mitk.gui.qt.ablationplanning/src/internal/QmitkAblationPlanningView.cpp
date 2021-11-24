@@ -40,6 +40,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkAppendPolyData.h>
 #include <vtkSphereSource.h>
 
+#include <ctime>
+
 const std::string QmitkAblationPlanningView::VIEW_ID = "org.mitk.views.ablationplanning";
 const static short ABLATION_VALUE = 2;
 const static short TUMOR_NOT_YET_ABLATED = 1;
@@ -583,10 +585,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   //Get final proposal and visualize it!
   mitk::AblationPlan::Pointer finalProposal = m_PlanningAlgo->GetAblationPlan();
 
-  std::string caseName = "Test";
+  std::stringstream caseName;
+  caseName << this->m_Controls.segmentationComboBox->GetSelectedNode()->GetName();
+  std::time_t t = std::time(0);
+  std::tm* now = std::localtime(&t);
+  caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon+1 << "d" << now->tm_mday << "h" << now->tm_hour << "m" << now->tm_min << "s" << now->tm_sec;
   m_PlanLogger->WriteHeader();
-  m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),caseName);
-  m_PlanLogger->WriteScene(this->GetDataStorage(),caseName);
+  m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),caseName.str());
+  m_PlanLogger->WriteScene(this->GetDataStorage(),caseName.str());
 
   MITK_INFO << "Finished calculating ablation zones!";
 
