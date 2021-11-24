@@ -583,8 +583,10 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   //Get final proposal and visualize it!
   mitk::AblationPlan::Pointer finalProposal = m_PlanningAlgo->GetAblationPlan();
 
+  std::string caseName = "Test";
   m_PlanLogger->WriteHeader();
-  m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),"Test");
+  m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),caseName);
+  m_PlanLogger->WriteScene(this->GetDataStorage(),caseName);
 
   MITK_INFO << "Finished calculating ablation zones!";
 
