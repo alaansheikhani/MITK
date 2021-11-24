@@ -9,6 +9,7 @@ set(INTERNAL_CPP_FILES
   mitkAblationPlan.cpp
   mitkAblationPlanOptimizer.cpp
   mitkAblationPlanningAlgorithm.cpp
+  mitkAblationPlanningLogging.cpp
 )
 
 set(H_FILES
