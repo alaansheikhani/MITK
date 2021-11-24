@@ -35,7 +35,6 @@ namespace mitk
     itkFactorylessNewMacro(Self);
     void ComputePlanning();
     itkGetMacro(AblationPlan,mitk::AblationPlan::Pointer);
-    itkSetMacro(FileName,std::string);
     void SetAdjustableParameters(int iterations, double maxAblationRadius, double ablationRadius, double minAblationRadius, double toleranceNonAblatedTumorSafetyMarginVolume);
     void SetSegmentationData(mitk::Image::Pointer segmentationImage, mitk::Vector3D imageDimension, mitk::Vector3D imageSpacing);
     void SetStartingPoint(mitk::Point3D startingPositionInWorldCoordinates, itk::Index<3> startingPositionIndexCoordinates);
@@ -75,10 +74,6 @@ namespace mitk
 
     /* Output / result */
     mitk::AblationPlan::Pointer m_AblationPlan;
-
-    /* For Logging */
-    std::string m_FileName;
-
 
     /*!
      * \brief Temporary vector storing the index coordinates of all circle centers of the ablation zones

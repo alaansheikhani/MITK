@@ -29,6 +29,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkAblationPlanningAlgorithm.h"
 #include "mitkAblationUtils.h"
 #include "mitkAblationZone.h"
+#include "mitkAblationPlanningLogging.h"
 
 #include "ui_QmitkAblationPlanningViewControls.h"
 
@@ -162,6 +163,9 @@ private:
 
   /** Holds a point set with the centers of all ablation zones */
   mitk::DataNode::Pointer m_AblationCentersNode;
+
+  /** For logging the results */
+  mitk::AblationPlanningLogging::Pointer m_PlanLogger;
 
   bool m_AblationCalculationMade;
 };

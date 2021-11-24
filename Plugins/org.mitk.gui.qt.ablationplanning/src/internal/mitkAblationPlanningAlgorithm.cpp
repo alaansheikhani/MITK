@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkAblationPlanOptimizer.h"
 
-mitk::AblationPlanningAlgorithm::AblationPlanningAlgorithm() : m_FileName("C:/test.csv") {}
+mitk::AblationPlanningAlgorithm::AblationPlanningAlgorithm() {}
 
 mitk::AblationPlanningAlgorithm::~AblationPlanningAlgorithm() {}
 
@@ -269,30 +269,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     } */
 
   }
-  // In das .csv schreiben
-  std::ofstream file;
-  file.open(m_FileName.c_str(), std::ios_base::app); //append to file
-  file << "Tumor Name,Tumor Volume,Tumor + Safetymargin Volume,Plan Nr,NumberOfZones,Factor Non-Ablated Volume,Factor "
-            "Overlapping Zones,Factor Ablated Volume Outside Of Tumor + Safetymargin Volume,Total Ablation "
-            "Volume,SolutionValue,Radius "
-      "Of Zones\n";
 
-  //just log final proposal:
-  file   << "Name" << ","
-         << "Volume" << ","
-         << "VolumeWSM" << ","
-         << "Final" << ","
-         << finalProposal->GetNumberOfZones() << ","
-         << finalProposal->GetStatistics().factorNonAblatedVolume / 100 << ","
-         << finalProposal->GetStatistics().factorOverlappingAblationZones / 100 << ","
-         << finalProposal->GetStatistics().factorAblatedVolumeOutsideSafetyMargin / 100 << ","
-         << finalProposal->GetStatistics().totalAblationVolume << "," << finalProposal->GetSolutionValue()
-         << ",";
-  for (int j = 0; j < finalProposal->GetNumberOfZones(); j++){
-        file << finalProposal->GetAblationZone(j)->radius << " ";
-  }
-  file << "\n";
-  file.close();
 
   //==================== Optimization of final proposal ==================================================
   /*

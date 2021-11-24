@@ -57,7 +57,8 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
     m_AblationRadius(10.0),
     m_AblationCalculationMade(false),
     m_AblationCentersNode(mitk::DataNode::New()),
-    m_PlanningAlgo(mitk::AblationPlanningAlgorithm::New())
+    m_PlanningAlgo(mitk::AblationPlanningAlgorithm::New()),
+    m_PlanLogger(mitk::AblationPlanningLogging::New())
 {
   this->UnsetSegmentationImageGeometry();
 
@@ -561,7 +562,7 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
                                           ablationRadius,
                                           minAblationRadius,
                                           toleranceNonAblatedVolume);
-  m_PlanningAlgo->SetFileName(m_Controls.m_LoggingFileName->text().toStdString());
+  m_PlanLogger->SetFileName(m_Controls.m_LoggingFileName->text().toStdString());
 
   //Set segmentation image for algorithm
   m_PlanningAlgo->SetSegmentationData(m_SegmentationImage,m_ImageDimension,m_ImageSpacing);
@@ -574,6 +575,9 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
   //Get final proposal and visualize it!
   mitk::AblationPlan::Pointer finalProposal = m_PlanningAlgo->GetAblationPlan();
+
+  m_PlanLogger->WriteHeader();
+  m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),"Test");
 
   MITK_INFO << "Finished calculating ablation zones!";
 
