@@ -31,13 +31,23 @@ namespace mitk
   class AblationPlanningLogging : public itk::Object
   {
   public:
+    struct AblationPlanningParameterSet{
+      double minRadius;
+      double desiredRadius;
+      double maxRadius;
+      double tissueShrinking;
+      double toleranceNonAblatedVolume;
+      double safetyMargin;
+      int iterations;
+    };
+
     mitkClassMacroItkParent(AblationPlanningLogging, itk::DataObject);
     itkFactorylessNewMacro(Self);
     itkSetMacro(FileName,std::string);
     void WriteHeader();
     /** Writes one line with information about that dataset to the logging file. Don't forget
         to write an heade before if the file is empty before.*/
-    void WriteDataSet(mitk::AblationPlan::Pointer plan, mitk::DataNode::Pointer tumorNode, std::string name);
+    void WriteDataSet(mitk::AblationPlan::Pointer plan, mitk::DataNode::Pointer tumorNode, mitk::AblationPlanningLogging::AblationPlanningParameterSet parameterSet, std::string name);
     /** Writs a whole planning scene to a subfolder with the name of this
         data set. */
     void WriteScene(mitk::DataStorage::Pointer storage, std::string name);

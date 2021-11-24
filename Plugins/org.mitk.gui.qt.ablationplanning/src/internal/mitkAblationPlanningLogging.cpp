@@ -31,18 +31,27 @@ mitk::AblationPlanningLogging::~AblationPlanningLogging(){
 void mitk::AblationPlanningLogging::WriteHeader(){
   std::ofstream file;
   file.open(m_FileName.c_str(), std::ios_base::app); //append to file
-  file   << "Case Name; Tumor Volume [ml]; Tumor + Safetymargin Volume [ml]; Number of Zones; "
-         << "Factor Non-Ablated Volume; Factor Overlapping Zones; Factor Ablated Volume Outside Of Tumor + Safetymargin Volume; "
-         << "Total Ablation Volume; Solution Value from Metric; Radii of all Zones\n";
+  file   << "Case Name; Tumor Volume [ml]; Safety Margin [mm]; Tumor + Safetymargin Volume [ml]; " //1,2,3,4
+         << "Param: Minimal Radius [mm]; Param: Desired Radius [mm]; Param: Maximal Radius [mm]; " //5,6,7
+         << "Param: Shrinking [percentage]; Param: Tolerance Non-Ablated Volume [percentage]; Iterations; " //8,9,10
+         << "Number of Zones; Factor Non-Ablated Volume; Factor Overlapping Zones; Factor Ablated Volume Outside Of Tumor + Safetymargin Volume; " //11,12,13,14
+         << "Total Ablation Volume; Solution Value from Metric; Radii of all Zones\n"; //15,16,17
   file.close();
 }
 
-void mitk::AblationPlanningLogging::WriteDataSet(mitk::AblationPlan::Pointer plan, mitk::DataNode::Pointer tumorNode, std::string name){
+void mitk::AblationPlanningLogging::WriteDataSet(mitk::AblationPlan::Pointer plan, mitk::DataNode::Pointer tumorNode, mitk::AblationPlanningLogging::AblationPlanningParameterSet parameterSet, std::string name){
   std::ofstream file;
   file.open(m_FileName.c_str(), std::ios_base::app); //append to file
-  file   << name << ";"
-         << plan->GetStatistics().tumorVolume << ";"
-         << plan->GetStatistics().tumorAndSafetyMarginVolume << ";"
+  file   << name << ";" //1
+         << plan->GetStatistics().tumorVolume << ";" //2
+         << parameterSet.safetyMargin << ";" //3
+         << plan->GetStatistics().tumorAndSafetyMarginVolume << ";" //4
+         << parameterSet.minRadius << ";" //5
+         << parameterSet.desiredRadius << ";" //6
+         << parameterSet.maxRadius << ";" //7
+         << parameterSet.tissueShrinking << ";" //8
+         << parameterSet.toleranceNonAblatedVolume << ";" //9
+         << parameterSet.iterations << ";" //10
          << plan->GetNumberOfZones() << ";"
          << plan->GetStatistics().factorNonAblatedVolume / 100 << ";"
          << plan->GetStatistics().factorOverlappingAblationZones / 100 << ";"
