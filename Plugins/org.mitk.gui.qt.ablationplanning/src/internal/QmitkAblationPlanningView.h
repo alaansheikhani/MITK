@@ -164,6 +164,9 @@ private:
   /** Holds a point set with the centers of all ablation zones */
   mitk::DataNode::Pointer m_AblationCentersNode;
 
+  /** Holds all ablation spheres of the last run. */
+  std::vector<mitk::DataNode::Pointer> m_AblationSpheres;
+
   /** For logging the results */
   mitk::AblationPlanningLogging::Pointer m_PlanLogger;
 

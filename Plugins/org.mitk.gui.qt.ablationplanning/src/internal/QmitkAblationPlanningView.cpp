@@ -333,6 +333,7 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     QString name = QString("Kugel_%1").arg(index + 1);
     m_DataNode->SetName(name.toStdString());
     this->GetDataStorage()->Add(m_DataNode);
+    m_AblationSpheres.push_back(m_DataNode);
 
     // Add Center Points
     double finalRadius = m_AblationPlan->GetAblationZone(index)->radius /
@@ -366,6 +367,10 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
   }
   this->GetDataStorage()->Remove(m_AblationCentersNode);
   this->GetDataStorage()->Modified();
+  for (mitk::DataNode::Pointer p : m_AblationSpheres){
+    this->GetDataStorage()->Remove(p);
+  }
+  m_AblationSpheres.clear();
   this->RequestRenderWindowUpdate();
 }
 
@@ -581,10 +586,21 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
 
   //Compute planning
   m_PlanningAlgo->ComputePlanning();
+  MITK_INFO << "Finished calculating ablation zones!";
 
   //Get final proposal and visualize it!
   mitk::AblationPlan::Pointer finalProposal = m_PlanningAlgo->GetAblationPlan();
-  MITK_INFO << "Finished calculating ablation zones!";
+  m_Controls.numberAblationVoluminaLabel->setText(QString::number(finalProposal->GetNumberOfZones()));
+  mitk::RenderingManager::GetInstance()->Modified();
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  double notAblated = AblationUtils::CheckImageForNonAblatedTissueInPercentage(finalProposal->GetSegmentationImage(), finalProposal->GetImageDimension());
+  if (notAblated > 0)
+  {
+    MITK_WARN << "There is still non ablated tumor tissue (" << notAblated << " percent).";
+  }
+  m_AblationPlan = finalProposal;
+  this->CreateSpheresOfAblationVolumes();
+  this->CalculateAblationStatistics();
 
   //logging of results
   std::stringstream caseName;
@@ -604,19 +620,6 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),params,caseName.str());
   m_PlanLogger->WriteScene(this->GetDataStorage(),caseName.str());
   MITK_INFO << "Logged all results to file " << m_Controls.m_LoggingFileName->text().toStdString() << " under name " << caseName.str();
-
-  m_Controls.numberAblationVoluminaLabel->setText(QString::number(finalProposal->GetNumberOfZones()));
-  mitk::RenderingManager::GetInstance()->Modified();
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-
-  double notAblated = AblationUtils::CheckImageForNonAblatedTissueInPercentage(finalProposal->GetSegmentationImage(), finalProposal->GetImageDimension());
-  if (notAblated > 0)
-  {
-    MITK_WARN << "There is still non ablated tumor tissue (" << notAblated << " percent).";
-  }
-  m_AblationPlan = finalProposal;
-  this->CreateSpheresOfAblationVolumes();
-  this->CalculateAblationStatistics();
 }
 
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
