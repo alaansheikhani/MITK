@@ -603,23 +603,26 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->CalculateAblationStatistics();
 
   //logging of results
-  std::stringstream caseName;
-  caseName << this->m_Controls.segmentationComboBox->GetSelectedNode()->GetName();
-  std::time_t t = std::time(0);
-  std::tm* now = std::localtime(&t);
-  caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon+1 << "d" << now->tm_mday << "h" << now->tm_hour << "m" << now->tm_min << "s" << now->tm_sec;
-  mitk::AblationPlanningLogging::AblationPlanningParameterSet params;
-  params.desiredRadius = m_Controls.ablationRadiusSpinBox->value();
-  params.maxRadius = m_Controls.maxAblationRadiusSpinBox->value();
-  params.minRadius = m_Controls.minAblationRadiusSpinBox->value();
-  params.iterations = m_Controls.repititionsCalculatingAblationZonesSpinBox->value();
-  params.safetyMargin = m_Controls.safetyMarginSpinBox->value();
-  params.tissueShrinking = m_Controls.tissueShrinkingSpinBox->value();
-  params.toleranceNonAblatedVolume = m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value();
-  m_PlanLogger->WriteHeader();
-  m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),params,caseName.str());
-  m_PlanLogger->WriteScene(this->GetDataStorage(),caseName.str());
-  MITK_INFO << "Logged all results to file " << m_Controls.m_LoggingFileName->text().toStdString() << " under name " << caseName.str();
+  if(this->m_Controls.LoggingActivated->isChecked())
+  {
+    std::stringstream caseName;
+    caseName << this->m_Controls.segmentationComboBox->GetSelectedNode()->GetName();
+    std::time_t t = std::time(0);
+    std::tm* now = std::localtime(&t);
+    caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon+1 << "d" << now->tm_mday << "h" << now->tm_hour << "m" << now->tm_min << "s" << now->tm_sec;
+    mitk::AblationPlanningLogging::AblationPlanningParameterSet params;
+    params.desiredRadius = m_Controls.ablationRadiusSpinBox->value();
+    params.maxRadius = m_Controls.maxAblationRadiusSpinBox->value();
+    params.minRadius = m_Controls.minAblationRadiusSpinBox->value();
+    params.iterations = m_Controls.repititionsCalculatingAblationZonesSpinBox->value();
+    params.safetyMargin = m_Controls.safetyMarginSpinBox->value();
+    params.tissueShrinking = m_Controls.tissueShrinkingSpinBox->value();
+    params.toleranceNonAblatedVolume = m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value();
+    m_PlanLogger->WriteHeader();
+    m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),params,caseName.str());
+    m_PlanLogger->WriteScene(this->GetDataStorage(),caseName.str());
+    MITK_INFO << "Logged all results to file " << m_Controls.m_LoggingFileName->text().toStdString() << " under name " << caseName.str();
+  }
 }
 
 void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)

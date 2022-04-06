@@ -35,7 +35,7 @@ void mitk::AblationPlanningLogging::WriteHeader(){
          << "Param: Minimal Radius [mm]; Param: Desired Radius [mm]; Param: Maximal Radius [mm]; " //5,6,7
          << "Param: Shrinking [percentage]; Param: Tolerance Non-Ablated Volume [percentage]; Iterations; " //8,9,10
          << "Number of Zones; Factor Non-Ablated Volume; Factor Overlapping Zones; Factor Ablated Volume Outside Of Tumor + Safetymargin Volume; " //11,12,13,14
-         << "Total Ablation Volume; Solution Value from Metric; Radii of all Zones\n"; //15,16,17
+         << "Total Ablation Volume; Solution Value from Metric; Radii of all Zones; Radii of all zones after shrinking\n"; //15,16,17,18
   file.close();
 }
 
@@ -60,6 +60,11 @@ void mitk::AblationPlanningLogging::WriteDataSet(mitk::AblationPlan::Pointer pla
          << plan->GetSolutionValue() << ";";
   for (int j = 0; j < plan->GetNumberOfZones(); j++){
         file << plan->GetAblationZone(j)->radius << "-";
+  }
+  file << ";";
+  for (int j = 0; j < plan->GetNumberOfZones(); j++)
+  {
+    file << plan->GetAblationZone(j)->radius / (1 + ((double)parameterSet.tissueShrinking / 100.0)) << "-";
   }
   file << "\n";
   file.close();
