@@ -17,7 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkAblationPlan.h"
 
 mitk::AblationPlan::AblationPlan()
-  : m_SegmentationImage(NULL),
+  : m_SegmentationImage(nullptr),
     m_AblationZones(std::vector<mitk::AblationZone>()),
     m_StatsSet(false),
     m_Stats(mitk::AblationPlan::AblationPlanStatistics())
