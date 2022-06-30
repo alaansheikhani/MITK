@@ -24,6 +24,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImage.h>
 #include <mitkNodePredicateAnd.h>
 #include <mitkNodePredicateOr.h>
+#include <mitkPointSet.h> //
+#include <mitkSurface.h>  //
 
 /**
   \brief AblationUtils static class for doing ablation calculations
@@ -289,6 +291,14 @@ public:
   static void SetMinMaxOverlapVolume(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
 
   static void SetMinMaxVolumeOutsideFactor(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
+
+  static std::vector<double> CalculateDistancesOfCOGToCenters(mitk::PointSet::Pointer COG,
+                                                              mitk::AblationPlan::Pointer plan);
+
+  static mitk::PointSet::Pointer GetCoordinatesBasedOnCOG(mitk::PointSet::Pointer COG,
+                                                          mitk::PointSet::Pointer zoneCenters);
+
+  static mitk::PointSet::Pointer CalculateCOGTargetPoints(mitk::Surface::Pointer surface);
 
   // static void SetMinMaxAgglomerations(std::vector<mitk::AblationPlan::Pointer> AllFoundPlans);
 

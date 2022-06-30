@@ -27,6 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // mitk image
 #include "mitkAblationPlan.h"
 #include "mitkProperties.h"
+#include "mitkTargetPointsCalculator.h" //
 #include <cmath>
 #include <mitkImage.h>
 #include <mitkImagePixelReadAccessor.h>
@@ -2299,7 +2300,6 @@ std::vector<std::vector<itk::Index<3>>> AblationUtils::FindAgglomerations(mitk::
   return agglomerationList;
 }
 
-
 std::vector<itk::Index<3>> AblationUtils::FindFullAgglomeration(mitk::Image::Pointer image,
                                                                 itk::Index<3> &startingIndex)
 {
@@ -2453,4 +2453,49 @@ void AblationUtils::SetMinMaxVolumeOutsideFactor(std::vector<mitk::AblationPlan:
     }
   }
   return;
+}
+
+std::vector<double> AblationUtils::CalculateDistancesOfCOGToCenters(mitk::PointSet::Pointer COG,
+                                                                    mitk::AblationPlan::Pointer plan)
+{
+  mitk::Point3D centerCoordinates;
+  std::vector<double> distances;
+  double distance;
+  MITK_INFO << "GetNumberOfZones() " << plan->GetNumberOfZones();
+  for (int index = 0; index < plan->GetNumberOfZones(); ++index)
+  {
+    plan->GetSegmentationImage()->GetGeometry()->IndexToWorld(plan->GetAblationZone(index)->indexCenter,
+                                                              centerCoordinates);
+    distance = COG->GetPoint(0).EuclideanDistanceTo(centerCoordinates);
+    distances.push_back(distance);
+  }
+  return distances;
+}
+
+mitk::PointSet::Pointer AblationUtils::GetCoordinatesBasedOnCOG(mitk::PointSet::Pointer COG,
+                                                                mitk::PointSet::Pointer zoneCenters)
+{
+  mitk::PointSet::Pointer newCoordinates = mitk::PointSet::New();
+  mitk::Point3D translation = COG->GetPoint(0);
+  mitk::Point3D point = COG->GetPoint(0) - translation;
+
+  newCoordinates->InsertPoint(point);
+
+  for (int index = 0; index < zoneCenters->GetSize(); ++index)
+  {
+    mitk::Point3D point = zoneCenters->GetPoint(index) - translation;
+    newCoordinates->InsertPoint(point);
+  }
+  return newCoordinates;
+}
+
+mitk::PointSet::Pointer AblationUtils::CalculateCOGTargetPoints(mitk::Surface::Pointer surface)
+{
+  mitk::TargetPointsCalculator::Pointer myTargetPointsCalculator = mitk::TargetPointsCalculator::New();
+  myTargetPointsCalculator->SetTargetPointCalculationMethod(
+    mitk::TargetPointsCalculator::OneTargetPointInCenterOfGravity);
+  myTargetPointsCalculator->SetInput(surface);
+  myTargetPointsCalculator->DoCalculate();
+  mitk::PointSet::Pointer targetPoints = myTargetPointsCalculator->GetOutput();
+  return targetPoints;
 }

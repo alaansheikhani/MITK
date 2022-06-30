@@ -27,6 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // mitk
 #include "mitkProperties.h"
+#include <ctime>
 #include <mitkImage.h>
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkImagePixelWriteAccessor.h>
@@ -35,12 +36,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkNodePredicateNot.h>
 #include <mitkNodePredicateProperty.h>
 #include <mitkPointSet.h>
-
 #include <mitkSurface.h>
 #include <vtkAppendPolyData.h>
 #include <vtkSphereSource.h>
-
-#include <ctime>
 
 const std::string QmitkAblationPlanningView::VIEW_ID = "org.mitk.views.ablationplanning";
 const static short ABLATION_VALUE = 2;
@@ -90,8 +88,10 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
     isNotABinaryImagePredicate, mitk::NodePredicateNot::New(mitk::TNodePredicateDataType<mitk::LabelSetImage>::New()));
 
   // to initialize with the first image, if nothing was selected yet...
-  if (this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate) != nullptr) {
-    m_SegmentationImage = dynamic_cast<mitk::Image*>(this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate)->GetData());
+  if (this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate) != nullptr)
+  {
+    m_SegmentationImage =
+      dynamic_cast<mitk::Image *>(this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate)->GetData());
     SetSegmentationImageGeometryInformation(m_SegmentationImage);
     OnSelectionChanged(this->GetDataStorage()->GetNode(m_IsASegmentationImagePredicate));
   }
@@ -303,6 +303,9 @@ void QmitkAblationPlanningView::CopyTemporaryAblationZoneDistribution()
 void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
 {
   mitk::PointSet::Pointer centerPoints = mitk::PointSet::New();
+  // get tumor COG
+  mitk::PointSet::Pointer COG = AblationUtils::CalculateCOGTargetPoints(selectedSurface);
+  std::vector<mitk::PointSet::Pointer> zoneCenters;
   for (int index = 0; index < m_AblationPlan->GetNumberOfZones(); ++index)
   {
     mitk::DataNode::Pointer m_DataNode = mitk::DataNode::New();
@@ -314,8 +317,8 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
     mitk::Point3D centerInWorldCoordinates;
 
-    m_AblationPlan->GetSegmentationImage()->GetGeometry()->IndexToWorld(m_AblationPlan->GetAblationZone(index)->indexCenter,
-                                                     centerInWorldCoordinates);
+    m_AblationPlan->GetSegmentationImage()->GetGeometry()->IndexToWorld(
+      m_AblationPlan->GetAblationZone(index)->indexCenter, centerInWorldCoordinates);
 
     // Center
     vtkSphere->SetRadius(m_AblationPlan->GetAblationZone(index)->radius);
@@ -332,6 +335,7 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     m_DataNode->SetData(mySphere);
     QString name = QString("Kugel_%1").arg(index + 1);
     m_DataNode->SetName(name.toStdString());
+    m_DataNode->SetOpacity(0.3);
     this->GetDataStorage()->Add(m_DataNode);
     m_AblationSpheres.push_back(m_DataNode);
 
@@ -342,11 +346,14 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     MITK_INFO << "Ablation Zone " << index << "[" << centerInWorldCoordinates[0] << ";" << centerInWorldCoordinates[1]
               << ";" << centerInWorldCoordinates[2] << "] / Radius: " << finalRadius;
     centerPoints->InsertPoint(centerInWorldCoordinates);
+    zoneCenters.push_back(centerPoints);
   }
-
+  m_AblationCenters = centerPoints;
+  this->CreateContourBtwCenters(COG, centerPoints);
   m_AblationCentersNode = mitk::DataNode::New();
   m_AblationCentersNode->SetName("Ablation Centers");
   m_AblationCentersNode->SetData(centerPoints);
+  // this->VisualizeMovedCenters(COG, centerPoints);
   this->GetDataStorage()->Add(m_AblationCentersNode);
 
   this->GetDataStorage()->Modified();
@@ -358,7 +365,6 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
   for (int index = m_AblationZonesProcessed.size(); index > 0; --index)
   {
     QString name = QString("Kugel_%1").arg(index);
-
     mitk::DataNode::Pointer dataNode = this->GetDataStorage()->GetNamedNode(name.toStdString());
     if (dataNode.IsNotNull())
     {
@@ -366,11 +372,26 @@ void QmitkAblationPlanningView::DeleteAllSpheres()
     }
   }
   this->GetDataStorage()->Remove(m_AblationCentersNode);
+  // this->GetDataStorage()->Remove(m_MovedCentersCOG);
   this->GetDataStorage()->Modified();
-  for (mitk::DataNode::Pointer p : m_AblationSpheres){
+  for (mitk::DataNode::Pointer p : m_AblationSpheres)
+  {
     this->GetDataStorage()->Remove(p);
   }
   m_AblationSpheres.clear();
+  this->RequestRenderWindowUpdate();
+}
+
+void QmitkAblationPlanningView::DeleteContours()
+{
+  this->GetDataStorage()->Remove(m_NewNode);
+  this->GetDataStorage()->Modified();
+  for (mitk::DataNode::Pointer p : contourNodes)
+  {
+    this->GetDataStorage()->Remove(p);
+    this->GetDataStorage()->Modified();
+  }
+  contourNodes.clear();
   this->RequestRenderWindowUpdate();
 }
 
@@ -378,10 +399,13 @@ void QmitkAblationPlanningView::CalculateAblationStatistics()
 {
   m_Controls.numberAblationVoluminaLabel->setText(QString("%1").arg(m_AblationPlan->GetNumberOfZones()));
   m_Controls.numberTumorVolumeLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().tumorVolume));
-  m_Controls.numberTumorAndMarginVolumeLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().tumorAndSafetyMarginVolume));
+  m_Controls.numberTumorAndMarginVolumeLabel->setText(
+    QString("%1").arg(m_AblationPlan->GetStatistics().tumorAndSafetyMarginVolume));
   m_Controls.numberAblationVolumeLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().totalAblationVolume));
-  m_Controls.numberVolumeAblatedTwoAndMoreLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().ablationVolumeAblatedMoreThanOneTime));
-  m_Controls.numberOverlappingAblationZonesLabel->setText(QString("%1").arg(m_AblationPlan->GetStatistics().factorOverlappingAblationZones));
+  m_Controls.numberVolumeAblatedTwoAndMoreLabel->setText(
+    QString("%1").arg(m_AblationPlan->GetStatistics().ablationVolumeAblatedMoreThanOneTime));
+  m_Controls.numberOverlappingAblationZonesLabel->setText(
+    QString("%1").arg(m_AblationPlan->GetStatistics().factorOverlappingAblationZones));
   m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel->setText(
     QString("%1").arg(m_AblationPlan->GetStatistics().factorAblatedVolumeOutsideSafetyMargin));
 }
@@ -395,6 +419,7 @@ void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mit
     AblationUtils::ResetSafetyMargin(m_SegmentationImage, m_ImageDimension);
     AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
     this->DeleteAllSpheres();
+    this->DeleteContours();
 
     m_TumorTissueSafetyMarginIndices.clear();
     m_AblationZones.clear();
@@ -500,6 +525,65 @@ void QmitkAblationPlanningView::OnCalculateSafetyMargin()
   }
 }
 
+void QmitkAblationPlanningView::CreateNodeForTumorCOG(mitk::Image::Pointer m_SegmentationImage)
+{
+  // get selected surface and name of surface
+  selectedSurface = dynamic_cast<mitk::Surface *>(this->m_Controls.applySBox->GetSelectedNode()->GetData());
+  std::string nameOfSelectedSurface = this->m_Controls.applySBox->GetSelectedNode()->GetName();
+
+  mitk::PointSet::Pointer points = AblationUtils::CalculateCOGTargetPoints(selectedSurface);
+
+  // create a new data node with targets
+  m_NewNode = mitk::DataNode::New();
+  m_NewNode->SetName(nameOfSelectedSurface + "_CenterOfGravity");
+  m_NewNode->SetData(points);
+  m_NewNode->SetProperty("color", mitk::ColorProperty::New(0, 255, 0));
+  m_NewNode->SetProperty("pointsize", mitk::FloatProperty::New(3));
+  m_NewNode->SetProperty("offset", mitk::FloatProperty::New(3));
+  // add the new node to the data storage
+  this->GetDataStorage()->Add(m_NewNode);
+  this->GetDataStorage()->Modified();
+}
+
+void QmitkAblationPlanningView::CreateContourBtwCenters(mitk::PointSet::Pointer COG,
+                                                        mitk::PointSet::Pointer zoneCenters)
+{
+  std::vector<mitk::PointSet::Pointer> pointSets(zoneCenters->GetSize());
+  std::vector<mitk::DataNode::Pointer> pointSetNodes(zoneCenters->GetSize());
+  // make new selection
+  QList<mitk::DataNode::Pointer> selection;
+  for (int index = 0; index < zoneCenters->GetSize(); ++index)
+  {
+    pointSets[index] = mitk::PointSet::New();
+    pointSets[index]->InsertPoint(0, COG->GetPoint(0));
+    pointSets[index]->InsertPoint(1, zoneCenters->GetPoint(index));
+    pointSetNodes[index] = mitk::DataNode::New();
+    pointSetNodes[index]->SetData(pointSets[index]);
+    QString name = "Line COG to center" + QString::number(index + 1);
+    pointSetNodes[index]->SetProperty("name", mitk::StringProperty::New(name.toStdString()));
+    pointSetNodes[index]->SetProperty("show contour", mitk::BoolProperty::New(true));
+    pointSetNodes[index]->SetProperty("show distances", mitk::BoolProperty::New(true));
+    pointSetNodes[index]->SetProperty("contourcolor", mitk::ColorProperty::New(255, 0, 255));
+    contourNodes.push_back(pointSetNodes[index]);
+    this->GetDataStorage()->Add(contourNodes[index]);
+    // on selection changed
+    selection.push_back(pointSetNodes[index]);
+    this->FireNodesSelected(selection);
+    this->OnSelectionChanged(berry::IWorkbenchPart::Pointer(), selection);
+  }
+}
+
+/* void QmitkAblationPlanningView::VisualizeMovedCenters(mitk::PointSet::Pointer COG,
+                                                         mitk::PointSet::Pointer zoneCenters)
+{
+  m_MovedCentersCOG = mitk::DataNode::New();
+  mitk::PointSet::Pointer newCoordinates = AblationUtils::GetCoordinatesBasedOnCOG(COG, zoneCenters);
+  m_MovedCentersCOG->SetData(newCoordinates);
+  m_MovedCentersCOG->SetName("COG-centers moved");
+  m_MovedCentersCOG->SetProperty("pointsize", mitk::FloatProperty::New(5));
+  this->GetDataStorage()->Add(m_MovedCentersCOG);
+}*/
+
 void QmitkAblationPlanningView::OnAblationStartingPointPushButtonClicked()
 {
   if (m_SegmentationImage.IsNull())
@@ -551,10 +635,18 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     return;
   }
 
+  // check if a surface was created and the input for COG is valid
+  if (this->m_Controls.applySBox->GetSelectedNode().IsNull())
+  {
+    MITK_WARN << "Error, no surface selected; Please create a smoothed surface";
+    return;
+  }
+
   m_AblationCalculationMade = true;
 
   // Reset earlier calculations:
   this->DeleteAllSpheres();
+  this->DeleteContours();
   AblationUtils::ResetSegmentationImage(m_SegmentationImage, m_ImageDimension);
   m_TumorTissueSafetyMarginIndices.clear();
   m_AblationZones.clear();
@@ -578,38 +670,47 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
                                           toleranceNonAblatedVolume);
   m_PlanLogger->SetFileName(m_Controls.m_LoggingFileName->text().toStdString());
 
-  //Set segmentation image for algorithm
-  m_PlanningAlgo->SetSegmentationData(m_SegmentationImage,m_ImageDimension,m_ImageSpacing);
+  // Set segmentation image for algorithm
+  m_PlanningAlgo->SetSegmentationData(m_SegmentationImage, m_ImageDimension, m_ImageSpacing);
 
-  //Set safety margin for algorithm
+  // Set safety margin for algorithm
   m_PlanningAlgo->SetSafetyMargin(m_TumorTissueSafetyMarginIndices);
 
-  //Compute planning
+  // Compute planning
   m_PlanningAlgo->ComputePlanning();
   MITK_INFO << "Finished calculating ablation zones!";
 
-  //Get final proposal and visualize it!
+  // Get final proposal and visualize it!
   mitk::AblationPlan::Pointer finalProposal = m_PlanningAlgo->GetAblationPlan();
   m_Controls.numberAblationVoluminaLabel->setText(QString::number(finalProposal->GetNumberOfZones()));
   mitk::RenderingManager::GetInstance()->Modified();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-  double notAblated = AblationUtils::CheckImageForNonAblatedTissueInPercentage(finalProposal->GetSegmentationImage(), finalProposal->GetImageDimension());
+  double notAblated = AblationUtils::CheckImageForNonAblatedTissueInPercentage(finalProposal->GetSegmentationImage(),
+                                                                               finalProposal->GetImageDimension());
   if (notAblated > 0)
   {
     MITK_WARN << "There is still non ablated tumor tissue (" << notAblated << " percent).";
   }
   m_AblationPlan = finalProposal;
+  this->CreateNodeForTumorCOG(m_SegmentationImage);
   this->CreateSpheresOfAblationVolumes();
   this->CalculateAblationStatistics();
 
-  //logging of results
-  if(this->m_Controls.LoggingActivated->isChecked())
+  // To get the tumor COG for the log file
+  mitk::PointSet::Pointer COG = AblationUtils::CalculateCOGTargetPoints(selectedSurface);
+
+  // To get the coordinates of the ablation centers relativ to the tumor COG
+  mitk::PointSet::Pointer newCoordinates = AblationUtils::GetCoordinatesBasedOnCOG(COG, m_AblationCenters);
+
+  // logging of results
+  if (this->m_Controls.LoggingActivated->isChecked())
   {
     std::stringstream caseName;
     caseName << this->m_Controls.segmentationComboBox->GetSelectedNode()->GetName();
     std::time_t t = std::time(0);
-    std::tm* now = std::localtime(&t);
-    caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon+1 << "d" << now->tm_mday << "h" << now->tm_hour << "m" << now->tm_min << "s" << now->tm_sec;
+    std::tm *now = std::localtime(&t);
+    caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon + 1 << "d" << now->tm_mday << "h" << now->tm_hour
+             << "m" << now->tm_min << "s" << now->tm_sec;
     mitk::AblationPlanningLogging::AblationPlanningParameterSet params;
     params.desiredRadius = m_Controls.ablationRadiusSpinBox->value();
     params.maxRadius = m_Controls.maxAblationRadiusSpinBox->value();
@@ -618,10 +719,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     params.safetyMargin = m_Controls.safetyMarginSpinBox->value();
     params.tissueShrinking = m_Controls.tissueShrinkingSpinBox->value();
     params.toleranceNonAblatedVolume = m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value();
+    params.COGravity = COG;
+    params.relativeCoordinates = newCoordinates;
     m_PlanLogger->WriteHeader();
-    m_PlanLogger->WriteDataSet(finalProposal,m_Controls.segmentationComboBox->GetSelectedNode(),params,caseName.str());
-    m_PlanLogger->WriteScene(this->GetDataStorage(),caseName.str());
-    MITK_INFO << "Logged all results to file " << m_Controls.m_LoggingFileName->text().toStdString() << " under name " << caseName.str();
+    m_PlanLogger->WriteDataSet(
+      finalProposal, m_Controls.segmentationComboBox->GetSelectedNode(), params, caseName.str());
+    m_PlanLogger->WriteScene(this->GetDataStorage(), caseName.str());
+    MITK_INFO << "Logged all results to file " << m_Controls.m_LoggingFileName->text().toStdString() << " under name "
+              << caseName.str();
   }
 }
 
@@ -631,7 +736,10 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
   m_Controls.setupUi(parent);
   m_Controls.segmentationComboBox->SetDataStorage(GetDataStorage());
   m_Controls.segmentationComboBox->SetPredicate(m_IsASegmentationImagePredicate);
-
+  // connecting the surface from data manager with surface combo box
+  m_Controls.applySBox->SetDataStorage(this->GetDataStorage());
+  m_Controls.applySBox->SetAutoSelectNewItems(true);
+  m_Controls.applySBox->SetPredicate(mitk::NodePredicateDataType::New("Surface"));
   // create signal/slot connections
   connect(m_Controls.segmentationComboBox,
           SIGNAL(OnSelectionChanged(const mitk::DataNode *)),
@@ -651,7 +759,8 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()), this, SLOT(OnCalculateSafetyMargin()));
   connect(m_Controls.m_ChooseFile, SIGNAL(clicked()), this, SLOT(OnChooseFileClicked()));
 
-  m_Controls.m_LoggingFileName->setText(QDir::toNativeSeparators(((QDir)QDir::homePath()).absolutePath()) + QDir::separator() + "output.csv");
+  m_Controls.m_LoggingFileName->setText(QDir::toNativeSeparators(((QDir)QDir::homePath()).absolutePath()) +
+                                        QDir::separator() + "output.csv");
   mitk::DataStorage::SetOfObjects::ConstPointer segmentationImages =
     GetDataStorage()->GetSubset(m_IsASegmentationImagePredicate);
   if (!segmentationImages->empty())
@@ -689,7 +798,9 @@ void QmitkAblationPlanningView::OnChooseFileClicked()
     currentPath = QDir(QDir::homePath());
   }
 
-  QString filename = QFileDialog::getSaveFileName(nullptr, tr("Choose Logging File"), currentPath.absolutePath(), "*.csv");
-  if (filename == "") return;
+  QString filename =
+    QFileDialog::getSaveFileName(nullptr, tr("Choose Logging File"), currentPath.absolutePath(), "*.csv");
+  if (filename == "")
+    return;
   m_Controls.m_LoggingFileName->setText(filename);
 }
