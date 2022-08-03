@@ -507,9 +507,9 @@ if(on)
   m_VirtualView->SetInput(m_Controls.m_CameraViewSelection->GetSelectedNavigationDataSource()->GetOutput(m_Controls.m_CameraViewSelection->GetSelectedToolID()));
 
   mitk::Vector3D viewDirection;
-  viewDirection[0] = (int)(m_Controls.m_NeedleViewX->isChecked());
-  viewDirection[1] = (int)(m_Controls.m_NeedleViewY->isChecked());
-  viewDirection[2] = (int)(m_Controls.m_NeedleViewZ->isChecked());
+  viewDirection[0] = m_Controls.m_CameraX->value(); //(int)(m_Controls.m_NeedleViewX->isChecked());
+  viewDirection[1] = m_Controls.m_CameraY->value();                       //(int)(m_Controls.m_NeedleViewY->isChecked());
+  viewDirection[2] = m_Controls.m_CameraZ->value(); //(int)(m_Controls.m_NeedleViewZ->isChecked());
   if (m_Controls.m_NeedleViewInvert->isChecked()) viewDirection *= -1;
   m_VirtualView->SetDirectionOfProjectionInToolCoordinates(viewDirection);
 
