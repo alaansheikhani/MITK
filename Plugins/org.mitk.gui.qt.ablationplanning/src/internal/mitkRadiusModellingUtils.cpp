@@ -56,7 +56,19 @@ double RadiusModellingUtils::shrinkage(int time, int power)
   double S = ((0.1536 * power + 56.02) /
               (1 + pow((time / (611.7 + pow(150.7, 2) * exp(-0.1491 * power))), (0.01165 * power - 1.374)))) -
              0.476;
-  return S;
+  return S / 100;
+}
+
+double RadiusModellingUtils::getMinShrinkage()
+{
+  double minS = shrinkage(60, 20);
+  return minS;
+}
+
+double RadiusModellingUtils::getMaxShrinkage()
+{
+  double maxS = shrinkage(600, 80);
+  return maxS;
 }
 
 double RadiusModellingUtils::getMinRadiusDophi()
@@ -81,4 +93,28 @@ double RadiusModellingUtils::getMaxRadiusEmprint()
 {
   double maxR = REmprint(600, 80);
   return maxR;
+}
+
+double RadiusModellingUtils::getPreAblationMinRadiusDophi()
+{
+  double RPre = getMinRadiusDophi() / (1 - getMinShrinkage());
+  return RPre;
+}
+
+double RadiusModellingUtils::getPreAblationMaxRadiusDophi()
+{
+  double RPre = getMaxRadiusDophi() / (1 - getMaxShrinkage());
+  return RPre;
+}
+
+double RadiusModellingUtils::getPreAblationMinRadiusEmprint()
+{
+  double RPre = getMinRadiusEmprint() / (1 - getMinShrinkage());
+  return RPre;
+}
+
+double RadiusModellingUtils::getPreAblationMaxRadiusEmprint()
+{
+  double RPre = getMaxRadiusEmprint() / (1 - getMaxShrinkage());
+  return RPre;
 }

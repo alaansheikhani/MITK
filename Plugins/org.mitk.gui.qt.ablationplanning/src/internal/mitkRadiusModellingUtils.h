@@ -31,10 +31,16 @@ public:
   static double RDophi(int time, int power);
   static double REmprint(int time, int power);
   static double shrinkage(int time, int power);
+  static double getMinShrinkage();
+  static double getMaxShrinkage();
   static double getMinRadiusDophi();
   static double getMaxRadiusDophi();
   static double getMinRadiusEmprint();
   static double getMaxRadiusEmprint();
+  static double getPreAblationMinRadiusDophi();
+  static double getPreAblationMaxRadiusDophi();
+  static double getPreAblationMinRadiusEmprint();
+  static double getPreAblationMaxRadiusEmprint();
 
 private:
   RadiusModellingUtils();
