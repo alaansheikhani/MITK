@@ -28,7 +28,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 class RadiusModellingUtils
 {
 public:
+  static std::vector<std::vector<double>> defineTimesAndPowers();
+  static int getMinLimitTime();
+  static int getMaxLimitTime();
+  static int getMinLimitPower();
+  static int getMaxLimitPower();
   static double RDophi(int time, int power);
+  static double DophiTimeSolved(int power, double radius);
   static double REmprint(int time, int power);
   static double shrinkage(int time, int power);
   static double getMinShrinkage();
@@ -41,6 +47,8 @@ public:
   static double getPreAblationMaxRadiusDophi();
   static double getPreAblationMinRadiusEmprint();
   static double getPreAblationMaxRadiusEmprint();
+  static std::vector<double> calculateTimeAndPowreOfARadiusDophi(double radius);
+  static double calculateShrinkageOfARadiusDophi(double radius);
 
 private:
   RadiusModellingUtils();

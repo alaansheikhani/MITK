@@ -20,6 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "mitkRadiusModellingUtils.h"
+#include <mitkImage.h>
 
 // Qt
 #include <QMessageBox>
@@ -37,11 +38,103 @@ RadiusModellingUtils::RadiusModellingUtils() {}
 
 RadiusModellingUtils::~RadiusModellingUtils() {}
 
+std::vector<std::vector<double>> RadiusModellingUtils::defineTimesAndPowers()
+{
+  std::vector<double> ablationTime;
+  std::vector<double> ablationPower;
+  std::vector<std::vector<double>> res;
+  for (int i = 0; i < 37; i++)
+  {
+    ablationTime.push_back(60.0 + i * 15.0);
+  }
+  res.push_back(ablationTime);
+  for (int i = 0; i < 11; i++)
+  {
+    ablationPower.push_back(30.0 + i * 5.0);
+  }
+  res.push_back(ablationPower);
+  return res;
+}
+
+int RadiusModellingUtils::getMinLimitTime()
+{
+  std::vector<double> time = defineTimesAndPowers().at(0);
+  double minTime = time.at(distance(time.begin(), min_element(time.begin(), time.end())));
+  return minTime;
+}
+
+int RadiusModellingUtils::getMaxLimitTime()
+{
+  std::vector<double> time = defineTimesAndPowers().at(0);
+  double maxTime = time.at(distance(time.begin(), max_element(time.begin(), time.end())));
+  return maxTime;
+}
+
+int RadiusModellingUtils::getMinLimitPower()
+{
+  std::vector<double> power = defineTimesAndPowers().at(1);
+  double minPower = power.at(distance(power.begin(), min_element(power.begin(), power.end())));
+  return minPower;
+}
+
+int RadiusModellingUtils::getMaxLimitPower()
+{
+  std::vector<double> power = defineTimesAndPowers().at(1);
+  double maxPower = power.at(distance(power.begin(), max_element(power.begin(), power.end())));
+  return maxPower;
+}
+
 double RadiusModellingUtils::RDophi(int time, int power)
 {
   double R =
     4.312 + 0.007297 * time + 0.1 * power + 1.015 * pow(10, -5) * pow(time, 2) + 6.11 * pow(10, -19) * time * power;
   return R;
+}
+
+double RadiusModellingUtils::DophiTimeSolved(int power, double radius)
+{
+  // define the coefficients when solving the quadretic equation
+  double a = 1.015 * pow(10, -5);
+  double b = 0.007297 + 6.11 * pow(10, -19) * power;
+  double c = 0.1 * power + 4.312 - radius;
+  double time1, time2;
+  // calculate the discriminant; the discriminant will always be positive (in range of the defined limits)
+  double discriminant = b * b - 4 * a * c;
+  // get the ablation time
+  if (discriminant > 0)
+  {
+    time1 = (-b + sqrt(discriminant)) / (2 * a);
+    time2 = (-b - sqrt(discriminant)) / (2 * a);
+    // in the defined power and time limits of the model, time1 is always pos, whereas time2 is neg.
+    if (time1 > 0 && time2 > 0)
+    {
+      if (time1 > time2)
+      {
+        return time1;
+      }
+      return time2;
+    }
+    else if (time1 > 0 || time2 > 0)
+    {
+      if (time1 > 0)
+      {
+        return time1;
+      }
+      return time2;
+    }
+    MITK_INFO << "Ablation time cann't be calculated";
+    return 0;
+  }
+  else if (discriminant == 0)
+  {
+    time1 = -b / (2 * a);
+    return time1;
+  }
+  else
+  {
+    MITK_INFO << "Ablation time cann't be calculated";
+    return 0;
+  }
 }
 
 double RadiusModellingUtils::REmprint(int time, int power)
@@ -61,37 +154,37 @@ double RadiusModellingUtils::shrinkage(int time, int power)
 
 double RadiusModellingUtils::getMinShrinkage()
 {
-  double minS = shrinkage(60, 20);
+  double minS = shrinkage(getMinLimitTime(), getMinLimitPower());
   return minS;
 }
 
 double RadiusModellingUtils::getMaxShrinkage()
 {
-  double maxS = shrinkage(600, 80);
+  double maxS = shrinkage(getMaxLimitTime(), getMaxLimitPower());
   return maxS;
 }
 
 double RadiusModellingUtils::getMinRadiusDophi()
 {
-  double minR = RDophi(60, 20);
+  double minR = RDophi(getMinLimitTime(), getMinLimitPower());
   return minR;
 }
 
 double RadiusModellingUtils::getMaxRadiusDophi()
 {
-  double maxR = RDophi(600, 80);
+  double maxR = RDophi(getMaxLimitTime(), getMaxLimitPower());
   return maxR;
 }
 
 double RadiusModellingUtils::getMinRadiusEmprint()
 {
-  double minR = REmprint(60, 20);
+  double minR = REmprint(getMinLimitTime(), getMinLimitPower());
   return minR;
 }
 
 double RadiusModellingUtils::getMaxRadiusEmprint()
 {
-  double maxR = REmprint(600, 80);
+  double maxR = REmprint(getMaxLimitTime(), getMaxLimitPower());
   return maxR;
 }
 
@@ -117,4 +210,51 @@ double RadiusModellingUtils::getPreAblationMaxRadiusEmprint()
 {
   double RPre = getMaxRadiusEmprint() / (1 - getMaxShrinkage());
   return RPre;
+}
+
+std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfARadiusDophi(double radius)
+{
+  std::vector<std::vector<double>> availableSettings = defineTimesAndPowers();
+  double ablationPower = availableSettings.at(1).at(6);
+  double ablationTime = DophiTimeSolved(ablationPower, radius);
+  std::vector<double> ablationSettings;
+  if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
+  {
+    ablationSettings.push_back(ablationTime);
+    ablationSettings.push_back(ablationPower);
+  }
+  else if (ablationTime < getMinLimitTime())
+  {
+    for (int i = 1; i < size(availableSettings.at(1)) - 3; i++)
+    {
+      ablationPower = availableSettings.at(1).at(6) - 5.0 * i;
+      ablationTime = DophiTimeSolved(ablationPower, radius);
+      if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
+      {
+        ablationSettings.push_back(ablationTime);
+        ablationSettings.push_back(ablationPower);
+      }
+    }
+  }
+  else
+  {
+    for (int i = 1; i < size(availableSettings.at(1)) - 5; i++)
+    {
+      ablationPower = availableSettings.at(1).at(6) + 5.0 * i;
+      ablationTime = DophiTimeSolved(ablationPower, radius);
+      if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
+      {
+        ablationSettings.push_back(ablationTime);
+        ablationSettings.push_back(ablationPower);
+      }
+    }
+  }
+  return ablationSettings;
+}
+
+double RadiusModellingUtils::calculateShrinkageOfARadiusDophi(double radius)
+{
+  std::vector<double> ablationSettings = calculateTimeAndPowreOfARadiusDophi(radius);
+  double shrinkageValue = shrinkage(ablationSettings.at(0), ablationSettings.at(1));
+  return shrinkageValue;
 }
