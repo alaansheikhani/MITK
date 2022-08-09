@@ -128,7 +128,6 @@ int AblationUtils::intRand(const int &min, const int &max)
 
 QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
                                                     std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
-                                                    double ablationRadius,
                                                     double minRadius,
                                                     double maxRadius,
                                                     itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
@@ -165,15 +164,15 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
       startingPositions.push_back(startingPosition5);
 
       double radius1 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        startingPosition1, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
+        startingPosition1, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius2 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        startingPosition2, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
+        startingPosition2, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius3 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        startingPosition3, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
+        startingPosition3, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius4 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        startingPosition4, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
+        startingPosition4, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius5 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        startingPosition5, image, imageSpacing, imageDimension, ablationRadius, minRadius, maxRadius);
+        startingPosition5, image, imageSpacing, imageDimension, minRadius, maxRadius);
       std::vector<double> radiusVector;
       std::vector<double>::iterator result;
       radiusVector.push_back(radius1);
@@ -184,12 +183,11 @@ QString AblationUtils::FindAblationStartingPosition(mitk::Image::Pointer image,
       result = std::max_element(radiusVector.begin(), radiusVector.end());
       int index = std::distance(radiusVector.begin(), result);
 
-      if (radiusVector.at(index) >= ablationRadius - 1)
+      if (radiusVector.at(index) >= minRadius - 1)
       {
         positionFound = true;
       }
-      else if (iteration > 10 && radiusVector.at(index) < ablationRadius - 1 &&
-               radiusVector.at(index) > ablationRadius / 2)
+      else if (iteration > 10 && radiusVector.at(index) < minRadius - 1 && radiusVector.at(index) > minRadius / 2)
       {
         positionFound = true;
       }
@@ -512,7 +510,6 @@ double AblationUtils::CalculateRadiusOfVolumeInsideTumorForGivenPoint(itk::Index
                                                                       mitk::Image::Pointer image,
                                                                       mitk::Vector3D &imageSpacing,
                                                                       mitk::Vector3D &imageDimension,
-                                                                      const double startRadius,
                                                                       const double minRadius,
                                                                       const double maxRadius)
 {
@@ -535,7 +532,7 @@ double AblationUtils::CalculateRadiusOfVolumeInsideTumorForGivenPoint(itk::Index
     //// MITK_INFO << "Calculated max radius for given point " << point << " : " << radius;
     // return radius;
 
-    double radius = startRadius;
+    double radius = minRadius;
     std::vector<double> radiusPercentage;
     bool maxRadiusReached{false};
     while (!maxRadiusReached)
@@ -553,12 +550,12 @@ double AblationUtils::CalculateRadiusOfVolumeInsideTumorForGivenPoint(itk::Index
     {
       if (radiusPercentage.at(i) >= 0.7)
       {
-        return startRadius + i;
+        return minRadius + i;
       }
     }
     maxRadiusReached = false;
     std::vector<double> radiusNonAblatedPercentage;
-    radius = startRadius;
+    radius = minRadius;
     while (!maxRadiusReached)
     {
       radiusNonAblatedPercentage.push_back(
@@ -577,7 +574,7 @@ double AblationUtils::CalculateRadiusOfVolumeInsideTumorForGivenPoint(itk::Index
         indexBestNonAblatedPercentage = k;
       }
     }
-    radius = startRadius + indexBestNonAblatedPercentage;
+    radius = minRadius + indexBestNonAblatedPercentage;
     return radius;
   }
 }
@@ -1431,7 +1428,6 @@ void AblationUtils::RemoveAblatedPixelsFromGivenVector(itk::Index<3> &center,
 mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                            std::vector<itk::Index<3>> &unchangedTumorSafetyMarginPixels,
                                                            mitk::Image::Pointer image,
-                                                           double &radius,
                                                            double &minRadius,
                                                            double &maxRadius,
                                                            mitk::Vector3D &imageDimension,
@@ -1480,25 +1476,25 @@ mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Inde
       positions.push_back(position10);
 
       double radius1 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position1, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position1, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius2 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position2, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position2, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius3 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position3, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position3, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius4 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position4, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position4, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius5 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position5, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position5, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius6 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position6, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position6, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius7 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position7, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position7, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius8 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position8, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position8, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius9 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position9, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position9, image, imageSpacing, imageDimension, minRadius, maxRadius);
       double radius10 = CalculateRadiusOfVolumeInsideTumorForGivenPoint(
-        position10, image, imageSpacing, imageDimension, radius, minRadius, maxRadius);
+        position10, image, imageSpacing, imageDimension, minRadius, maxRadius);
       std::vector<double> radiusVector;
       std::vector<int>::iterator result;
       std::vector<double> percentageNonAblatedTumorVector;
@@ -1522,7 +1518,7 @@ mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Inde
         GetPercentageOfNonAblatedTumorvolumeInsideZone(position9, image, imageSpacing, imageDimension, radius9));
       percentageNonAblatedTumorVector.push_back(
         GetPercentageOfNonAblatedTumorvolumeInsideZone(position10, image, imageSpacing, imageDimension, radius10));
-          //GetPercentageOfNonAblatedTumorvolumeInsideZone
+      // GetPercentageOfNonAblatedTumorvolumeInsideZone
       std::vector<double> percentageTumorVector;
       percentageTumorVector.push_back(
         GetPercentageOfTumorvolumeInsideZone(position1, image, imageSpacing, imageDimension, radius1));
@@ -1572,7 +1568,8 @@ mitk::AblationZone AblationUtils::SearchNextAblationCenter(std::vector<itk::Inde
       int index = {0};
       for (int i = 1; i < radiusVector.size(); i++)
       {
-        if (percentageNonAblatedTumorVector.at(i) > percentageNonAblatedTumorVector.at(index) && percentageTumorVector.at(i) > 0.5)
+        if (percentageNonAblatedTumorVector.at(i) > percentageNonAblatedTumorVector.at(index) &&
+            percentageTumorVector.at(i) > 0.5)
         {
           index = i;
         }
@@ -2183,7 +2180,7 @@ void AblationUtils::ComputeStatistics(mitk::AblationPlan::Pointer plan,
   s.factorNonAblatedVolume =
     AblationUtils::CheckImageForNonAblatedTissueInPercentage(plan->GetSegmentationImage(), plan->GetImageDimension());
   s.factorMaxNonAblatedVolume = factorMaxNonAblatedVolume;
-  //AblationUtils::FindAgglomerations(
+  // AblationUtils::FindAgglomerations(
   //  plan->GetSegmentationImage(), plan->GetImageSpacing(), plan->GetImageDimension());
   plan->SetStatistics(s);
 }

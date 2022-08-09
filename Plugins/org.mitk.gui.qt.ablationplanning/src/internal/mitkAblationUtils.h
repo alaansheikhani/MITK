@@ -64,7 +64,6 @@ public:
    */
   static QString FindAblationStartingPosition(mitk::Image::Pointer image,
                                               std::vector<itk::Index<3>> &tumorTissueSafetyMarginIndices,
-                                              double ablationRadius,
                                               double minRadius,
                                               double maxRadius,
                                               itk::Index<3> &tempAblationStartingPositionIndexCoordinates,
@@ -113,7 +112,6 @@ public:
                                                                 mitk::Image::Pointer image,
                                                                 mitk::Vector3D &imageSpacing,
                                                                 mitk::Vector3D &imageDimension,
-                                                                double startRadius,
                                                                 double minRadius,
                                                                 double maxRadius);
 
@@ -194,7 +192,6 @@ public:
   static mitk::AblationZone SearchNextAblationCenter(std::vector<itk::Index<3>> &tumorSafetyMarginPixels,
                                                      std::vector<itk::Index<3>> &unchangedTumorSafetyMarginPixels,
                                                      mitk::Image::Pointer image,
-                                                     double &radius,
                                                      double &minRadius,
                                                      double &maxRadius,
                                                      mitk::Vector3D &imageDimension,

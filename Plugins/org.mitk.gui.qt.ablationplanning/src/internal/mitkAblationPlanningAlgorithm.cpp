@@ -24,13 +24,11 @@ mitk::AblationPlanningAlgorithm::~AblationPlanningAlgorithm() {}
 
 void mitk::AblationPlanningAlgorithm::SetAdjustableParameters(int iterations,
                                                               double maxAblationRadius,
-                                                              double ablationRadius,
                                                               double minAblationRadius,
                                                               double toleranceNonAblatedTumorSafetyMarginVolume)
 {
   m_Iterations = iterations;
   m_MaxAblationRadius = maxAblationRadius;
-  m_AblationRadius = ablationRadius;
   m_MinAblationRadius = minAblationRadius;
   m_ToleranceNonAblatedTumorSafetyMarginVolume = toleranceNonAblatedTumorSafetyMarginVolume;
 }
@@ -121,7 +119,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
       // Add starting zone
       AblationUtils::CalculateAblationVolume(m_TempAblationStartingPositionIndexCoordinates,
                                              currentPlan->GetSegmentationImage(),
-                                             m_AblationRadius,
+                                             m_MinAblationRadius,
                                              m_ImageSpacing,
                                              m_ImageDimension,
                                              tempAblationZones);
@@ -140,7 +138,6 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
           AblationUtils::SearchNextAblationCenter(indices,
                                                   tumorIndicesUnchanged,
                                                   currentPlan->GetSegmentationImage(),
-                                                  m_AblationRadius,
                                                   m_MinAblationRadius,
                                                   m_MaxAblationRadius,
                                                   m_ImageDimension,
@@ -194,8 +191,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
 
     // Check if some zones can be removed
     // AblationUtils::DetectNotNeededAblationVolume(currentPlan,currentPlan->GetSegmentationImage(),currentPlan->GetImageDimension(),currentPlan->GetImageSpacing());
-    //AblationUtils::ComputeStatistics(
-     // currentPlan, m_TumorTissueSafetyMarginIndices, m_ToleranceNonAblatedTumorSafetyMarginVolume);
+    // AblationUtils::ComputeStatistics(
+    // currentPlan, m_TumorTissueSafetyMarginIndices, m_ToleranceNonAblatedTumorSafetyMarginVolume);
 
     // Check if some zones can be removed INCLUDE
     AblationUtils::RemoveNotNeededAblationZones(currentPlan,
@@ -247,8 +244,8 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
     /* Code to log all found plans
     std::ofstream file;
     file.open(m_FileName.c_str(), std::ios_base::app); //append to file
-    file << "Tumor Name,Tumor Volume,Tumor + Safetymargin Volume,Plan Nr,NumberOfZones,Factor Non-Ablated Volume,Factor "
-            "Overlapping Zones,Factor Ablated Volume Outside Of Tumor + Safetymargin Volume,Total Ablation "
+    file << "Tumor Name,Tumor Volume,Tumor + Safetymargin Volume,Plan Nr,NumberOfZones,Factor Non-Ablated Volume,Factor
+    " "Overlapping Zones,Factor Ablated Volume Outside Of Tumor + Safetymargin Volume,Total Ablation "
             "Volume,SolutionValue,Radius "
       "Of Zones\n";
 
@@ -267,9 +264,7 @@ void mitk::AblationPlanningAlgorithm::ComputePlanning()
       file << "\n";
       file.close();
     } */
-
   }
-
 
   //==================== Optimization of final proposal ==================================================
   /*
