@@ -36,9 +36,7 @@ namespace mitk
     struct AblationPlanningParameterSet
     {
       double minRadius;
-      double desiredRadius;
       double maxRadius;
-      double tissueShrinking;
       double toleranceNonAblatedVolume;
       double safetyMargin;
       int iterations;
@@ -68,6 +66,7 @@ namespace mitk
   private:
     std::string m_FileName;
     std::vector<double> distances;
+    double tissueShrinking;
   };
 } // namespace mitk
 #endif /* MITKABLATIONPLANLOG_H_HEADER_INCLUDED_ */
