@@ -54,7 +54,6 @@ QmitkAblationPlanningView::QmitkAblationPlanningView()
     m_AblationStartingPositionInWorldCoordinates(),
     m_AblationStartingPositionIndexCoordinates(),
     m_ManualAblationStartingPositionSet(false),
-    m_AblationRadius(10.0),
     m_AblationCalculationMade(false),
     m_AblationCentersNode(mitk::DataNode::New()),
     m_PlanningAlgo(mitk::AblationPlanningAlgorithm::New()),
@@ -340,8 +339,9 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     m_AblationSpheres.push_back(m_DataNode);
 
     // Add Center Points
-    double finalRadius = m_AblationPlan->GetAblationZone(index)->radius /
-                         (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+    double finalRadius =
+      m_AblationPlan->GetAblationZone(index)->radius *
+      (1 - RadiusModellingUtils::calculateShrinkageOfARadiusDophi(m_AblationPlan->GetAblationZone(index)->radius));
     ;
     MITK_INFO << "Ablation Zone " << index << "[" << centerInWorldCoordinates[0] << ";" << centerInWorldCoordinates[1]
               << ";" << centerInWorldCoordinates[2] << "] / Radius: " << finalRadius;
@@ -655,17 +655,14 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_TempAblationZonesProcessed.clear();
 
   // Get some parameters from UI and set them for algorithm
-  double minAblationRadius =
-    m_Controls.minAblationRadiusSpinBox->value() * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
-  double ablationRadius =
-    m_Controls.ablationRadiusSpinBox->value() * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
-  double maxAblationRadius =
-    m_Controls.maxAblationRadiusSpinBox->value() * (1 + ((double)m_Controls.tissueShrinkingSpinBox->value() / 100.0));
+  double minAblationRadius = RadiusModellingUtils::getPreAblationMinRadiusDophi();
+  MITK_INFO << "MINNNNN " << minAblationRadius;
+  double maxAblationRadius = RadiusModellingUtils::getPreAblationMaxRadiusDophi();
+  MITK_INFO << "MAXXXXX " << maxAblationRadius;
   double toleranceNonAblatedVolume =
     (double)m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value() / 100.0;
   m_PlanningAlgo->SetAdjustableParameters(m_Controls.repititionsCalculatingAblationZonesSpinBox->value(),
                                           maxAblationRadius,
-                                          ablationRadius,
                                           minAblationRadius,
                                           toleranceNonAblatedVolume);
   m_PlanLogger->SetFileName(m_Controls.m_LoggingFileName->text().toStdString());
@@ -712,12 +709,11 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon + 1 << "d" << now->tm_mday << "h" << now->tm_hour
              << "m" << now->tm_min << "s" << now->tm_sec;
     mitk::AblationPlanningLogging::AblationPlanningParameterSet params;
-    params.desiredRadius = m_Controls.ablationRadiusSpinBox->value();
-    params.maxRadius = m_Controls.maxAblationRadiusSpinBox->value();
-    params.minRadius = m_Controls.minAblationRadiusSpinBox->value();
+    params.maxRadius = RadiusModellingUtils::getMaxRadiusDophi();
+    params.minRadius = RadiusModellingUtils::getMinRadiusDophi();
     params.iterations = m_Controls.repititionsCalculatingAblationZonesSpinBox->value();
     params.safetyMargin = m_Controls.safetyMarginSpinBox->value();
-    params.tissueShrinking = m_Controls.tissueShrinkingSpinBox->value();
+    // params.tissueShrinking = 0.2;
     params.toleranceNonAblatedVolume = m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value();
     params.COGravity = COG;
     params.relativeCoordinates = newCoordinates;
@@ -753,9 +749,6 @@ void QmitkAblationPlanningView::CreateQtPartControl(QWidget *parent)
           SIGNAL(clicked()),
           this,
           SLOT(OnCalculateAblationZonesPushButtonClicked()));
-  connect(m_Controls.ablationRadiusSpinBox, SIGNAL(valueChanged(double)), this, SLOT(OnAblationRadiusChanged(double)));
-  connect(
-    m_Controls.tissueShrinkingSpinBox, SIGNAL(valueChanged(int)), this, SLOT(OnTissueShrinkingFactorChanged(int)));
   connect(m_Controls.calculateSafetyMarginPushButton, SIGNAL(clicked()), this, SLOT(OnCalculateSafetyMargin()));
   connect(m_Controls.m_ChooseFile, SIGNAL(clicked()), this, SLOT(OnChooseFileClicked()));
 

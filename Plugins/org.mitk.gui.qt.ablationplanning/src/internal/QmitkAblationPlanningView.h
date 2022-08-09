@@ -17,21 +17,18 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef QMITKABLATIONPLANNINGVIEW_H
 #define QMITKABLATIONPLANNINGVIEW_H
 
-#include <berryISelectionListener.h>
-
-#include <QmitkAbstractView.h>
-
-#include <mitkNodePredicateAnd.h>
-#include <mitkNodePredicateOr.h>
-
-#include <mitkImage.h>
 #include "mitkAblationPlan.h"
 #include "mitkAblationPlanningAlgorithm.h"
+#include "mitkAblationPlanningLogging.h"
 #include "mitkAblationUtils.h"
 #include "mitkAblationZone.h"
-#include "mitkAblationPlanningLogging.h"
-
+#include "mitkRadiusModellingUtils.h"
 #include "ui_QmitkAblationPlanningViewControls.h"
+#include <QmitkAbstractView.h>
+#include <berryISelectionListener.h>
+#include <mitkImage.h>
+#include <mitkNodePredicateAnd.h>
+#include <mitkNodePredicateOr.h>
 
 /**
   \brief QmitkAblationPlanningView
@@ -126,7 +123,6 @@ private:
 
   bool m_ManualAblationStartingPositionSet; // entf
   double m_MaxAblationRadius;               // Maximal ablation radius //entf
-  double m_AblationRadius;                  // Desired ablation radius //entf
   double m_MinAblationRadius;               // Minimal ablation radius //entf
   mitk::Image::Pointer m_SegmentationImage;
   mitk::AblationPlan::Pointer m_AblationPlan;
