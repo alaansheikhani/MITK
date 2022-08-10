@@ -341,7 +341,7 @@ void QmitkAblationPlanningView::CreateSpheresOfAblationVolumes()
     // Add Center Points
     double finalRadius =
       m_AblationPlan->GetAblationZone(index)->radius *
-      (1 - RadiusModellingUtils::calculateShrinkageOfARadiusDophi(m_AblationPlan->GetAblationZone(index)->radius));
+      (1 - RadiusModellingUtils::calculateShrinkageOfPreRadiusDophi(m_AblationPlan->GetAblationZone(index)->radius));
     ;
     MITK_INFO << "Ablation Zone " << index << "[" << centerInWorldCoordinates[0] << ";" << centerInWorldCoordinates[1]
               << ";" << centerInWorldCoordinates[2] << "] / Radius: " << finalRadius;
@@ -408,6 +408,61 @@ void QmitkAblationPlanningView::CalculateAblationStatistics()
     QString("%1").arg(m_AblationPlan->GetStatistics().factorOverlappingAblationZones));
   m_Controls.numberFactorAblatedVolumeOutsideSafetyMarginLabel->setText(
     QString("%1").arg(m_AblationPlan->GetStatistics().factorAblatedVolumeOutsideSafetyMargin));
+}
+
+std::vector<double> QmitkAblationPlanningView::GetMinAndMaxRadiiOfSelectedMWA()
+{
+  QString system =
+    /*"Dophi™ M150E" */ m_Controls.MWASystemDropDown->itemText(m_Controls.MWASystemDropDown->currentIndex());
+  QString dophi = "Dophi™ M150E";
+  QString emprint = "Emprint™";
+  std::vector<double> MinAndMax;
+  double minAblationRadius, maxAblationRadius;
+  if (system == dophi)
+  {
+    minAblationRadius = RadiusModellingUtils::getPreAblationMinRadiusDophi();
+    // MITK_INFO << "MINNNNN " << minAblationRadius;
+    maxAblationRadius = RadiusModellingUtils::getPreAblationMaxRadiusDophi();
+    // MITK_INFO << "MAXXXXX " << maxAblationRadius;
+  }
+  else
+  {
+    minAblationRadius = RadiusModellingUtils::getPreAblationMinRadiusDophi();
+    // MITK_INFO << "MINNNNN " << minAblationRadius;
+    maxAblationRadius = RadiusModellingUtils::getPreAblationMaxRadiusDophi();
+    // MITK_INFO << "MAXXXXX " << maxAblationRadius;
+  }
+  MinAndMax.push_back(minAblationRadius);
+  MinAndMax.push_back(maxAblationRadius);
+  return MinAndMax;
+}
+
+void QmitkAblationPlanningView::SetPredictedZonesProperties(mitk::AblationPlan::Pointer finalPlan)
+{
+  QString zoneResults;
+  mitk::Point3D center;
+  double x, y, z, time, power, radius;
+  for (int index = 0; index < m_AblationCenters->GetSize(); index++)
+  {
+    center = m_AblationCenters->GetPoint(index);
+    x = center[0];
+    y = center[1];
+    z = center[2];
+    radius = finalPlan->GetAblationZone(index)->radius;
+    time =
+      RadiusModellingUtils::calculateTimeAndPowreOfPreRadiusDophi(finalPlan->GetAblationZone(index)->radius).at(0) / 60;
+    power =
+      RadiusModellingUtils::calculateTimeAndPowreOfPreRadiusDophi(finalPlan->GetAblationZone(index)->radius).at(1);
+    zoneResults = "<html><div>Zone<font color = '#ff0000'>" + QString::number(index + 1) +
+                  "</font> at <font color = '#ff0000'>[" + QString::number(x) + "," + QString::number(y) + "," +
+                  QString::number(z) + "]</font> with <font color = '#ff0000'>" + QString::number(power) +
+                  " W</font> for <font color = '#ff0000'>" + QString::number(time) +
+                  " min</font> and <font color = '#ff0000'>" + QString::number(radius) +
+                  " mm</font> radius</div></html>";
+    m_Controls.predictedZonesOutput->append(zoneResults);
+    m_Controls.predictedZonesOutput->setFontPointSize(10);
+    m_Controls.predictedZonesOutput->setFontFamily("MS Shell Dlg 2");
+  }
 }
 
 void QmitkAblationPlanningView::OnSegmentationComboBoxSelectionChanged(const mitk::DataNode *node)
@@ -655,10 +710,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   m_TempAblationZonesProcessed.clear();
 
   // Get some parameters from UI and set them for algorithm
-  double minAblationRadius = RadiusModellingUtils::getPreAblationMinRadiusDophi();
-  MITK_INFO << "MINNNNN " << minAblationRadius;
-  double maxAblationRadius = RadiusModellingUtils::getPreAblationMaxRadiusDophi();
-  MITK_INFO << "MAXXXXX " << maxAblationRadius;
+  double minAblationRadius = GetMinAndMaxRadiiOfSelectedMWA().at(0);
+  double maxAblationRadius = GetMinAndMaxRadiiOfSelectedMWA().at(1);
   double toleranceNonAblatedVolume =
     (double)m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value() / 100.0;
   m_PlanningAlgo->SetAdjustableParameters(m_Controls.repititionsCalculatingAblationZonesSpinBox->value(),
@@ -692,6 +745,8 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
   this->CreateNodeForTumorCOG(m_SegmentationImage);
   this->CreateSpheresOfAblationVolumes();
   this->CalculateAblationStatistics();
+  m_Controls.MWAOutput->setText(m_Controls.MWASystemDropDown->itemText(m_Controls.MWASystemDropDown->currentIndex()));
+  this->SetPredictedZonesProperties(finalProposal);
 
   // To get the tumor COG for the log file
   mitk::PointSet::Pointer COG = AblationUtils::CalculateCOGTargetPoints(selectedSurface);

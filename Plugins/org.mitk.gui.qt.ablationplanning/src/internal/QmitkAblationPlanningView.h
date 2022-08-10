@@ -85,6 +85,10 @@ protected:
 
   void CalculateAblationStatistics();
 
+  std::vector<double> GetMinAndMaxRadiiOfSelectedMWA();
+
+  void SetPredictedZonesProperties(mitk::AblationPlan::Pointer finalPlan);
+
   void CreateNodeForTumorCOG(mitk::Image::Pointer m_SegmentationImage);
 
   void CreateContourBtwCenters(mitk::PointSet::Pointer COG, mitk::PointSet::Pointer zoneCenters);
