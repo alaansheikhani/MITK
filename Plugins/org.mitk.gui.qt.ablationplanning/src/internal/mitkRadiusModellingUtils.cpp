@@ -43,14 +43,20 @@ std::vector<std::vector<double>> RadiusModellingUtils::defineTimesAndPowers()
   std::vector<double> ablationTime;
   std::vector<double> ablationPower;
   std::vector<std::vector<double>> res;
-  for (int i = 2; i < 37; i++)
+  double mint, maxt, minp, maxp;
+  std::vector<double> limits = {90, 600, 45, 80};
+  mint = limits.at(0);
+  maxt = limits.at(1);
+  minp = limits.at(2);
+  maxp = limits.at(3);
+  for (int i = mint; i <= maxt; i = i + 15)
   {
-    ablationTime.push_back(60.0 + i * 15.0);
+    ablationTime.push_back(i);
   }
   res.push_back(ablationTime);
-  for (int i = 3; i < 11; i++)
+  for (int i = minp; i <= maxp; i = i + 5)
   {
-    ablationPower.push_back(30.0 + i * 5.0);
+    ablationPower.push_back(i);
   }
   res.push_back(ablationPower);
   return res;
@@ -269,7 +275,10 @@ double RadiusModellingUtils::getPreAblationMaxRadiusEmprint()
 std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPostRadiusDophi(double radius)
 {
   std::vector<std::vector<double>> availableSettings = defineTimesAndPowers();
-  double ablationPower = availableSettings.at(1).at(3);
+  auto x = find(availableSettings.at(1).begin(), availableSettings.at(1).end(), 60);
+  int index = distance(availableSettings.at(1).begin(), x);
+  int ind = distance(x, availableSettings.at(1).end());
+  double ablationPower = availableSettings.at(1).at(index);
   double ablationTime = DophiTimeSolved_Post(ablationPower, radius);
   std::vector<double> ablationSettings;
   if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
@@ -279,9 +288,9 @@ std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPostRadiusDophi
   }
   else if (ablationTime < getMinLimitTime())
   {
-    for (int i = 1; i < size(availableSettings.at(1)) - 3; i++)
+    for (int i = 1; i <= index; i++)
     {
-      ablationPower = availableSettings.at(1).at(6) - 5.0 * i;
+      ablationPower = availableSettings.at(1).at(index) - 5.0 * i;
       ablationTime = DophiTimeSolved_Post(ablationPower, radius);
       if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
       {
@@ -292,9 +301,9 @@ std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPostRadiusDophi
   }
   else
   {
-    for (int i = 1; i < size(availableSettings.at(1)) - 5; i++)
+    for (int i = ind - 1; i >= 1; i--)
     {
-      ablationPower = availableSettings.at(1).at(6) + 5.0 * i;
+      ablationPower = availableSettings.at(1).at(index) + 5.0 * i;
       ablationTime = DophiTimeSolved_Post(ablationPower, radius);
       if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
       {
@@ -309,7 +318,10 @@ std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPostRadiusDophi
 std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPreRadiusDophi(double radius)
 {
   std::vector<std::vector<double>> availableSettings = defineTimesAndPowers();
-  double ablationPower = availableSettings.at(1).at(3);
+  auto x = find(availableSettings.at(1).begin(), availableSettings.at(1).end(), 60);
+  int index = distance(availableSettings.at(1).begin(), x);
+  int ind = distance(x, availableSettings.at(1).end());
+  double ablationPower = availableSettings.at(1).at(index);
   double ablationTime = DophiTimeSolved_Pre(ablationPower, radius);
   std::vector<double> ablationSettings;
   if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
@@ -319,9 +331,9 @@ std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPreRadiusDophi(
   }
   else if (ablationTime < getMinLimitTime())
   {
-    for (int i = 1; i < size(availableSettings.at(1)) - 3; i++)
+    for (int i = 1; i <= index; i++)
     {
-      ablationPower = availableSettings.at(1).at(6) - 5.0 * i;
+      ablationPower = availableSettings.at(1).at(index) - 5.0 * i;
       ablationTime = DophiTimeSolved_Pre(ablationPower, radius);
       if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
       {
@@ -332,9 +344,9 @@ std::vector<double> RadiusModellingUtils::calculateTimeAndPowreOfPreRadiusDophi(
   }
   else
   {
-    for (int i = 1; i < size(availableSettings.at(1)) - 5; i++)
+    for (int i = ind - 1; i >= 1; i--)
     {
-      ablationPower = availableSettings.at(1).at(6) + 5.0 * i;
+      ablationPower = availableSettings.at(1).at(index) + 5.0 * i;
       ablationTime = DophiTimeSolved_Pre(ablationPower, radius);
       if (ablationTime >= getMinLimitTime() && ablationTime <= getMaxLimitTime())
       {
