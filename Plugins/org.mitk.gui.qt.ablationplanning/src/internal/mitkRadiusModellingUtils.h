@@ -33,8 +33,10 @@ public:
   static int getMaxLimitTime();
   static int getMinLimitPower();
   static int getMaxLimitPower();
-  static double RDophi(int time, int power);
-  static double DophiTimeSolved(int power, double radius);
+  static double RDophi_Post(int time, int power);
+  static double RDophi_Pre(int time, int power);
+  static double DophiTimeSolved_Post(int power, double radius);
+  static double DophiTimeSolved_Pre(int power, double radius);
   static double REmprint(int time, int power);
   static double shrinkage(int time, int power);
   static double getMinShrinkage();
@@ -47,8 +49,10 @@ public:
   static double getPreAblationMaxRadiusDophi();
   static double getPreAblationMinRadiusEmprint();
   static double getPreAblationMaxRadiusEmprint();
-  static std::vector<double> calculateTimeAndPowreOfARadiusDophi(double radius);
-  static double calculateShrinkageOfARadiusDophi(double radius);
+  static std::vector<double> calculateTimeAndPowreOfPostRadiusDophi(double radius);
+  static std::vector<double> calculateTimeAndPowreOfPreRadiusDophi(double radius);
+  static double calculateShrinkageOfPostRadiusDophi(double radius);
+  static double calculateShrinkageOfPreRadiusDophi(double radius);
 
 private:
   RadiusModellingUtils();
