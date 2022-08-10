@@ -68,7 +68,7 @@ void mitk::AblationPlanningLogging::WriteDataSet(
        << plan->GetSolutionValue() << ";";                                          // 14
   for (int j = 0; j < plan->GetNumberOfZones(); j++)
   {
-    file << RadiusModellingUtils::calculateShrinkageOfARadiusDophi(plan->GetAblationZone(j)->radius) << "-"; // 15
+    file << RadiusModellingUtils::calculateShrinkageOfPreRadiusDophi(plan->GetAblationZone(j)->radius) << "-"; // 15
   }
   file << ";";
   for (int j = 0; j < plan->GetNumberOfZones(); j++)
@@ -79,7 +79,7 @@ void mitk::AblationPlanningLogging::WriteDataSet(
   for (int j = 0; j < plan->GetNumberOfZones(); j++)
   {
     file << plan->GetAblationZone(j)->radius *
-              (1 - RadiusModellingUtils::calculateShrinkageOfARadiusDophi(plan->GetAblationZone(j)->radius))
+              (1 - RadiusModellingUtils::calculateShrinkageOfPreRadiusDophi(plan->GetAblationZone(j)->radius))
          << "-"; // 17
   }
   file << ";";
