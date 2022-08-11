@@ -124,17 +124,17 @@ double RadiusModellingUtils::DophiTimeSolved_Post(int power, double radius)
     {
       if (time1 > time2)
       {
-        return time1;
+        return ceil(time1 * 100) / 100;
       }
-      return time2;
+      return ceil(time2 * 100) / 100;
     }
     else if (time1 > 0 || time2 > 0)
     {
       if (time1 > 0)
       {
-        return time1;
+        return ceil(time1 * 100) / 100;
       }
-      return time2;
+      return ceil(time2 * 100) / 100;
     }
     // MITK_INFO << "Ablation time cann't be calculated";
     return 0;
@@ -142,7 +142,7 @@ double RadiusModellingUtils::DophiTimeSolved_Post(int power, double radius)
   else if (discriminant == 0)
   {
     time1 = -b / (2 * a);
-    return time1;
+    return ceil(time1 * 100) / 100;
   }
   else
   {
@@ -155,8 +155,8 @@ double RadiusModellingUtils::DophiTimeSolved_Pre(int power, double radius)
 {
   // define the coefficients when solving the quadretic equation
   double a = 1.961 * pow(10, -5) - 1.017 * pow(10, -7) * power;
-  double b = 0.0006476 * power - 0.004371;
-  double c = 3.339 + 0.1864 * power - 0.002331 * pow(power, 2) - 2.218 * pow(10, -5) * pow(power, 3) - radius;
+  double b = -4.389 * pow(10, -6) * pow(power, 2) + 0.0006476 * power - 0.004371;
+  double c = 2.218 * pow(10, -5) * pow(power, 3) - 0.002331 * pow(power, 2) + 0.1864 * power + 3.339 - radius;
   double time1, time2;
   // calculate the discriminant; the discriminant will always be positive (in range of the defined limits)
   double discriminant = b * b - 4 * a * c;
@@ -170,17 +170,17 @@ double RadiusModellingUtils::DophiTimeSolved_Pre(int power, double radius)
     {
       if (time1 > time2)
       {
-        return time1;
+        return ceil(time1 * 100) / 100;
       }
-      return time2;
+      return ceil(time2 * 100) / 100;
     }
     else if (time1 > 0 || time2 > 0)
     {
       if (time1 > 0)
       {
-        return time1;
+        return ceil(time1 * 100) / 100;
       }
-      return time2;
+      return ceil(time2 * 100) / 100;
     }
     // MITK_INFO << "Ablation time cann't be calculated";
     return 0;
@@ -188,7 +188,7 @@ double RadiusModellingUtils::DophiTimeSolved_Pre(int power, double radius)
   else if (discriminant == 0)
   {
     time1 = -b / (2 * a);
-    return time1;
+    return ceil(time1 * 100) / 100;
   }
   else
   {
