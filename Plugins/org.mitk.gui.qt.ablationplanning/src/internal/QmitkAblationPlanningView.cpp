@@ -764,9 +764,12 @@ void QmitkAblationPlanningView::OnCalculateAblationZonesPushButtonClicked()
     caseName << "y" << (now->tm_year + 1900) << "m" << now->tm_mon + 1 << "d" << now->tm_mday << "h" << now->tm_hour
              << "m" << now->tm_min << "s" << now->tm_sec;
     mitk::AblationPlanningLogging::AblationPlanningParameterSet params;
-    params.maxRadius = RadiusModellingUtils::getMaxRadiusDophi();
-    params.minRadius = RadiusModellingUtils::getMinRadiusDophi();
-    params.iterations = m_Controls.repititionsCalculatingAblationZonesSpinBox->value();
+    params.maxRadius = RadiusModellingUtils::getPreAblationMaxRadiusDophi() *
+                       (1 - RadiusModellingUtils::calculateShrinkageOfPreRadiusDophi(
+                              RadiusModellingUtils::getPreAblationMaxRadiusDophi()));
+    params.minRadius = RadiusModellingUtils::getPreAblationMinRadiusDophi() *
+                       (1 - RadiusModellingUtils::calculateShrinkageOfPreRadiusDophi(
+                              RadiusModellingUtils::getPreAblationMinRadiusDophi()));
     params.safetyMargin = m_Controls.safetyMarginSpinBox->value();
     // params.tissueShrinking = 0.2;
     params.toleranceNonAblatedVolume = m_Controls.toleranceNonAblatedTumorSafetyMarginVolumeSpinBox->value();
