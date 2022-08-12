@@ -250,13 +250,13 @@ double RadiusModellingUtils::getMaxRadiusEmprint()
 
 double RadiusModellingUtils::getPreAblationMinRadiusDophi()
 {
-  double RPre = getMinRadiusDophi() / (1 - getMinShrinkage());
+  double RPre = RDophi_Pre(getMinLimitTime(), getMinLimitPower());
   return RPre;
 }
 
 double RadiusModellingUtils::getPreAblationMaxRadiusDophi()
 {
-  double RPre = getMaxRadiusDophi() / (1 - getMaxShrinkage());
+  double RPre = RDophi_Pre(getMaxLimitTime(), getMaxLimitPower());
   return RPre;
 }
 
