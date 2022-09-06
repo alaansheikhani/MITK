@@ -156,6 +156,8 @@ bool CheckRegistrationInitialization();
 */
 void DestroyIGTPipeline();
 
+void alan_OnPointSetRecording(bool record);
+
 //####################### Members for the IGT pipeline ######################################
 // The IGT pipeline is basically initialized in the method OnSetupNavigation(). Further initialization
 // is done in the methods OnPermanentRegistration(), OnPointSetRecording() and OnVirtualCamera().
@@ -176,8 +178,10 @@ mitk::NavigationData::Pointer m_ObjectmarkerNavigationData;                     
 QTimer* m_Timer; ///< central timer which updates the IGT pipeline
 
 //members for the point set recording
-mitk::NavigationData::Pointer m_PointSetRecordingNavigationData;
-mitk::PointSet::Pointer m_PSRecordingPointSet;
+mitk::NavigationData::Pointer m_PointSetRecordingNavigationData_1;
+mitk::NavigationData::Pointer m_PointSetRecordingNavigationData_2;
+mitk::PointSet::Pointer m_PSRecordingPointSet_1;
+mitk::PointSet::Pointer m_PSRecordingPointSet_2;
 bool m_PointSetRecording;
 bool m_PermanentRegistration;
 bool m_CameraView;

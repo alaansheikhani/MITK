@@ -37,7 +37,7 @@
         <x>0</x>
         <y>0</y>
         <width>345</width>
-        <height>860</height>
+        <height>388</height>
        </rect>
       </property>
       <attribute name="label">
@@ -546,6 +546,48 @@
              </spacer>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="m_viewX">
+            <property name="minimum">
+             <double>-1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="m_viewY">
+            <property name="minimum">
+             <double>-1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="m_viewZ">
+            <property name="minimum">
+             <double>-1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QCheckBox" name="m_NeedleUpInvert">
