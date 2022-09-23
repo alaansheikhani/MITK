@@ -52,7 +52,7 @@ QmitkIGTTrackingLabView::QmitkIGTTrackingLabView()
     m_PermanentRegistrationFilter(nullptr),
     m_Visualizer(nullptr),
     m_VirtualView(nullptr),
-    m_PSRecordingPointSet_1(nullptr),
+    m_PSRecordingPointSet(nullptr),
     m_PointSetRecording(false),
     m_PermanentRegistration(false),
     m_CameraView(false),
@@ -84,19 +84,19 @@ void QmitkIGTTrackingLabView::UpdateTimer()
     m_VirtualView->Update();
   }
 
-  if (m_PointSetRecording && m_PSRecordingPointSet_1.IsNotNull())
+  if (m_PointSetRecording && m_PSRecordingPointSet.IsNotNull())
   {
-    int size = m_PSRecordingPointSet_1->GetSize();
+    int size = m_PSRecordingPointSet->GetSize();
     mitk::NavigationData::Pointer nd = m_PointSetRecordingNavigationData_1;
 
     if (size > 0)
     {
-      mitk::Point3D p = m_PSRecordingPointSet_1->GetPoint(size - 1);
+      mitk::Point3D p = m_PSRecordingPointSet->GetPoint(size - 1);
       if (p.EuclideanDistanceTo(nd->GetPosition()) > (double)m_Controls.m_PSRecordingSpinBox->value())
-        m_PSRecordingPointSet_1->InsertPoint(size, nd->GetPosition());
+        m_PSRecordingPointSet->InsertPoint(size, nd->GetPosition());
     }
     else
-      m_PSRecordingPointSet_1->InsertPoint(size, nd->GetPosition());
+      m_PSRecordingPointSet->InsertPoint(size, nd->GetPosition());
   }
 }
 
@@ -193,6 +193,7 @@ void QmitkIGTTrackingLabView::OnObjectmarkerSelected()
 //####################### Slots of INITIAL REGISTRATION step ####################################
 //###############################################################################################
 //###############################################################################################
+
 void QmitkIGTTrackingLabView::OnInitialRegistration()
 {
   // Check for initialization
@@ -209,6 +210,9 @@ void QmitkIGTTrackingLabView::OnInitialRegistration()
   for (int i = 0; i < imageFiducials->GetSize(); i++)
   {
     double point[3] = {imageFiducials->GetPoint(i)[0], imageFiducials->GetPoint(i)[1], imageFiducials->GetPoint(i)[2]};
+
+    QString Error_result;
+
     sourcePoints->InsertNextPoint(point);
     double point_targets[3] = {
       trackerFiducials->GetPoint(i)[0], trackerFiducials->GetPoint(i)[1], trackerFiducials->GetPoint(i)[2]};
@@ -224,8 +228,10 @@ void QmitkIGTTrackingLabView::OnInitialRegistration()
   transform->Modified();
   transform->Update();
   // compute FRE of transform
+
   double FRE = mitk::StaticIGTHelperFunctions::ComputeFRE(imageFiducials, trackerFiducials, transform);
   m_Controls.m_RegistrationWidget->SetQualityDisplayText("FRE: " + QString::number(FRE) + " mm");
+
   //#############################################################################################
 
   //############### conversion back to itk/mitk data types ##########################
@@ -290,6 +296,60 @@ void QmitkIGTTrackingLabView::OnInitialRegistration()
   }
   //################################################################
 }
+//###############################################################################################
+//###############################################################################################
+//####################### Change Opacity of Image Fiducials ########################################
+//###############################################################################################
+//###############################################################################################
+void QmitkIGTTrackingLabView::OnButtonNavigationMode()
+{
+  mitk::Color color;
+  color.Set(0.0f, 1.0f, 0.2f);
+  m_ImageFiducialsDataNode->SetOpacity(0.25);
+  m_ImageFiducialsDataNode->SetFloatProperty("pointsize", 30);
+  m_ImageFiducialsDataNode->SetColor(color);
+
+  mitk::NavigationData::Pointer nd = m_InstrumentNavigationData;
+}
+
+//###############################################################################################
+
+//###############################################################################################
+//###############################################################################################
+//####################### caluculate Error in Navigation ########################################
+//###############################################################################################
+//###############################################################################################
+
+void QmitkIGTTrackingLabView::OnButtonResult()
+{
+  // Check for initialization
+  if (!CheckRegistrationInitialization())
+    return;
+
+  QString result = "";
+  m_Controls.textBrowser->setText(QString("\n" + QString("\n")));
+
+  mitk::PointSet::Pointer imageFiducials = dynamic_cast<mitk::PointSet *>(m_ImageFiducialsDataNode->GetData());
+  mitk::PointSet::Pointer trackerFiducials = dynamic_cast<mitk::PointSet *>(m_TrackerFiducialsDataNode->GetData());
+
+  for (int i = 0; i < imageFiducials->GetSize(); i++)
+  {
+    double point[3] = {imageFiducials->GetPoint(i)[0], imageFiducials->GetPoint(i)[1], imageFiducials->GetPoint(i)[2]};
+
+    QString Error_result;
+
+    double distance = imageFiducials->GetPoint(i).EuclideanDistanceTo(trackerFiducials->GetPoint(i));
+
+    QString distance_str =
+      "Error Point_" + QString::number(i) + ":  " + QString::number(distance) + "  mm" + "\n" + "\n";
+
+    result = result + distance_str;
+  }
+
+  m_Controls.textBrowser->append(QString(result));
+}
+
+//####################################################################
 
 void QmitkIGTTrackingLabView::OnAddRegistrationTrackingFiducial()
 {
@@ -369,6 +429,7 @@ void QmitkIGTTrackingLabView::InitializeRegistration()
 void QmitkIGTTrackingLabView::OnPermanentRegistration(bool on)
 {
   if (on)
+
   {
     //######################################################################
     //######################## inititalization #############################
@@ -473,7 +534,6 @@ void QmitkIGTTrackingLabView::OnPermanentRegistration(bool on)
 //###############################################################################################
 //###############################################################################################
 
-
 void QmitkIGTTrackingLabView::OnPointSetRecording(bool record)
 {
   mitk::DataStorage *ds = this->GetDataStorage();
@@ -487,27 +547,28 @@ void QmitkIGTTrackingLabView::OnPointSetRecording(bool record)
       return;
     }
     m_PointSetRecordingNavigationData_1 =
-    m_Controls.m_PointSetRecordingToolSelectionWidget->GetSelectedNavigationDataSource()->GetOutput(m_Controls.m_PointSetRecordingToolSelectionWidget->GetSelectedToolID());
-
-
-
+      m_Controls.m_PointSetRecordingToolSelectionWidget->GetSelectedNavigationDataSource()->GetOutput(
+        m_Controls.m_PointSetRecordingToolSelectionWidget->GetSelectedToolID());
 
     // initialize point set
     mitk::DataNode::Pointer psRecND = ds->GetNamedNode("Recorded Points");
-    if (m_PSRecordingPointSet_1.IsNull() || psRecND.IsNull())
+    if (m_PSRecordingPointSet.IsNull() || psRecND.IsNull())
     {
-      m_PSRecordingPointSet_1 = nullptr;
-      m_PSRecordingPointSet_1 = mitk::PointSet::New();
+      m_PSRecordingPointSet = nullptr;
+      m_PSRecordingPointSet = mitk::PointSet::New();
+
       mitk::DataNode::Pointer dn = mitk::DataNode::New();
-      dn->SetName("Recorded Points");
+
+      dn->SetName("Recorded Points_1");
       dn->SetColor(0., 1., 0.);
+      dn->SetProperty("pointsize", mitk::FloatProperty::New(10));
       dn->SetProperty("show contour", mitk::BoolProperty::New(true));
-      dn->SetData(m_PSRecordingPointSet_1);
+      dn->SetData(m_PSRecordingPointSet);
       ds->Add(dn);
     }
     else
     {
-      m_PSRecordingPointSet_1;
+      m_PSRecordingPointSet;
     }
     m_PointSetRecording = true;
   }
@@ -536,15 +597,17 @@ void QmitkIGTTrackingLabView::OnVirtualCamera(bool on)
   if (on)
   {
     m_VirtualView = mitk::CameraVisualization::New();
+
     m_VirtualView->SetInput(m_Controls.m_CameraViewSelection->GetSelectedNavigationDataSource()->GetOutput(
       m_Controls.m_CameraViewSelection->GetSelectedToolID()));
 
     mitk::Vector3D viewDirection;
+    // mitk::Point3D::pointer cameraPosition_alan = m_InstrumentNavigationData->GetPosition;
 
-
-    viewDirection[0] = m_Controls.m_CameraX->value();//(int)(m_Controls.m_NeedleViewX->isChecked());
+    viewDirection[0] = m_Controls.m_CameraX->value(); //(int)(m_Controls.m_NeedleViewX->isChecked());
     viewDirection[1] = m_Controls.m_CameraY->value(); //(int)(m_Controls.m_NeedleViewY->isChecked());
     viewDirection[2] = m_Controls.m_CameraZ->value(); //(int)(m_Controls.m_NeedleViewZ->isChecked());
+
     if (m_Controls.m_NeedleViewInvert->isChecked())
       viewDirection *= -1;
     m_VirtualView->SetDirectionOfProjectionInToolCoordinates(viewDirection);
@@ -559,6 +622,11 @@ void QmitkIGTTrackingLabView::OnVirtualCamera(bool on)
     m_VirtualView->SetViewUpInToolCoordinates(viewUpVector);
 
     m_VirtualView->SetRenderer(this->GetRenderWindowPart()->GetQmitkRenderWindow("3d")->GetRenderer());
+
+    // set CameraVisualization_ViewAngle
+
+    m_VirtualView->SetViewAngle(m_Controls.m_viewAngleSpingBox->value());
+
     // next line: better code when this plugin is migrated to mitk::abstractview
     // m_VirtualView->SetRenderer(mitk::BaseRenderer::GetInstance(this->GetRenderWindowPart()->GetRenderWindow("3d")->GetRenderWindow()));
     m_CameraView = true;
@@ -569,15 +637,19 @@ void QmitkIGTTrackingLabView::OnVirtualCamera(bool on)
     // disable UI elements
     m_Controls.m_ViewDirectionBox->setEnabled(false);
     m_Controls.m_ViewUpBox->setEnabled(false);
+    m_Controls.m_viewAngleSpingBox->setEnabled(false);
   }
   else
   {
     m_VirtualView = nullptr;
     m_CameraView = false;
+
     m_Controls.m_CameraViewSelection->GetSelectedNavigationTool()->GetDataNode()->SetBoolProperty("visible", true);
 
     m_Controls.m_ViewDirectionBox->setEnabled(true);
     m_Controls.m_ViewUpBox->setEnabled(true);
+    m_Controls.m_viewAngleSpingBox->setEnabled(true);
+    m_VirtualView->SetViewAngle(30);
   }
 }
 
@@ -615,6 +687,8 @@ void QmitkIGTTrackingLabView::CreateConnections()
   m_Timer = new QTimer(this);
 
   // create connections
+  connect(m_Controls.m_calculateError, SIGNAL(clicked()), this, SLOT(OnButtonResult()));
+  connect(m_Controls.m_navigationMode, SIGNAL(clicked()), this, SLOT(OnButtonNavigationMode()));
   connect(m_Timer, SIGNAL(timeout()), this, SLOT(UpdateTimer()));
   connect(
     m_Controls.m_UsePermanentRegistrationToggle, SIGNAL(toggled(bool)), this, SLOT(OnPermanentRegistration(bool)));
