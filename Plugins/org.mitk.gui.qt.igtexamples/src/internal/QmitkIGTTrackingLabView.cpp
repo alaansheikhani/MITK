@@ -16,6 +16,8 @@ found in the LICENSE file.
 
 // Qmitk
 #include "QmitkIGTTrackingLabView.h"
+#include <iostream>
+#include <numeric>
 
 #include <QmitkFiducialRegistrationWidget.h>
 #include <QmitkNDIConfigurationWidget.h>
@@ -327,6 +329,8 @@ void QmitkIGTTrackingLabView::OnButtonResult()
     return;
 
   QString result = "";
+  std::vector<double> errorVector;
+
   m_Controls.textBrowser->setText(QString("\n" + QString("\n")));
 
   mitk::PointSet::Pointer imageFiducials = dynamic_cast<mitk::PointSet *>(m_ImageFiducialsDataNode->GetData());
@@ -339,6 +343,7 @@ void QmitkIGTTrackingLabView::OnButtonResult()
     QString Error_result;
 
     double distance = imageFiducials->GetPoint(i).EuclideanDistanceTo(trackerFiducials->GetPoint(i));
+    errorVector.push_back(distance);
 
     QString distance_str =
       "Error Point_" + QString::number(i) + ":  " + QString::number(distance) + "  mm" + "\n" + "\n";
@@ -346,7 +351,11 @@ void QmitkIGTTrackingLabView::OnButtonResult()
     result = result + distance_str;
   }
 
+  double errorAverage = std::accumulate(errorVector.begin(), errorVector.end(), 0.0) / (errorVector.size());
+  QString errorAverageStr = "Mean of Errors: " + QString::number(errorAverage) + "  mm";
+
   m_Controls.textBrowser->append(QString(result));
+  m_Controls.textBrowser->append(errorAverageStr);
 }
 
 //####################################################################
@@ -602,7 +611,6 @@ void QmitkIGTTrackingLabView::OnVirtualCamera(bool on)
       m_Controls.m_CameraViewSelection->GetSelectedToolID()));
 
     mitk::Vector3D viewDirection;
-    // mitk::Point3D::pointer cameraPosition_alan = m_InstrumentNavigationData->GetPosition;
 
     viewDirection[0] = m_Controls.m_CameraX->value(); //(int)(m_Controls.m_NeedleViewX->isChecked());
     viewDirection[1] = m_Controls.m_CameraY->value(); //(int)(m_Controls.m_NeedleViewY->isChecked());
@@ -641,6 +649,7 @@ void QmitkIGTTrackingLabView::OnVirtualCamera(bool on)
   }
   else
   {
+    m_VirtualView->SetViewAngle(30);
     m_VirtualView = nullptr;
     m_CameraView = false;
 
@@ -649,7 +658,6 @@ void QmitkIGTTrackingLabView::OnVirtualCamera(bool on)
     m_Controls.m_ViewDirectionBox->setEnabled(true);
     m_Controls.m_ViewUpBox->setEnabled(true);
     m_Controls.m_viewAngleSpingBox->setEnabled(true);
-    m_VirtualView->SetViewAngle(30);
   }
 }
 
